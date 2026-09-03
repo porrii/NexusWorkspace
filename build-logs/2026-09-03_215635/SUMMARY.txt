@@ -1,0 +1,47 @@
+NexusWorkspace build  -  2026-09-03_215635
+Repo:    E:\Proyectos\NexusWorkspace
+Config:  Debug
+
+.NET SDK 9  : ya presente   ("D:\Archivos de Programa\dotnet")
+dotnet-ef   : ya presente
+
+  [1] entorno ....... OK
+  [2] restore ....... OK
+  [3] migracion ..... OK (creada)
+  [4] build ......... OK   (errores: 0  avisos: 2)
+  [5] test .......... OK
+
+8569316 fix(ef): dotnet ef requiere Microsoft.EntityFrameworkCore.Design en el proyecto de arranque
+
+--- ERRORES de build ------------------------------------------------
+
+--- ultimas 45 lineas del log de build --------------------------
+  NexusWorkspace.Domain -> E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Domain\bin\Debug\net9.0\NexusWorkspace.Domain.dll
+  NexusWorkspace.Application -> E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\bin\Debug\net9.0\NexusWorkspace.Application.dll
+  NexusWorkspace.UI -> E:\Proyectos\NexusWorkspace\src\NexusWorkspace.UI\bin\Debug\net9.0\NexusWorkspace.UI.dll
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Infrastructure\Search\Fts5SearchService.cs(127,18): warning CA1859: Cambiar el tipo de valor devuelto del método 'EnsureTableAsync' de 'System.Threading.Tasks.Task' a 'System.Threading.Tasks.Task<int>' para mejorar el rendimiento (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1859) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Infrastructure\NexusWorkspace.Infrastructure.csproj]
+  NexusWorkspace.Infrastructure -> E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Infrastructure\bin\Debug\net9.0\NexusWorkspace.Infrastructure.dll
+  NexusWorkspace.Desktop -> E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Desktop\bin\Debug\net9.0\NexusWorkspace.Desktop.dll
+  NexusWorkspace.Tests -> E:\Proyectos\NexusWorkspace\tests\NexusWorkspace.Tests\bin\Debug\net9.0\NexusWorkspace.Tests.dll
+
+Compilación correcta.
+
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Infrastructure\Search\Fts5SearchService.cs(127,18): warning CA1859: Cambiar el tipo de valor devuelto del método 'EnsureTableAsync' de 'System.Threading.Tasks.Task' a 'System.Threading.Tasks.Task<int>' para mejorar el rendimiento (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1859) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Infrastructure\NexusWorkspace.Infrastructure.csproj]
+    1 Advertencia(s)
+    0 Errores
+
+Tiempo transcurrido 00:00:02.58
+
+--- avisos de build (primeros 30) ---------------------------------
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Infrastructure\Search\Fts5SearchService.cs(127,18): warning CA1859: Cambiar el tipo de valor devuelto del método 'EnsureTableAsync' de 'System.Threading.Tasks.Task' a 'System.Threading.Tasks.Task<int>' para mejorar el rendimiento (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1859) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Infrastructure\NexusWorkspace.Infrastructure.csproj]
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Infrastructure\Search\Fts5SearchService.cs(127,18): warning CA1859: Cambiar el tipo de valor devuelto del método 'EnsureTableAsync' de 'System.Threading.Tasks.Task' a 'System.Threading.Tasks.Task<int>' para mejorar el rendimiento (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1859) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Infrastructure\NexusWorkspace.Infrastructure.csproj]
+
+--- migracion EF (ultimas 40 lineas) ---------------------------
+Build started...
+Build succeeded.
+Done. To undo this action, use 'ef migrations remove'
+
+--- resumen de test ----------------------------------------------
+Correctas! - Con error:     0, Superado:    39, Omitido:     0, Total:    39, Duración: 2 s - NexusWorkspace.Tests.dll (net9.0)
+
+Logs completos: E:\Proyectos\NexusWorkspace\build-logs\2026-09-03_215635
