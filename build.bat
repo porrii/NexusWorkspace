@@ -27,7 +27,7 @@ rem      listo para enviar.
 rem ============================================================================
 
 rem ---- Configuracion (editable) ---------------------------------------------
-set "TOOLS_BASE=D:\Archivos de programa"
+set "TOOLS_BASE=D:\Archivos de Programa"
 set "DOTNET_ROOT=%TOOLS_BASE%\dotnet"
 set "DOTNET_TOOLS=%TOOLS_BASE%\dotnet-tools"
 set "DOTNET_CHANNEL=9.0"
