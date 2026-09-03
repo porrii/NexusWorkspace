@@ -58,6 +58,8 @@ dotnet_diagnostic.CA2007.severity = none   # UI code intentionally resumes on th
 dotnet_diagnostic.CA1707.severity = none   # test method names use underscores
 dotnet_diagnostic.CA1515.severity = none   # public types in an app assembly are fine
 dotnet_diagnostic.CA1859.severity = none   # micro-perf return-type hints, noisy in async code
+dotnet_diagnostic.CA1716.severity = none   # cross-language keyword clashes (VB) — C#-only project
+dotnet_diagnostic.CA1000.severity = none   # static members on generic types (cf. Enumerable.Empty<T>)
 
 [tests/**.cs]
 dotnet_diagnostic.CA1707.severity = none
