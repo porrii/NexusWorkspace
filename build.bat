@@ -250,19 +250,23 @@ for /f %%c in ('powershell -NoProfile -Command "if(Test-Path '%BUILDLOG%'){(Sele
 git log -1 --oneline >> "%SUMMARY%" 2>&1
 >>"%SUMMARY%" echo.
 
-if exist "%BUILDLOG%" (
-    >>"%SUMMARY%" echo --- errores de build (hasta 100) ------------------------------------
-    powershell -NoProfile -Command "if(Test-Path '%BUILDLOG%'){ Select-String -Path '%BUILDLOG%' -Pattern ': error ' -SimpleMatch | Select-Object -First 100 -ExpandProperty Line }" >> "%SUMMARY%" 2>nul
-    >>"%SUMMARY%" echo.
-    >>"%SUMMARY%" echo --- avisos de build (hasta 60) ------------------------------------
-    powershell -NoProfile -Command "if(Test-Path '%BUILDLOG%'){ Select-String -Path '%BUILDLOG%' -Pattern ': warning ' -SimpleMatch | Select-Object -First 60 -ExpandProperty Line }" >> "%SUMMARY%" 2>nul
-    >>"%SUMMARY%" echo.
-)
-if exist "%TESTLOG%" (
-    >>"%SUMMARY%" echo --- resumen de test --------------------------------------------------
-    powershell -NoProfile -Command "if(Test-Path '%TESTLOG%'){ Select-String -Path '%TESTLOG%' -Pattern 'Passed!','Failed!','Passed:','Failed:','Skipped:','\[FAIL\]','error CS' | Select-Object -First 80 -ExpandProperty Line }" >> "%SUMMARY%" 2>nul
-    >>"%SUMMARY%" echo.
-)
+rem  --- extracto de errores/avisos de build (sin bloques if(...) por los parentesis) ---
+if not exist "%BUILDLOG%" goto sum_test
+>>"%SUMMARY%" echo --- ERRORES de build ------------------------------------------------
+powershell -NoProfile -Command "Select-String -LiteralPath '%BUILDLOG%' -Pattern ': error ' -SimpleMatch | Select-Object -First 120 -ExpandProperty Line" 1>>"%SUMMARY%" 2>nul
+powershell -NoProfile -Command "Select-String -LiteralPath '%BUILDLOG%' -Pattern ': error ' -SimpleMatch | Select-Object -ExpandProperty Line" 1>"%LOGDIR%\errores.txt" 2>nul
+>>"%SUMMARY%" echo(
+>>"%SUMMARY%" echo --- avisos de build (primeros 40) ---------------------------------
+powershell -NoProfile -Command "Select-String -LiteralPath '%BUILDLOG%' -Pattern ': warning ' -SimpleMatch | Select-Object -First 40 -ExpandProperty Line" 1>>"%SUMMARY%" 2>nul
+>>"%SUMMARY%" echo(
+
+:sum_test
+if not exist "%TESTLOG%" goto sum_end
+>>"%SUMMARY%" echo --- resumen de test ----------------------------------------------
+powershell -NoProfile -Command "Select-String -LiteralPath '%TESTLOG%' -Pattern 'Aprobado','Con error','Erroneo','Total:','Failed','Passed','error CS','error MSB' | Select-Object -First 100 -ExpandProperty Line" 1>>"%SUMMARY%" 2>nul
+>>"%SUMMARY%" echo(
+
+:sum_end
 >>"%SUMMARY%" echo Logs completos: %LOGDIR%
 
 echo.
