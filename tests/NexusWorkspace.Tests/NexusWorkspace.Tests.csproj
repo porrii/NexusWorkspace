@@ -6,6 +6,8 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <Nullable>enable</Nullable>
+    <!-- xUnit test names use underscores by convention. -->
+    <NoWarn>$(NoWarn);CA1707;CA1861;CA2007</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

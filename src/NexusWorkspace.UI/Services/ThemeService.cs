@@ -31,7 +31,7 @@ public sealed class ThemeService(ISettingsStore settings) : IThemeService
             _ => ThemeVariant.Default,
         };
 
-        if (Application.Current is { } app)
+        if (Avalonia.Application.Current is { } app)
         {
             Dispatcher.UIThread.Post(() => app.RequestedThemeVariant = variant);
         }

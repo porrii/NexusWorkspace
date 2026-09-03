@@ -9,7 +9,9 @@ using NexusWorkspace.UI.Views;
 
 namespace NexusWorkspace.UI;
 
-public partial class App : Application
+// Fully qualified: 'Application' alone binds to the NexusWorkspace.Application
+// namespace (enclosing-namespace member) instead of Avalonia's Application type.
+public partial class App : Avalonia.Application
 {
     /// <summary>Set by the platform head before the Avalonia lifetime starts.</summary>
     public static IServiceProvider Services { get; set; } = null!;
