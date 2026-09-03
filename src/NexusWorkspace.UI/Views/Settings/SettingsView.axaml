@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Settings.SettingsView">
+
+  <StackPanel Spacing="16" MaxWidth="760">
+
+    <TextBlock Text="Configuración" Classes="h1" />
+
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Apariencia" Classes="h2" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Tema" VerticalAlignment="Center" Classes="muted" />
+          <ComboBox ItemsSource="{Binding ThemeOptions}" SelectedItem="{Binding SelectedTheme, Mode=TwoWay}" Width="200" />
+        </StackPanel>
+        <TextBlock Classes="muted" Text="«Sistema» sigue el tema del sistema operativo." />
+      </StackPanel>
+    </Border>
+
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Base de datos y archivos" Classes="h2" />
+        <TextBlock Classes="muted" Text="{Binding DataFolder, StringFormat='{}Carpeta de datos: {0}'}" TextWrapping="Wrap" />
+        <TextBlock Classes="muted" Text="Modo portable activo." IsVisible="{Binding IsPortable}" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Button Content="Abrir carpeta de datos" Command="{Binding OpenDataFolderCommand}" />
+          <Button Content="Abrir carpeta de logs" Command="{Binding OpenLogsFolderCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Datos de demostración" Classes="h2" />
+        <TextBlock Classes="muted" TextWrapping="Wrap"
+                   Text="Crea un proyecto de ejemplo con tareas, subtareas, checklist, comentarios e historial. Se puede eliminar por completo." />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Button Content="Cargar datos de demostración" Classes="accent"
+                  IsEnabled="{Binding !DemoDataPresent}"
+                  Command="{Binding LoadDemoDataCommand}" />
+          <Button Content="Eliminar datos de demostración"
+                  IsEnabled="{Binding DemoDataPresent}"
+                  Command="{Binding RemoveDemoDataCommand}" />
+        </StackPanel>
+        <TextBlock Text="{Binding StatusMessage}" Classes="muted"
+                   IsVisible="{Binding StatusMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+      </StackPanel>
+    </Border>
+
+    <TextBlock Classes="muted"
+               Text="Más categorías (Atajos, Notificaciones, Backup, Exportación, Plantillas, Privacidad…) llegan en fases posteriores." />
+
+  </StackPanel>
+
+</UserControl>

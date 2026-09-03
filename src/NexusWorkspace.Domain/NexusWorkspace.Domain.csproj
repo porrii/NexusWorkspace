@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>NexusWorkspace.Domain</RootNamespace>
+    <AssemblyName>NexusWorkspace.Domain</AssemblyName>
+  </PropertyGroup>
+
+  <!-- Domain has ZERO dependencies on purpose. Do not add package or project references here. -->
+
+</Project>

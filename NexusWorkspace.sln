@@ -1,0 +1,77 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F0000000-0000-4000-8000-00000000000A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F0000000-0000-4000-8000-00000000000B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F0000000-0000-4000-8000-00000000000C}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		global.json = global.json
+		.editorconfig = .editorconfig
+		README.md = README.md
+		docs\ARCHITECTURE.md = docs\ARCHITECTURE.md
+		docs\BUILD.md = docs\BUILD.md
+		docs\DATA-MODEL.md = docs\DATA-MODEL.md
+		docs\ROADMAP.md = docs\ROADMAP.md
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusWorkspace.Domain", "src\NexusWorkspace.Domain\NexusWorkspace.Domain.csproj", "{B1A1E1F1-0001-4001-8001-000000000001}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusWorkspace.Application", "src\NexusWorkspace.Application\NexusWorkspace.Application.csproj", "{B1A1E1F1-0002-4001-8001-000000000002}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusWorkspace.Infrastructure", "src\NexusWorkspace.Infrastructure\NexusWorkspace.Infrastructure.csproj", "{B1A1E1F1-0003-4001-8001-000000000003}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusWorkspace.UI", "src\NexusWorkspace.UI\NexusWorkspace.UI.csproj", "{B1A1E1F1-0004-4001-8001-000000000004}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusWorkspace.Desktop", "src\NexusWorkspace.Desktop\NexusWorkspace.Desktop.csproj", "{B1A1E1F1-0005-4001-8001-000000000005}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusWorkspace.Tests", "tests\NexusWorkspace.Tests\NexusWorkspace.Tests.csproj", "{B1A1E1F1-0007-4001-8001-000000000007}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B1A1E1F1-0001-4001-8001-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1A1E1F1-0001-4001-8001-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1A1E1F1-0001-4001-8001-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1A1E1F1-0001-4001-8001-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1A1E1F1-0002-4001-8001-000000000002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1A1E1F1-0002-4001-8001-000000000002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1A1E1F1-0002-4001-8001-000000000002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1A1E1F1-0002-4001-8001-000000000002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1A1E1F1-0003-4001-8001-000000000003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1A1E1F1-0003-4001-8001-000000000003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1A1E1F1-0003-4001-8001-000000000003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1A1E1F1-0003-4001-8001-000000000003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1A1E1F1-0004-4001-8001-000000000004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1A1E1F1-0004-4001-8001-000000000004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1A1E1F1-0004-4001-8001-000000000004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1A1E1F1-0004-4001-8001-000000000004}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1A1E1F1-0005-4001-8001-000000000005}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1A1E1F1-0005-4001-8001-000000000005}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1A1E1F1-0005-4001-8001-000000000005}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1A1E1F1-0005-4001-8001-000000000005}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1A1E1F1-0007-4001-8001-000000000007}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1A1E1F1-0007-4001-8001-000000000007}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1A1E1F1-0007-4001-8001-000000000007}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1A1E1F1-0007-4001-8001-000000000007}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B1A1E1F1-0001-4001-8001-000000000001} = {F0000000-0000-4000-8000-00000000000A}
+		{B1A1E1F1-0002-4001-8001-000000000002} = {F0000000-0000-4000-8000-00000000000A}
+		{B1A1E1F1-0003-4001-8001-000000000003} = {F0000000-0000-4000-8000-00000000000A}
+		{B1A1E1F1-0004-4001-8001-000000000004} = {F0000000-0000-4000-8000-00000000000A}
+		{B1A1E1F1-0005-4001-8001-000000000005} = {F0000000-0000-4000-8000-00000000000A}
+		{B1A1E1F1-0007-4001-8001-000000000007} = {F0000000-0000-4000-8000-00000000000B}
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

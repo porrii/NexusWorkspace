@@ -1,0 +1,29 @@
+<Project>
+
+  <!-- Shared build settings for every project in the solution. -->
+  <PropertyGroup>
+    <TargetFramework Condition="'$(TargetFramework)' == '' and '$(TargetFrameworks)' == ''">net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+
+    <!-- Analyzers on; warnings stay warnings for now so the first build on the
+         build PC is not blocked by style nits. Tighten in CI later. -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+    <Product>NexusWorkspace</Product>
+    <Company>NexusWorkspace</Company>
+    <Authors>Iván</Authors>
+    <Copyright>© 2026 Iván</Copyright>
+    <Version>0.1.0</Version>
+    <NeutralLanguage>es</NeutralLanguage>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,157 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Projects.ProjectDetailView">
+
+  <StackPanel Spacing="16" MaxWidth="1040">
+
+    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+
+    <!-- Header -->
+    <Border Classes="card" IsVisible="{Binding Header, Converter={x:Static conv:AppConverters.IsNotNull}}">
+      <StackPanel Spacing="12" DataContext="{Binding Header}">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+            <mi:MaterialIcon Kind="FolderOutline" Width="26" Height="26" VerticalAlignment="Center"
+                             Foreground="{DynamicResource AppAccentBrush}" />
+            <TextBlock Text="{Binding Name}" Classes="h1" VerticalAlignment="Center" />
+            <Border Classes="pill" VerticalAlignment="Center"
+                    BorderBrush="{Binding Status, Converter={x:Static conv:AppConverters.ProjectStatusBrush}}">
+              <TextBlock Text="{Binding Status, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                         Foreground="{Binding Status, Converter={x:Static conv:AppConverters.ProjectStatusBrush}}" />
+            </Border>
+            <Border Classes="pill" VerticalAlignment="Center"
+                    BorderBrush="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}">
+              <TextBlock Text="{Binding Priority, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                         Foreground="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}" />
+            </Border>
+          </StackPanel>
+        </Grid>
+
+        <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Classes="muted"
+                   IsVisible="{Binding Description, Converter={x:Static conv:AppConverters.HasText}}" />
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="{Binding ProgressPercent, StringFormat='{}Progreso {0}%'}" Classes="muted" VerticalAlignment="Center" />
+          <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Width="240" Height="6" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding OpenTaskCount, StringFormat='{}· {0} abiertas'}" Classes="muted" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding FinishedTaskCount, StringFormat='{}· {0} finalizadas'}" Classes="muted" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="14">
+          <TextBlock Classes="muted" Text="{Binding StartDateUtc, Converter={x:Static conv:AppConverters.LocalDate}, StringFormat='{}Inicio: {0}'}" />
+          <TextBlock Classes="muted" Text="{Binding DueDateUtc, Converter={x:Static conv:AppConverters.LocalDate}, StringFormat='{}Previsto: {0}'}" />
+          <TextBlock Classes="muted" Text="{Binding OwnerName, StringFormat='{}Responsable: {0}'}"
+                     IsVisible="{Binding OwnerName, Converter={x:Static conv:AppConverters.HasText}}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Actions -->
+    <StackPanel Orientation="Horizontal" Spacing="10">
+      <TextBlock Text="Cambiar estado" Classes="muted" VerticalAlignment="Center" />
+      <ComboBox ItemsSource="{Binding AvailableStatuses}" Width="200"
+                SelectedItem="{Binding Header.Status, Mode=OneWay}"
+                SelectionChanged="OnStatusSelectionChanged">
+        <ComboBox.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <Button Content="Archivar / Restaurar" Command="{Binding ArchiveCommand}" />
+    </StackPanel>
+
+    <!-- Tabs -->
+    <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+
+      <TabItem Header="Tareas">
+        <StackPanel Spacing="12" Margin="0,12,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Command="{Binding ToggleCreateTaskPanelCommand}" Classes="accent">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <mi:MaterialIcon Kind="Plus" Width="16" Height="16" />
+                <TextBlock Text="Nueva tarea" />
+              </StackPanel>
+            </Button>
+            <CheckBox Content="Ver finalizadas" IsChecked="{Binding ShowFinishedTasks, Mode=TwoWay}" />
+          </StackPanel>
+
+          <Border Classes="card" IsVisible="{Binding IsCreateTaskPanelOpen}">
+            <StackPanel Spacing="10">
+              <TextBox Watermark="Título de la tarea" Text="{Binding NewTaskTitle, Mode=TwoWay}" />
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="Prioridad" Classes="muted" VerticalAlignment="Center" />
+                <ComboBox ItemsSource="{Binding Priorities}" SelectedItem="{Binding NewTaskPriority, Mode=TwoWay}" Width="160">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Content="Crear" Classes="accent" Command="{Binding CreateTaskCommand}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <ItemsControl ItemsSource="{Binding Tasks}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Classes="row" Margin="0,0,0,8" Tag="{Binding}" PointerReleased="OnTaskClicked">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Border Grid.Column="0" Classes="pill" Margin="0,0,10,0" VerticalAlignment="Center"
+                            BorderBrush="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}">
+                      <TextBlock Text="{Binding Priority, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                                 Foreground="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Spacing="3">
+                      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                      <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Classes="muted" Text="{Binding Status, Converter={x:Static conv:AppConverters.EnumLabel}}" />
+                        <TextBlock Classes="muted" Text="{Binding SubTaskProgressPercent, StringFormat='{}Subtareas {0}%'}"
+                                   IsVisible="{Binding SubTaskTotal, Converter={x:Static conv:AppConverters.Positive}}" />
+                        <TextBlock Classes="muted" Text="{Binding DueDateUtc, Converter={x:Static conv:AppConverters.LocalDate}, StringFormat='{}Vence {0}'}"
+                                   IsVisible="{Binding DueDateUtc, Converter={x:Static conv:AppConverters.IsNotNull}}" />
+                      </StackPanel>
+                    </StackPanel>
+                    <Border Grid.Column="2" Width="9" Height="9" CornerRadius="99" VerticalAlignment="Center"
+                            Background="{Binding Status, Converter={x:Static conv:AppConverters.TaskStatusBrush}}" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="Resumen">
+        <StackPanel Spacing="10" Margin="0,12,0,0">
+          <TextBlock Text="Descripción" Classes="h2" />
+          <TextBlock Text="{Binding Header.Description}" TextWrapping="Wrap"
+                     IsVisible="{Binding Header.Description, Converter={x:Static conv:AppConverters.HasText}}" />
+          <TextBlock Text="Sin descripción." Classes="muted"
+                     IsVisible="{Binding Header.Description, Converter={x:Static conv:AppConverters.IsBlank}}" />
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="Actividad">
+        <ItemsControl ItemsSource="{Binding Timeline}" Margin="0,12,0,0">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,9">
+                <TextBlock Grid.Column="0" Classes="muted" MinWidth="130"
+                           Text="{Binding OccurredAtUtc, Converter={x:Static conv:AppConverters.LocalDateTime}}" />
+                <TextBlock Grid.Column="1" Text="{Binding Summary}" TextWrapping="Wrap" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </TabItem>
+
+    </TabControl>
+
+  </StackPanel>
+
+</UserControl>

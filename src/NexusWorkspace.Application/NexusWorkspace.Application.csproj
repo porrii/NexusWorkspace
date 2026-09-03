@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>NexusWorkspace.Application</RootNamespace>
+    <AssemblyName>NexusWorkspace.Application</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NexusWorkspace.Domain\NexusWorkspace.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- EF Core is referenced here on purpose: IApplicationDbContext exposes DbSet<T>
+         and services use LINQ async operators. This is the pragmatic Clean Architecture
+         trade-off chosen in docs/ARCHITECTURE.md — no generic repository layer. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+</Project>

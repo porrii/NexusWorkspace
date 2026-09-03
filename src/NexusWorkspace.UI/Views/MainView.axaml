@@ -1,0 +1,83 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.MainView"
+             Background="{DynamicResource AppGroundBrush}">
+
+  <Grid ColumnDefinitions="Auto,*">
+
+    <!-- Sidebar -->
+    <Border Grid.Column="0"
+            Width="{Binding IsSidebarExpanded, Converter={x:Static conv:AppConverters.SidebarWidth}}"
+            Background="{DynamicResource AppSurfaceBrush}"
+            BorderBrush="{DynamicResource AppLineBrush}"
+            BorderThickness="0,0,1,0">
+      <DockPanel LastChildFill="True" Margin="8,12">
+
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="6,0,6,14">
+          <Button Command="{Binding ToggleSidebarCommand}"
+                  Classes="quick" Padding="7" ToolTip.Tip="Contraer / expandir (barra lateral)">
+            <mi:MaterialIcon Kind="Menu" Width="18" Height="18" />
+          </Button>
+          <TextBlock Text="NexusWorkspace"
+                     VerticalAlignment="Center"
+                     FontSize="15" FontWeight="SemiBold"
+                     Foreground="{DynamicResource AppInkBrush}"
+                     Opacity="{Binding IsSidebarExpanded, Converter={x:Static conv:AppConverters.ExpandedToOpacity}}" />
+        </StackPanel>
+
+        <Button DockPanel.Dock="Bottom"
+                Command="{Binding CycleThemeCommand}"
+                Classes="quick" HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left" Margin="4,10,4,0"
+                ToolTip.Tip="Cambiar tema (claro / oscuro / sistema)">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="{Binding ThemeGlyph}" FontSize="15" />
+            <TextBlock Text="Tema"
+                       Opacity="{Binding IsSidebarExpanded, Converter={x:Static conv:AppConverters.ExpandedToOpacity}}" />
+          </StackPanel>
+        </Button>
+
+        <ListBox ItemsSource="{Binding Items}"
+                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal" Spacing="12" Height="30">
+                <mi:MaterialIcon Kind="{Binding Icon}" Width="19" Height="19" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Label}" VerticalAlignment="Center" FontSize="13"
+                           Opacity="{Binding $parent[ListBox].DataContext.IsSidebarExpanded, Converter={x:Static conv:AppConverters.ExpandedToOpacity}}" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+      </DockPanel>
+    </Border>
+
+    <!-- Content -->
+    <Grid Grid.Column="1" RowDefinitions="Auto,*" Margin="0">
+
+      <Border Grid.Row="0" Padding="18,12"
+              IsVisible="{Binding CanGoBack}"
+              BorderBrush="{DynamicResource AppLineBrush}" BorderThickness="0,0,0,1">
+        <Button Command="{Binding GoBackCommand}" Classes="quick">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <mi:MaterialIcon Kind="ArrowLeft" Width="16" Height="16" />
+            <TextBlock Text="Atrás" />
+          </StackPanel>
+        </Button>
+      </Border>
+
+      <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+        <TransitioningContentControl Content="{Binding CurrentPage}" Margin="28,24,28,40" />
+      </ScrollViewer>
+
+    </Grid>
+
+  </Grid>
+
+</UserControl>

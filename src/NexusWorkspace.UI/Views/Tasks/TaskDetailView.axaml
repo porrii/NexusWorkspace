@@ -1,0 +1,188 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Tasks.TaskDetailView">
+
+  <StackPanel Spacing="16" MaxWidth="1000">
+
+    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+
+    <!-- Header -->
+    <Border Classes="card" IsVisible="{Binding Detail, Converter={x:Static conv:AppConverters.IsNotNull}}">
+      <StackPanel Spacing="12" DataContext="{Binding Detail}">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <Border Classes="pill" VerticalAlignment="Center"
+                  BorderBrush="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}">
+            <TextBlock Text="{Binding Priority, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                       Foreground="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}" />
+          </Border>
+          <TextBlock Text="{Binding Title}" Classes="h1" VerticalAlignment="Center" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="14">
+          <TextBlock Classes="muted" Text="{Binding ProjectName}" />
+          <Border Classes="pill" VerticalAlignment="Center"
+                  BorderBrush="{Binding Status, Converter={x:Static conv:AppConverters.TaskStatusBrush}}">
+            <TextBlock Text="{Binding Status, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                       Foreground="{Binding Status, Converter={x:Static conv:AppConverters.TaskStatusBrush}}" />
+          </Border>
+          <TextBlock Classes="muted"
+                     Text="{Binding DueDateUtc, Converter={x:Static conv:AppConverters.LocalDate}, StringFormat='{}Vence {0}'}"
+                     IsVisible="{Binding DueDateUtc, Converter={x:Static conv:AppConverters.IsNotNull}}" />
+          <TextBlock Classes="muted"
+                     Text="{Binding AssigneeName, StringFormat='{}Responsable: {0}'}"
+                     IsVisible="{Binding AssigneeName, Converter={x:Static conv:AppConverters.HasText}}" />
+          <TextBlock Classes="muted"
+                     Text="{Binding RelatedCompanyName, StringFormat='{}Empresa: {0}'}"
+                     IsVisible="{Binding RelatedCompanyName, Converter={x:Static conv:AppConverters.HasText}}" />
+        </StackPanel>
+        <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Classes="muted"
+                   IsVisible="{Binding Description, Converter={x:Static conv:AppConverters.HasText}}" />
+      </StackPanel>
+    </Border>
+
+    <!-- Status / priority / archive -->
+    <StackPanel Orientation="Horizontal" Spacing="10">
+      <ComboBox ItemsSource="{Binding AvailableStatuses}" Width="190"
+                SelectedItem="{Binding Detail.Status, Mode=OneWay}"
+                SelectionChanged="OnStatusSelectionChanged">
+        <ComboBox.ItemTemplate>
+          <DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <ComboBox ItemsSource="{Binding Priorities}" Width="150"
+                SelectedItem="{Binding Detail.Priority, Mode=OneWay}"
+                SelectionChanged="OnPrioritySelectionChanged">
+        <ComboBox.ItemTemplate>
+          <DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <Button Content="Archivar / Restaurar" Command="{Binding ArchiveCommand}" />
+    </StackPanel>
+
+    <!-- Quick actions -->
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Acciones rápidas" Classes="h2" />
+        <TextBox Watermark="Descripción opcional para la próxima acción…"
+                 Text="{Binding QuickActionNote, Mode=TwoWay}" />
+        <ItemsControl ItemsSource="{Binding QuickActions}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Button Classes="quick" Margin="0,0,8,8"
+                      Content="{Binding Label}"
+                      Command="{Binding $parent[ItemsControl].DataContext.ExecuteQuickActionCommand}"
+                      CommandParameter="{Binding}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+
+    <Grid ColumnDefinitions="*,*">
+
+      <!-- Subtasks -->
+      <Border Classes="card" Grid.Column="0" Margin="0,0,9,0">
+        <StackPanel Spacing="10">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="Subtareas" Classes="h2" />
+            <TextBlock Classes="muted" VerticalAlignment="Center"
+                       Text="{Binding SubTaskProgress, StringFormat='{}{0}%'}" />
+          </StackPanel>
+          <ProgressBar Minimum="0" Maximum="100" Value="{Binding SubTaskProgress}" Height="6" />
+          <ItemsControl ItemsSource="{Binding SubTasks}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <CheckBox Content="{Binding Title}" IsChecked="{Binding IsDone, Mode=OneWay}"
+                          Command="{Binding $parent[ItemsControl].DataContext.ToggleSubTaskCommand}"
+                          CommandParameter="{Binding}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBox Width="220" Watermark="Nueva subtarea" Text="{Binding NewSubTaskTitle, Mode=TwoWay}" />
+            <Button Content="Añadir" Command="{Binding AddSubTaskCommand}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- Checklist -->
+      <Border Classes="card" Grid.Column="1" Margin="9,0,0,0">
+        <StackPanel Spacing="10">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="Checklist" Classes="h2" />
+            <TextBlock Classes="muted" VerticalAlignment="Center"
+                       Text="{Binding ChecklistProgress, StringFormat='{}{0}%'}" />
+          </StackPanel>
+          <ProgressBar Minimum="0" Maximum="100" Value="{Binding ChecklistProgress}" Height="6" />
+          <ItemsControl ItemsSource="{Binding Checklist}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <CheckBox Content="{Binding Text}" IsChecked="{Binding IsChecked, Mode=OneWay}"
+                          Command="{Binding $parent[ItemsControl].DataContext.ToggleChecklistItemCommand}"
+                          CommandParameter="{Binding}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBox Width="220" Watermark="Nuevo ítem" Text="{Binding NewChecklistText, Mode=TwoWay}" />
+            <Button Content="Añadir" Command="{Binding AddChecklistItemCommand}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+    </Grid>
+
+    <!-- Comments -->
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Comentarios" Classes="h2" />
+        <ItemsControl ItemsSource="{Binding Comments}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Spacing="2" Margin="0,0,0,10">
+                <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
+                <TextBlock Classes="muted"
+                           Text="{Binding CreatedAtUtc, Converter={x:Static conv:AppConverters.RelativeDateTime}}" />
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBox Width="420" AcceptsReturn="True" MinHeight="48" TextWrapping="Wrap"
+                   Watermark="Escribe un comentario…" Text="{Binding NewCommentBody, Mode=TwoWay}" />
+          <Button Content="Comentar" Classes="accent" VerticalAlignment="Bottom"
+                  Command="{Binding AddCommentCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- History -->
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Historial (inmutable)" Classes="h2" />
+        <ItemsControl ItemsSource="{Binding History}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,8">
+                <TextBlock Grid.Column="0" Classes="muted" MinWidth="140"
+                           Text="{Binding OccurredAtUtc, Converter={x:Static conv:AppConverters.LocalDateTime}}" />
+                <StackPanel Grid.Column="1" Spacing="1">
+                  <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" />
+                  <TextBlock Classes="muted" Text="{Binding Note}"
+                             IsVisible="{Binding Note, Converter={x:Static conv:AppConverters.HasText}}" />
+                </StackPanel>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+
+  </StackPanel>
+
+</UserControl>

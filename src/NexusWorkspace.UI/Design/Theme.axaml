@@ -1,0 +1,51 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <ResourceDictionary.ThemeDictionaries>
+
+    <!-- Light -->
+    <ResourceDictionary x:Key="Default">
+      <SolidColorBrush x:Key="AppGroundBrush" Color="#F4F5F8" />
+      <SolidColorBrush x:Key="AppSurfaceBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="AppSurfaceAltBrush" Color="#FBFBFD" />
+      <SolidColorBrush x:Key="AppInkBrush" Color="#1A1D28" />
+      <SolidColorBrush x:Key="AppInkSoftBrush" Color="#3B4152" />
+      <SolidColorBrush x:Key="AppMutedBrush" Color="#6A7183" />
+      <SolidColorBrush x:Key="AppLineBrush" Color="#E4E6EE" />
+      <SolidColorBrush x:Key="AppLineStrongBrush" Color="#D3D6E1" />
+      <SolidColorBrush x:Key="AppAccentBrush" Color="#4A43D9" />
+      <SolidColorBrush x:Key="AppAccentWashBrush" Color="#ECEBFC" />
+      <SolidColorBrush x:Key="AppOnAccentBrush" Color="#FFFFFF" />
+    </ResourceDictionary>
+
+    <!-- Dark -->
+    <ResourceDictionary x:Key="Dark">
+      <SolidColorBrush x:Key="AppGroundBrush" Color="#0D0F16" />
+      <SolidColorBrush x:Key="AppSurfaceBrush" Color="#14171F" />
+      <SolidColorBrush x:Key="AppSurfaceAltBrush" Color="#191C25" />
+      <SolidColorBrush x:Key="AppInkBrush" Color="#E8E9F0" />
+      <SolidColorBrush x:Key="AppInkSoftBrush" Color="#C3C6D3" />
+      <SolidColorBrush x:Key="AppMutedBrush" Color="#949AAC" />
+      <SolidColorBrush x:Key="AppLineBrush" Color="#262A36" />
+      <SolidColorBrush x:Key="AppLineStrongBrush" Color="#343A48" />
+      <SolidColorBrush x:Key="AppAccentBrush" Color="#8E8AF7" />
+      <SolidColorBrush x:Key="AppAccentWashBrush" Color="#1E1E36" />
+      <SolidColorBrush x:Key="AppOnAccentBrush" Color="#131223" />
+    </ResourceDictionary>
+
+  </ResourceDictionary.ThemeDictionaries>
+
+  <!-- Semantic colours (shared across themes) -->
+  <SolidColorBrush x:Key="SemCriticalBrush" Color="#D93A44" />
+  <SolidColorBrush x:Key="SemHighBrush" Color="#DD8330" />
+  <SolidColorBrush x:Key="SemMediumBrush" Color="#B8951F" />
+  <SolidColorBrush x:Key="SemLowBrush" Color="#5C7CB0" />
+  <SolidColorBrush x:Key="SemDoneBrush" Color="#2E9E63" />
+  <SolidColorBrush x:Key="SemBlockedBrush" Color="#9A2F3A" />
+  <SolidColorBrush x:Key="SemWaitingBrush" Color="#7A5AD1" />
+
+  <x:Double x:Key="AppCornerRadius">14</x:Double>
+  <CornerRadius x:Key="CardCornerRadius">14</CornerRadius>
+  <CornerRadius x:Key="PillCornerRadius">999</CornerRadius>
+
+</ResourceDictionary>

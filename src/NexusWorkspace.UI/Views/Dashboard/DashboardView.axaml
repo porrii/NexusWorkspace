@@ -1,0 +1,126 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Dashboard.DashboardView">
+
+  <StackPanel Spacing="18" MaxWidth="1080">
+
+    <StackPanel Spacing="4">
+      <TextBlock Text="{Binding Greeting}" Classes="h1" />
+      <TextBlock Text="{Binding SummaryLine}" Classes="muted" />
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+                 IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+    </StackPanel>
+
+    <!-- Stat tiles -->
+    <UniformGrid Columns="4" >
+      <Border Classes="tile" Margin="0,0,10,0">
+        <StackPanel Spacing="2">
+          <TextBlock Text="Pendientes" Classes="muted" />
+          <TextBlock Text="{Binding OpenTaskCount}" FontSize="26" FontWeight="SemiBold"
+                     Foreground="{DynamicResource AppAccentBrush}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Margin="0,0,10,0">
+        <StackPanel Spacing="2">
+          <TextBlock Text="Críticas" Classes="muted" />
+          <TextBlock Text="{Binding CriticalTaskCount}" FontSize="26" FontWeight="SemiBold"
+                     Foreground="{DynamicResource SemCriticalBrush}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Margin="0,0,10,0">
+        <StackPanel Spacing="2">
+          <TextBlock Text="Vencidas" Classes="muted" />
+          <TextBlock Text="{Binding OverdueTaskCount}" FontSize="26" FontWeight="SemiBold"
+                     Foreground="{DynamicResource SemHighBrush}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile">
+        <StackPanel Spacing="2">
+          <TextBlock Text="Esperando" Classes="muted" />
+          <TextBlock Text="{Binding WaitingTaskCount}" FontSize="26" FontWeight="SemiBold"
+                     Foreground="{DynamicResource SemWaitingBrush}" />
+        </StackPanel>
+      </Border>
+    </UniformGrid>
+
+    <Grid ColumnDefinitions="*,*" >
+
+      <!-- Active projects -->
+      <Border Classes="card" Grid.Column="0" Margin="0,0,9,0">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Proyectos activos" Classes="h2" />
+          <ItemsControl ItemsSource="{Binding ActiveProjects}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Classes="row" Margin="0,0,0,8"
+                        PointerReleased="OnProjectRowClicked" Tag="{Binding}">
+                  <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Border Width="9" Height="9" CornerRadius="99" VerticalAlignment="Center"
+                              Background="{Binding Status, Converter={x:Static conv:AppConverters.ProjectStatusBrush}}" />
+                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                    </StackPanel>
+                    <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Height="6" />
+                    <TextBlock Classes="muted"
+                               Text="{Binding OpenTaskCount, StringFormat='{}{0} abiertas'}" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock Text="Sin proyectos activos." Classes="muted"
+                     IsVisible="{Binding !AnyActiveProjects}" />
+        </StackPanel>
+      </Border>
+
+      <!-- Recent activity -->
+      <Border Classes="card" Grid.Column="1" Margin="9,0,0,0">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Actividad reciente" Classes="h2" />
+          <ItemsControl ItemsSource="{Binding RecentActivity}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,9">
+                  <TextBlock Grid.Column="0" Classes="muted" MinWidth="86"
+                             Text="{Binding OccurredAtUtc, Converter={x:Static conv:AppConverters.RelativeDateTime}}" />
+                  <TextBlock Grid.Column="1" Text="{Binding Summary}" TextWrapping="Wrap" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock Text="Todavía no hay actividad registrada." Classes="muted"
+                     IsVisible="{Binding !AnyRecentActivity}" />
+        </StackPanel>
+      </Border>
+
+    </Grid>
+
+    <Border Classes="card">
+      <StackPanel Spacing="12">
+        <TextBlock Text="Próximos vencimientos" Classes="h2" />
+        <ItemsControl ItemsSource="{Binding UpcomingTasks}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,8">
+                <Border Grid.Column="0" Classes="pill" Margin="0,0,10,0"
+                        BorderBrush="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}">
+                  <TextBlock Text="{Binding Priority, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                             Foreground="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}" />
+                </Border>
+                <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Classes="muted" VerticalAlignment="Center"
+                           Text="{Binding DueDateUtc, Converter={x:Static conv:AppConverters.LocalDate}}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Text="Nada con fecha límite próxima." Classes="muted"
+                   IsVisible="{Binding !AnyUpcoming}" />
+      </StackPanel>
+    </Border>
+
+  </StackPanel>
+
+</UserControl>
