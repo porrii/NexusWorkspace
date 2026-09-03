@@ -69,6 +69,9 @@ goto parseargs
 for /f "usebackq delims=" %%t in (`powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd_HHmmss"`) do set "STAMP=%%t"
 set "LOGDIR=%REPO%\build-logs\%STAMP%"
 mkdir "%LOGDIR%" 2>nul
+
+rem  --- poda: conserva solo las 6 carpetas de log mas recientes ---
+powershell -NoProfile -Command "Get-ChildItem -LiteralPath '%REPO%\build-logs' -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -Skip 6 | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue" 1>nul 2>nul
 set "INSTALLLOG=%LOGDIR%\00-install.log"
 set "ENVLOG=%LOGDIR%\01-environment.log"
 set "RESTORELOG=%LOGDIR%\02-restore.log"

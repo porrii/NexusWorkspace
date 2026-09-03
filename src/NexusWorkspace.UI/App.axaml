@@ -6,7 +6,11 @@
              RequestedThemeVariant="Default">
 
   <Application.Resources>
-    <ResourceInclude Source="avares://NexusWorkspace.UI/Design/Theme.axaml" />
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://NexusWorkspace.UI/Design/Theme.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
   </Application.Resources>
 
   <Application.Styles>

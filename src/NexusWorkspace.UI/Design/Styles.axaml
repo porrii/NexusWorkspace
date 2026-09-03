@@ -11,7 +11,7 @@
     <Setter Property="BoxShadow" Value="0 1 2 0 #0F141626, 0 10 28 -14 #22141626" />
   </Style>
 
-  <Style Selector=".tile">
+  <Style Selector="Border.tile">
     <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource AppLineBrush}" />
     <Setter Property="BorderThickness" Value="1" />
@@ -19,6 +19,12 @@
     <Setter Property="Padding" Value="16" />
   </Style>
   <Style Selector="Button.tile">
+    <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AppLineBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="16" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
     <Setter Property="HorizontalContentAlignment" Value="Left" />
     <Setter Property="VerticalContentAlignment" Value="Top" />
   </Style>
