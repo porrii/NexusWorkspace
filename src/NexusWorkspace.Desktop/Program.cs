@@ -1,5 +1,6 @@
 using Avalonia;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using NexusWorkspace.Application;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Desktop.Platform;
