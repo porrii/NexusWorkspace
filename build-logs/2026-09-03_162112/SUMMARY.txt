@@ -1,0 +1,20 @@
+NexusWorkspace build  -  2026-09-03_162112
+Repo:    E:\Proyectos\NexusWorkspace
+Config:  Debug
+
+.NET SDK 9  : ya presente   ("D:\Archivos de Programa\dotnet")
+dotnet-ef   : ya presente
+
+  [1] entorno ....... OK
+  [2] restore ....... OK
+  [3] migracion ..... FALLO
+  [4] build ......... FALLO   (errores: 0  avisos: 0)
+  [5] test .......... PENDIENTE
+
+9ead9c3 fix(ui): CS0103 ProjectStateMachine — faltaba using NexusWorkspace.Domain.Projects
+
+--- ERRORES de build ------------------------------------------------
+
+--- avisos de build (primeros 40) ---------------------------------
+
+Logs completos: E:\Proyectos\NexusWorkspace\build-logs\2026-09-03_162112
