@@ -1,0 +1,2 @@
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.UI\ViewModels\Projects\ProjectDetailViewModel.cs(93,29): error CS0103: El nombre 'ProjectStateMachine' no existe en el contexto actual [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.UI\NexusWorkspace.UI.csproj]
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.UI\ViewModels\Projects\ProjectDetailViewModel.cs(93,29): error CS0103: El nombre 'ProjectStateMachine' no existe en el contexto actual [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.UI\NexusWorkspace.UI.csproj]
