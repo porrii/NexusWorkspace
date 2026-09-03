@@ -267,6 +267,11 @@ powershell -NoProfile -Command "Get-Content -LiteralPath '%BUILDLOG%' -Tail 120"
 powershell -NoProfile -Command "Select-String -LiteralPath '%BUILDLOG%' -Pattern ': warning ' -SimpleMatch | Select-Object -First 30 -ExpandProperty Line" 1>>"%SUMMARY%" 2>nul
 >>"%SUMMARY%" echo(
 
+if not exist "%MIGLOG%" goto sum_test
+>>"%SUMMARY%" echo --- migracion EF (ultimas 40 lineas) ---------------------------
+powershell -NoProfile -Command "Get-Content -LiteralPath '%MIGLOG%' -Tail 40" 1>>"%SUMMARY%" 2>nul
+>>"%SUMMARY%" echo(
+
 :sum_test
 if not exist "%TESTLOG%" goto sum_end
 >>"%SUMMARY%" echo --- resumen de test ----------------------------------------------
