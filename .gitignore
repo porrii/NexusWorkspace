@@ -47,7 +47,7 @@ packages/
 *.log
 
 # ---- Local build logs from build.bat (send these to review, don't commit) ----
-/build-logs/
+#/build-logs/
 
 # ---- OS ----
 Thumbs.db

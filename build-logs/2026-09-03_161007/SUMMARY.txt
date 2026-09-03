@@ -1,0 +1,15 @@
+NexusWorkspace build  -  2026-09-03_161007
+Repo:    E:\Proyectos\NexusWorkspace
+Config:  Debug
+
+.NET SDK 9  : ya presente   ("D:\Archivos de Programa\dotnet")
+dotnet-ef   : ya presente
+
+  [1] entorno ....... OK
+  [2] restore ....... OK
+  [3] migracion ..... FALLO
+  [4] build ......... FALLO   (errores: 2  avisos: 14)
+  [5] test .......... PENDIENTE
+
+98bff14 fix(ui): CS0118 — 'Application' se resolvía al namespace NexusWorkspace.Application
+
