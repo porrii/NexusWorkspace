@@ -13,6 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Packages.props = Directory.Packages.props
 		global.json = global.json
 		.editorconfig = .editorconfig
+		build.bat = build.bat
 		README.md = README.md
 		docs\ARCHITECTURE.md = docs\ARCHITECTURE.md
 		docs\BUILD.md = docs\BUILD.md

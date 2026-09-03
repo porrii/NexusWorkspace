@@ -8,12 +8,30 @@ en verde lo antes posible.
 
 Ver [`BUILD.md`](BUILD.md). Resumen: **.NET 9 SDK**. Nada más para escritorio.
 
-## 1. Secuencia
+## 1. La vía rápida: `build.bat`
+
+En la raíz del repo hay un script reutilizable que hace **todo**: comprueba/instala
+.NET 9 SDK en `D:\Archivos de programa\dotnet` (portable, sin admin), instala
+`dotnet-ef`, restaura, crea la migración `Initial` si no existe, compila, ejecuta
+los tests y deja los logs en `build-logs\<fecha_hora>\` con un `SUMMARY.txt`.
+
+```bat
+git pull
+git switch dev
+build.bat
+```
+
+Otras formas: `build.bat release` · `build.bat run` (lanza la app) ·
+`build.bat clean` · `build.bat notest` · se combinan (`build.bat release run`).
+
+Cuando termine, **envíame la carpeta `build-logs\<fecha_hora>\`** (o al menos
+`SUMMARY.txt` + los `.log` marcados como FALLO).
+
+## 2. La vía manual (equivalente)
 
 ```powershell
 cd <repo>
-git pull
-git switch dev
+git pull ; git switch dev
 
 dotnet restore
 dotnet ef migrations add Initial `
@@ -29,7 +47,7 @@ dotnet run --project src/NexusWorkspace.Desktop
 > La app arranca aunque no crees la migración (cae a `EnsureCreated`), pero es
 > mejor tenerla.
 
-## 2. Orden para resolver errores de compilación
+## 3. Orden para resolver errores de compilación
 
 Compila proyecto a proyecto, de abajo a arriba. Así los errores no se solapan:
 
@@ -46,7 +64,7 @@ dotnet build tests/NexusWorkspace.Tests
 dos compilan limpios, los patrones base (entidades, `Result<T>`, servicios,
 sobrecargas de `IUnitOfWorkRunner`, generadores de CommunityToolkit) son correctos.
 
-## 3. Puntos frágiles conocidos (y cómo salir del paso)
+## 4. Puntos frágiles conocidos (y cómo salir del paso)
 
 | Archivo / zona | Posible problema | Salida rápida |
 |---|---|---|
@@ -56,15 +74,15 @@ sobrecargas de `IUnitOfWorkRunner`, generadores de CommunityToolkit) son correct
 | XAML con *bindings* por reflexión | No hay `x:DataType`, así que los errores de binding salen **en ejecución** como avisos en consola, no al compilar. | Arrancar la app, mirar la consola/log, corregir el `{Binding …}` señalado. No bloquean el build. |
 | Migración EF | `dotnet ef` podría quejarse de la conversión global de `Guid`/enum o de la tabla FTS. La tabla `SearchIndex` **no** está en el modelo EF (se crea con SQL en `DatabaseInitializer`), así que **no** debe aparecer en la migración. | Si aparece algo raro de `SearchIndex` en la migración generada, bórralo del archivo de migración. |
 
-## 4. Qué debería verse al arrancar
+## 5. Qué debería verse al arrancar
 
 1. Ventana **NexusWorkspace** con barra lateral (Dashboard · Inbox · Proyectos · … · Configuración) y botón de tema.
 2. `%APPDATA%\NexusWorkspace\` creado con `nexus.db`, `logs\`, `settings.json`.
 3. Dashboard vacío con saludo y widgets. **Configuración → Cargar datos de demostración** llena un proyecto de ejemplo con tareas, subtareas, checklist, comentarios e historial.
 4. `Ctrl+K` abre el Command Palette · `Ctrl+F` la búsqueda · `Ctrl+Shift+Espacio` la captura rápida.
 
-## 5. Cuando esté en verde
+## 6. Cuando esté en verde
 
-Comparte el resultado (`dotnet build` y `dotnet test`). Con eso ajusto lo que haga
-falta y sigo con la **Fase 3** (Seguimientos + Recordatorios + Notificaciones + Calendario)
-sobre una base ya validada.
+Comparte el resultado — lo más cómodo es la carpeta `build-logs\<fecha_hora>\` que
+genera `build.bat`. Con eso ajusto lo que haga falta y sigo con la **Fase 3**
+(Seguimientos + Recordatorios + Notificaciones + Calendario) sobre una base ya validada.

@@ -33,7 +33,18 @@ FluentAvalonia · Material.Icons · Serilog · LiveCharts2 · xUnit.
 Documento visual de arquitectura y wireframes:
 <https://claude.ai/code/artifact/b9e28e8b-0851-4844-916b-385f9f3b03a9>
 
-## Compilar (resumen)
+## Compilar
+
+Vía rápida (comprueba/instala .NET 9, restaura, migra, compila, testea y deja logs):
+
+```bat
+build.bat
+```
+
+`build.bat release` · `build.bat run` · `build.bat clean` · `build.bat notest`.
+Los logs quedan en `build-logs\<fecha_hora>\` con un `SUMMARY.txt`.
+
+Manual:
 
 ```powershell
 dotnet restore
@@ -41,4 +52,4 @@ dotnet run --project src/NexusWorkspace.Desktop
 dotnet test
 ```
 
-Requisitos y detalles: [`docs/BUILD.md`](docs/BUILD.md).
+Requisitos y detalles: [`docs/BUILD.md`](docs/BUILD.md) · [`docs/FIRST-COMPILE.md`](docs/FIRST-COMPILE.md).
