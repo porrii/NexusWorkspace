@@ -1,0 +1,50 @@
+NexusWorkspace build  -  2026-09-03_215933
+Repo:    E:\Proyectos\NexusWorkspace
+Config:  Debug
+
+.NET SDK 9  : ya presente   ("D:\Archivos de Programa\dotnet")
+dotnet-ef   : ya presente
+
+  [1] entorno ....... OK
+  [2] restore ....... OK
+  [3] migracion ..... OMITIDO (ya existe)
+  [4] build ......... OK   (errores: 0  avisos: 6)
+  [5] test .......... OK
+
+777e39f chore: cierre del shakeout de Fases 0-2 (build 0/0, migración Initial, 39/39 tests)
+
+--- ERRORES de build ------------------------------------------------
+
+--- ultimas 45 lineas del log de build --------------------------
+  NexusWorkspace.Domain -> E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Domain\bin\Debug\net9.0\NexusWorkspace.Domain.dll
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Common\Result.cs(4,31): warning CA1716: Cambie el nombre del tipo Error para que deje de estar en conflicto con la palabra clave reservada del lenguaje “Error”. El uso de una palabra clave reservada como nombre de un tipo dificulta que los consumidores de otros lenguajes usen el tipo. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1716) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Abstractions\IGlobalHotkeyService.cs(11,10): warning CA1716: Cambie el nombre del miembro virtual o de interfaz IGlobalHotkeyService.Stop() para que deje de estar en conflicto con la palabra clave reservada del lenguaje “Stop”. El uso de una palabra clave reservada como nombre de un miembro virtual o de interfaz dificulta que usuarios de otros lenguajes invaliden o implementen el miembro. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1716) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Common\PagedResult.cs(12,34): warning CA1000: No declarar miembros estáticos en tipos genéricos (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1000) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+  NexusWorkspace.Application -> E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\bin\Debug\net9.0\NexusWorkspace.Application.dll
+  NexusWorkspace.Infrastructure -> E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Infrastructure\bin\Debug\net9.0\NexusWorkspace.Infrastructure.dll
+  NexusWorkspace.UI -> E:\Proyectos\NexusWorkspace\src\NexusWorkspace.UI\bin\Debug\net9.0\NexusWorkspace.UI.dll
+  NexusWorkspace.Desktop -> E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Desktop\bin\Debug\net9.0\NexusWorkspace.Desktop.dll
+  NexusWorkspace.Tests -> E:\Proyectos\NexusWorkspace\tests\NexusWorkspace.Tests\bin\Debug\net9.0\NexusWorkspace.Tests.dll
+
+Compilación correcta.
+
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Common\Result.cs(4,31): warning CA1716: Cambie el nombre del tipo Error para que deje de estar en conflicto con la palabra clave reservada del lenguaje “Error”. El uso de una palabra clave reservada como nombre de un tipo dificulta que los consumidores de otros lenguajes usen el tipo. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1716) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Abstractions\IGlobalHotkeyService.cs(11,10): warning CA1716: Cambie el nombre del miembro virtual o de interfaz IGlobalHotkeyService.Stop() para que deje de estar en conflicto con la palabra clave reservada del lenguaje “Stop”. El uso de una palabra clave reservada como nombre de un miembro virtual o de interfaz dificulta que usuarios de otros lenguajes invaliden o implementen el miembro. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1716) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Common\PagedResult.cs(12,34): warning CA1000: No declarar miembros estáticos en tipos genéricos (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1000) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+    3 Advertencia(s)
+    0 Errores
+
+Tiempo transcurrido 00:00:05.49
+
+--- avisos de build (primeros 30) ---------------------------------
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Common\Result.cs(4,31): warning CA1716: Cambie el nombre del tipo Error para que deje de estar en conflicto con la palabra clave reservada del lenguaje “Error”. El uso de una palabra clave reservada como nombre de un tipo dificulta que los consumidores de otros lenguajes usen el tipo. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1716) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Abstractions\IGlobalHotkeyService.cs(11,10): warning CA1716: Cambie el nombre del miembro virtual o de interfaz IGlobalHotkeyService.Stop() para que deje de estar en conflicto con la palabra clave reservada del lenguaje “Stop”. El uso de una palabra clave reservada como nombre de un miembro virtual o de interfaz dificulta que usuarios de otros lenguajes invaliden o implementen el miembro. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1716) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Common\PagedResult.cs(12,34): warning CA1000: No declarar miembros estáticos en tipos genéricos (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1000) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Common\Result.cs(4,31): warning CA1716: Cambie el nombre del tipo Error para que deje de estar en conflicto con la palabra clave reservada del lenguaje “Error”. El uso de una palabra clave reservada como nombre de un tipo dificulta que los consumidores de otros lenguajes usen el tipo. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1716) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Abstractions\IGlobalHotkeyService.cs(11,10): warning CA1716: Cambie el nombre del miembro virtual o de interfaz IGlobalHotkeyService.Stop() para que deje de estar en conflicto con la palabra clave reservada del lenguaje “Stop”. El uso de una palabra clave reservada como nombre de un miembro virtual o de interfaz dificulta que usuarios de otros lenguajes invaliden o implementen el miembro. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1716) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Common\PagedResult.cs(12,34): warning CA1000: No declarar miembros estáticos en tipos genéricos (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1000) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+
+--- resumen de test ----------------------------------------------
+Correctas! - Con error:     0, Superado:    39, Omitido:     0, Total:    39, Duración: 2 s - NexusWorkspace.Tests.dll (net9.0)
+
+Logs completos: E:\Proyectos\NexusWorkspace\build-logs\2026-09-03_215933

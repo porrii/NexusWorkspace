@@ -1,0 +1,2 @@
+E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\Common\Result.cs(4,31): warning CA1716: Cambie el nombre del tipo Error para que deje de estar en conflicto con la palabra clave reservada del lenguaje “Error”. El uso de una palabra clave reservada como nombre de un tipo dificulta que los consumidores de otros lenguajes usen el tipo. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1716) [E:\Proyectos\NexusWorkspace\src\NexusWorkspace.Application\NexusWorkspace.Application.csproj]
+    0 Errores
