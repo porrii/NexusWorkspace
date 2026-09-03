@@ -57,6 +57,7 @@ dotnet_diagnostic.CA1861.severity = none   # inline constant arrays as args are 
 dotnet_diagnostic.CA2007.severity = none   # UI code intentionally resumes on the UI thread
 dotnet_diagnostic.CA1707.severity = none   # test method names use underscores
 dotnet_diagnostic.CA1515.severity = none   # public types in an app assembly are fine
+dotnet_diagnostic.CA1859.severity = none   # micro-perf return-type hints, noisy in async code
 
 [tests/**.cs]
 dotnet_diagnostic.CA1707.severity = none

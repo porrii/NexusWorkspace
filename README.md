@@ -10,8 +10,8 @@ seguimientos, reuniones, comunicaciones, personas, empresas y documentación,
 
 ## Estado
 
-En desarrollo. Fase 0 (cimientos) + Fase 1 (Proyectos · Tareas · Historial) en curso.
-Ver `docs/ROADMAP.md`.
+En desarrollo. **Fases 0–2 completas y validadas** (build en verde, migración EF
+`Initial`, 39/39 tests). Ver `docs/ROADMAP.md`.
 
 ## Tecnología
 
