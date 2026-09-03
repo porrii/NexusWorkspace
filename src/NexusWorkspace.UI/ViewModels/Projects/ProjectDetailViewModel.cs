@@ -7,6 +7,7 @@ using NexusWorkspace.Application.Activity;
 using NexusWorkspace.Application.Projects;
 using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Domain.Enums;
+using NexusWorkspace.Domain.Projects;
 using NexusWorkspace.UI.Services;
 using NexusWorkspace.UI.ViewModels.Tasks;
 

@@ -47,6 +47,16 @@ dotnet_naming_symbols.private_field_symbol.applicable_accessibilities = private
 dotnet_naming_style.underscore_prefix_style.required_prefix = _
 dotnet_naming_style.underscore_prefix_style.capitalization = camel_case
 
-# CA1848/CA1727 etc. can be noisy early on
-dotnet_diagnostic.CA1848.severity = none
-dotnet_diagnostic.CA1031.severity = none
+# Analyzer noise we intentionally accept in this codebase
+dotnet_diagnostic.CA1848.severity = none   # LoggerMessage delegates — not worth it here
+dotnet_diagnostic.CA1031.severity = none   # broad catch is deliberate in a few resilient paths
+dotnet_diagnostic.CA1305.severity = none   # UI date formatting uses the current culture on purpose
+dotnet_diagnostic.CA1822.severity = none   # false positive for XAML-bound instance members
+dotnet_diagnostic.CA1001.severity = none   # CancellationTokenSource fields, replaced not disposed
+dotnet_diagnostic.CA1861.severity = none   # inline constant arrays as args are fine
+dotnet_diagnostic.CA2007.severity = none   # UI code intentionally resumes on the UI thread
+dotnet_diagnostic.CA1707.severity = none   # test method names use underscores
+dotnet_diagnostic.CA1515.severity = none   # public types in an app assembly are fine
+
+[tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none
