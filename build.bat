@@ -253,11 +253,15 @@ git log -1 --oneline >> "%SUMMARY%" 2>&1
 rem  --- extracto de errores/avisos de build (sin bloques if(...) por los parentesis) ---
 if not exist "%BUILDLOG%" goto sum_test
 >>"%SUMMARY%" echo --- ERRORES de build ------------------------------------------------
-powershell -NoProfile -Command "Select-String -LiteralPath '%BUILDLOG%' -Pattern ': error ' -SimpleMatch | Select-Object -First 120 -ExpandProperty Line" 1>>"%SUMMARY%" 2>nul
-powershell -NoProfile -Command "Select-String -LiteralPath '%BUILDLOG%' -Pattern ': error ' -SimpleMatch | Select-Object -ExpandProperty Line" 1>"%LOGDIR%\errores.txt" 2>nul
+powershell -NoProfile -Command "Select-String -LiteralPath '%BUILDLOG%' -Pattern 'error ','ERROR','\bfailed\b','\bFAILED\b','AVLN','XamlX','MSB4','se produjo un error','error(?!es)' | Select-Object -Unique -First 120 -ExpandProperty Line" 1>>"%SUMMARY%" 2>nul
+powershell -NoProfile -Command "Select-String -LiteralPath '%BUILDLOG%' -Pattern 'error ','ERROR','\bfailed\b','\bFAILED\b','AVLN','XamlX','MSB4' | Select-Object -Unique -ExpandProperty Line" 1>"%LOGDIR%\errores.txt" 2>nul
 >>"%SUMMARY%" echo(
->>"%SUMMARY%" echo --- avisos de build (primeros 40) ---------------------------------
-powershell -NoProfile -Command "Select-String -LiteralPath '%BUILDLOG%' -Pattern ': warning ' -SimpleMatch | Select-Object -First 40 -ExpandProperty Line" 1>>"%SUMMARY%" 2>nul
+>>"%SUMMARY%" echo --- ultimas 45 lineas del log de build --------------------------
+powershell -NoProfile -Command "Get-Content -LiteralPath '%BUILDLOG%' -Tail 45" 1>>"%SUMMARY%" 2>nul
+powershell -NoProfile -Command "Get-Content -LiteralPath '%BUILDLOG%' -Tail 120" 1>"%LOGDIR%\build-tail.txt" 2>nul
+>>"%SUMMARY%" echo(
+>>"%SUMMARY%" echo --- avisos de build (primeros 30) ---------------------------------
+powershell -NoProfile -Command "Select-String -LiteralPath '%BUILDLOG%' -Pattern ': warning ' -SimpleMatch | Select-Object -First 30 -ExpandProperty Line" 1>>"%SUMMARY%" 2>nul
 >>"%SUMMARY%" echo(
 
 :sum_test
