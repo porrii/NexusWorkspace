@@ -11,12 +11,19 @@
     <Setter Property="BoxShadow" Value="0 1 2 0 #0F141626, 0 10 28 -14 #22141626" />
   </Style>
 
-  <Style Selector="Border.tile">
+  <Style Selector=".tile">
     <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource AppLineBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="12" />
     <Setter Property="Padding" Value="16" />
+  </Style>
+  <Style Selector="Button.tile">
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="VerticalContentAlignment" Value="Top" />
+  </Style>
+  <Style Selector="Button.tile:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AppAccentWashBrush}" />
   </Style>
 
   <!-- Section heading -->

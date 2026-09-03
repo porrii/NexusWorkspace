@@ -6,15 +6,36 @@
 
   <StackPanel Spacing="18" MaxWidth="1080">
 
-    <StackPanel Spacing="4">
-      <TextBlock Text="{Binding Greeting}" Classes="h1" />
-      <TextBlock Text="{Binding SummaryLine}" Classes="muted" />
-      <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
-                 IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
-    </StackPanel>
+    <Grid ColumnDefinitions="*,Auto">
+      <StackPanel Grid.Column="0" Spacing="4">
+        <TextBlock Text="{Binding Greeting}" Classes="h1" />
+        <TextBlock Text="{Binding SummaryLine}" Classes="muted" />
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+                   IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+      </StackPanel>
+      <Button Grid.Column="1" Command="{Binding ToggleCustomizeCommand}" Classes="quick" VerticalAlignment="Top">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <mi:MaterialIcon Kind="Tune" Width="15" Height="15" />
+          <TextBlock Text="Personalizar" />
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <Border Classes="card" IsVisible="{Binding IsCustomizing}">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Widgets visibles" Classes="h2" />
+        <WrapPanel>
+          <CheckBox Content="Indicadores" IsChecked="{Binding ShowTiles, Mode=TwoWay}" Margin="0,0,18,0" />
+          <CheckBox Content="Captura rápida" IsChecked="{Binding ShowQuickCapture, Mode=TwoWay}" Margin="0,0,18,0" />
+          <CheckBox Content="Proyectos activos" IsChecked="{Binding ShowActiveProjects, Mode=TwoWay}" Margin="0,0,18,0" />
+          <CheckBox Content="Actividad reciente" IsChecked="{Binding ShowRecentActivity, Mode=TwoWay}" Margin="0,0,18,0" />
+          <CheckBox Content="Próximos vencimientos" IsChecked="{Binding ShowUpcoming, Mode=TwoWay}" />
+        </WrapPanel>
+      </StackPanel>
+    </Border>
 
     <!-- Stat tiles -->
-    <UniformGrid Columns="4" >
+    <UniformGrid Columns="5" IsVisible="{Binding ShowTiles}">
       <Border Classes="tile" Margin="0,0,10,0">
         <StackPanel Spacing="2">
           <TextBlock Text="Pendientes" Classes="muted" />
@@ -36,19 +57,46 @@
                      Foreground="{DynamicResource SemHighBrush}" />
         </StackPanel>
       </Border>
-      <Border Classes="tile">
+      <Border Classes="tile" Margin="0,0,10,0">
         <StackPanel Spacing="2">
           <TextBlock Text="Esperando" Classes="muted" />
           <TextBlock Text="{Binding WaitingTaskCount}" FontSize="26" FontWeight="SemiBold"
                      Foreground="{DynamicResource SemWaitingBrush}" />
         </StackPanel>
       </Border>
+      <Button Classes="tile" Command="{Binding OpenInboxCommand}" HorizontalContentAlignment="Left" Padding="16">
+        <StackPanel Spacing="2">
+          <TextBlock Text="Inbox" Classes="muted" />
+          <TextBlock Text="{Binding InboxCount}" FontSize="26" FontWeight="SemiBold"
+                     Foreground="{DynamicResource AppInkBrush}" />
+        </StackPanel>
+      </Button>
     </UniformGrid>
 
-    <Grid ColumnDefinitions="*,*" >
+    <!-- Inline quick capture -->
+    <Border Classes="card" IsVisible="{Binding ShowQuickCapture}">
+      <StackPanel Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <mi:MaterialIcon Kind="FlashOutline" Width="16" Height="16"
+                           Foreground="{DynamicResource AppAccentBrush}" VerticalAlignment="Center" />
+          <TextBlock Text="Captura rápida" Classes="h2" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBox Width="560" Watermark="Escribe algo y pulsa Enter — irá a Inbox…"
+                   Text="{Binding CaptureText, Mode=TwoWay}">
+            <TextBox.KeyBindings>
+              <KeyBinding Gesture="Enter" Command="{Binding CaptureCommand}" />
+            </TextBox.KeyBindings>
+          </TextBox>
+          <Button Content="Guardar" Classes="accent" Command="{Binding CaptureCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Grid ColumnDefinitions="*,*">
 
       <!-- Active projects -->
-      <Border Classes="card" Grid.Column="0" Margin="0,0,9,0">
+      <Border Classes="card" Grid.Column="0" Margin="0,0,9,0" IsVisible="{Binding ShowActiveProjects}">
         <StackPanel Spacing="12">
           <TextBlock Text="Proyectos activos" Classes="h2" />
           <ItemsControl ItemsSource="{Binding ActiveProjects}">
@@ -76,7 +124,7 @@
       </Border>
 
       <!-- Recent activity -->
-      <Border Classes="card" Grid.Column="1" Margin="9,0,0,0">
+      <Border Classes="card" Grid.Column="1" Margin="9,0,0,0" IsVisible="{Binding ShowRecentActivity}">
         <StackPanel Spacing="12">
           <TextBlock Text="Actividad reciente" Classes="h2" />
           <ItemsControl ItemsSource="{Binding RecentActivity}">
@@ -97,7 +145,7 @@
 
     </Grid>
 
-    <Border Classes="card">
+    <Border Classes="card" IsVisible="{Binding ShowUpcoming}">
       <StackPanel Spacing="12">
         <TextBlock Text="Próximos vencimientos" Classes="h2" />
         <ItemsControl ItemsSource="{Binding UpcomingTasks}">

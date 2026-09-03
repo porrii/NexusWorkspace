@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Infrastructure.Persistence;
 using NexusWorkspace.Infrastructure.Persistence.Interceptors;
+using NexusWorkspace.Infrastructure.Search;
 using NexusWorkspace.Infrastructure.Seeding;
 using NexusWorkspace.Infrastructure.Settings;
 using NexusWorkspace.Infrastructure.Storage;
@@ -29,15 +30,21 @@ public static class DependencyInjection
         services.AddSingleton<ISettingsStore, JsonSettingsStore>();
 
         services.AddSingleton<AuditableEntityInterceptor>();
+        services.AddSingleton<SearchIndexInterceptor>();
 
         services.AddDbContext<NexusDbContext>((serviceProvider, options) =>
         {
             var paths = serviceProvider.GetRequiredService<IAppPaths>();
             options.UseSqlite($"Data Source={paths.DatabasePath};Foreign Keys=True");
-            options.AddInterceptors(serviceProvider.GetRequiredService<AuditableEntityInterceptor>());
+            options.AddInterceptors(
+                serviceProvider.GetRequiredService<AuditableEntityInterceptor>(),
+                serviceProvider.GetRequiredService<SearchIndexInterceptor>());
         });
 
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<NexusDbContext>());
+
+        services.AddScoped<Fts5SearchService>();
+        services.AddScoped<ISearchService>(sp => sp.GetRequiredService<Fts5SearchService>());
 
         services.AddScoped<DatabaseInitializer>();
         services.AddScoped<DemoDataSeeder>();

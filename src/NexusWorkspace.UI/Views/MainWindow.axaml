@@ -8,6 +8,14 @@
         Background="{DynamicResource AppGroundBrush}"
         WindowStartupLocation="CenterScreen">
 
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+K" Command="{Binding OpenCommandPaletteCommand}" />
+    <KeyBinding Gesture="Ctrl+F" Command="{Binding OpenSearchCommand}" />
+    <KeyBinding Gesture="Ctrl+N" Command="{Binding NewProjectCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+Space" Command="{Binding QuickCaptureCommand}" />
+    <KeyBinding Gesture="Escape" Command="{Binding CloseOverlaysCommand}" />
+  </Window.KeyBindings>
+
   <views:MainView />
 
 </Window>

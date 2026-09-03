@@ -10,6 +10,22 @@ Todas las entidades relevantes heredan de `AuditableEntity` e implementan
 | `IsArchived` / `ArchivedAtUtc` | `bool` / `DateTime?` | Fuera de vistas activas, sigue en Archivados. |
 | `IsDeleted` / `DeletedAtUtc` | `bool` / `DateTime?` | Papelera lógica (soft-delete), *global query filter*. |
 
+## Almacenamiento
+
+- **GUID como texto**: todas las claves (PK/FK) se guardan como texto de 36 caracteres
+  en minúsculas (`GuidToStringConverter`). Legible en la BD, consistente con el SQL crudo
+  del índice de búsqueda y aún ordenable en el tiempo (v7).
+- **Enums como texto** (`HaveConversion<string>()`).
+
+## Búsqueda (FTS5)
+
+Tabla virtual `SearchIndex` (`fts5`, tokenizer `unicode61 remove_diacritics 2`), **fuera del
+modelo EF** — la crea `DatabaseInitializer` / `Fts5SearchService` con SQL. Columnas:
+`entity_kind, entity_id, navigate_kind, navigate_id, project_id` (UNINDEXED) + `title, body`.
+Se indexan `Project`, `WorkTask` y `Comment`; un acierto en un comentario navega a su tarea.
+La mantiene sincronizada `SearchIndexInterceptor` en cada `SaveChanges` (best-effort: un fallo
+del índice nunca rompe un guardado; se puede reconstruir desde Configuración).
+
 ## Referencias polimórficas
 
 `Comment`, `Attachment`, `ActivityEvent`, `FollowUp`, `Communication`, `Reminder`
@@ -35,7 +51,7 @@ apuntan a cualquier entidad con **`TargetKind` (`EntityKind`) + `TargetId` (`Gui
 | `Communication` | `TargetKind, TargetId, ProjectId, Kind, Direction, PersonId, CompanyId, OccurredAtUtc, Summary, Body` | polimórfico + `Person`/`Company` |
 | `Meeting` | `ProjectId, Title, StartUtc, EndUtc, Location, Notes` | ∞—∞ `Person` (asistentes) |
 | `Reminder` | `TargetKind, TargetId, Text, RemindAtUtc, Status` | a cualquier entidad |
-| `InboxItem` | `RawText, ParsedHintJson, ConvertedToKind, ConvertedToId` | se convierte en `WorkTask`/`Project`/nota/incidencia/`FollowUp` |
+| `InboxItem` | `RawText, ParsedHint, State (Pending/Converted/Dismissed), ConvertedToKind, ConvertedToId, ProcessedAtUtc` | captura rápida; se convierte en `WorkTask`/`Project` (descartar = soft-delete) |
 | `SavedSearch` | `Name, QueryJson, IsFavorite` | filtros guardados |
 | `Template` | `Name, Kind, DefinitionJson` | genera árboles de proyecto/tarea |
 | `Notification` | `Text, Kind, CreatedAtUtc, IsRead, DeepLink` | centro de notificaciones local |

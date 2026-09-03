@@ -31,7 +31,15 @@ public partial class App : Application
         switch (ApplicationLifetime)
         {
             case IClassicDesktopStyleApplicationLifetime desktop:
-                desktop.MainWindow = new MainWindow { DataContext = shell };
+                var window = new MainWindow { DataContext = shell };
+                var hotkeys = Services.GetService<IGlobalHotkeyService>();
+                if (hotkeys is not null)
+                {
+                    window.Opened += (_, _) => hotkeys.Start();
+                    desktop.ShutdownRequested += (_, _) => hotkeys.Stop();
+                }
+
+                desktop.MainWindow = window;
                 break;
 
             case ISingleViewApplicationLifetime singleView:

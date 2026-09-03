@@ -1,10 +1,12 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Domain.Activity;
 using NexusWorkspace.Domain.Collaboration;
 using NexusWorkspace.Domain.Common;
 using NexusWorkspace.Domain.Companies;
+using NexusWorkspace.Domain.Inbox;
 using NexusWorkspace.Domain.People;
 using NexusWorkspace.Domain.Projects;
 using NexusWorkspace.Domain.Tags;
@@ -48,10 +50,16 @@ public sealed class NexusDbContext(DbContextOptions<NexusDbContext> options)
 
     public DbSet<ActivityEvent> ActivityEvents => Set<ActivityEvent>();
 
+    public DbSet<InboxItem> InboxItems => Set<InboxItem>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         // Store every enum as text: readable in the DB and stable across reorders.
         configurationBuilder.Properties<Enum>().HaveConversion<string>().HaveMaxLength(32);
+
+        // Store GUIDs as 36-char lowercase text: readable, consistent with the raw
+        // SQL used by the FTS5 search index, and still time-sortable (v7).
+        configurationBuilder.Properties<Guid>().HaveConversion<GuidToStringConverter>().HaveMaxLength(36);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

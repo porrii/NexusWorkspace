@@ -20,6 +20,7 @@ internal static class Program
         services.AddApplication();
         services.AddUi();
         services.AddSingleton<IPlatformLauncher, WindowsPlatformLauncher>();
+        services.AddSingleton<IGlobalHotkeyService, WindowsGlobalHotkeyService>();
         services.AddLogging(builder =>
         {
             builder.ClearProviders();

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using NexusWorkspace.Domain.Activity;
 using NexusWorkspace.Domain.Collaboration;
 using NexusWorkspace.Domain.Companies;
+using NexusWorkspace.Domain.Inbox;
 using NexusWorkspace.Domain.People;
 using NexusWorkspace.Domain.Projects;
 using NexusWorkspace.Domain.Tags;
@@ -47,6 +48,8 @@ public interface IApplicationDbContext
     DbSet<Attachment> Attachments { get; }
 
     DbSet<ActivityEvent> ActivityEvents { get; }
+
+    DbSet<InboxItem> InboxItems { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

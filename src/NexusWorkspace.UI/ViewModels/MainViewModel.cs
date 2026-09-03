@@ -4,16 +4,20 @@ using CommunityToolkit.Mvvm.Input;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Settings;
 using NexusWorkspace.UI.Services;
+using NexusWorkspace.UI.ViewModels.CommandPalette;
+using NexusWorkspace.UI.ViewModels.Projects;
+using NexusWorkspace.UI.ViewModels.Search;
 using NexusWorkspace.UI.ViewModels.Shell;
 
 namespace NexusWorkspace.UI.ViewModels;
 
-/// <summary>The shell: navigation rail, active page host, theme and sidebar state.</summary>
+/// <summary>The shell: navigation rail, active page host, theme, sidebar, and the Ctrl+K / Ctrl+F overlays.</summary>
 public partial class MainViewModel : ViewModelBase
 {
     private readonly INavigationService _navigation;
     private readonly IThemeService _theme;
     private readonly ISettingsStore _settings;
+    private readonly IQuickCaptureLauncher _quickCapture;
     private bool _suppressSelectionNavigation;
 
     [ObservableProperty]
@@ -28,11 +32,26 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _themeGlyph = "◐";
 
-    public MainViewModel(INavigationService navigation, IThemeService theme, ISettingsStore settings)
+    [ObservableProperty]
+    private bool _isCommandPaletteOpen;
+
+    [ObservableProperty]
+    private bool _isSearchOpen;
+
+    public MainViewModel(
+        INavigationService navigation,
+        IThemeService theme,
+        ISettingsStore settings,
+        IQuickCaptureLauncher quickCapture,
+        CommandPaletteViewModel palette,
+        SearchViewModel search)
     {
         _navigation = navigation;
         _theme = theme;
         _settings = settings;
+        _quickCapture = quickCapture;
+        Palette = palette;
+        Search = search;
 
         IsSidebarExpanded = settings.Current.SidebarExpanded;
         UpdateThemeGlyph(settings.Current.Theme);
@@ -40,7 +59,7 @@ public partial class MainViewModel : ViewModelBase
         Items =
         [
             new(PageKey.Dashboard, "Dashboard", "ViewDashboard"),
-            new(PageKey.Inbox, "Inbox", "Inbox", IsImplemented: false),
+            new(PageKey.Inbox, "Inbox", "Inbox"),
             new(PageKey.Projects, "Proyectos", "FolderMultiple"),
             new(PageKey.Tasks, "Tareas", "CheckboxMarked", IsImplemented: false),
             new(PageKey.FollowUps, "Seguimientos", "ClockAlert", IsImplemented: false),
@@ -54,11 +73,18 @@ public partial class MainViewModel : ViewModelBase
             new(PageKey.Settings, "Configuración", "Cog"),
         ];
 
+        Palette.RequestClose += (_, _) => IsCommandPaletteOpen = false;
+        Search.RequestClose += (_, _) => IsSearchOpen = false;
+
         _navigation.Navigated += OnNavigated;
         _navigation.NavigateTo(PageKey.Dashboard);
     }
 
     public ObservableCollection<NavigationItem> Items { get; }
+
+    public CommandPaletteViewModel Palette { get; }
+
+    public SearchViewModel Search { get; }
 
     public bool CanGoBack => _navigation.CanGoBack;
 
@@ -75,6 +101,8 @@ public partial class MainViewModel : ViewModelBase
     private void OnNavigated(object? sender, ViewModelBase page)
     {
         CurrentPage = page;
+        IsCommandPaletteOpen = false;
+        IsSearchOpen = false;
         OnPropertyChanged(nameof(CanGoBack));
 
         var key = PageKeyFor(page);
@@ -90,8 +118,9 @@ public partial class MainViewModel : ViewModelBase
     private static PageKey? PageKeyFor(ViewModelBase page) => page switch
     {
         Dashboard.DashboardViewModel => PageKey.Dashboard,
-        Projects.ProjectsViewModel => PageKey.Projects,
-        Projects.ProjectDetailViewModel => PageKey.Projects,
+        Inbox.InboxViewModel => PageKey.Inbox,
+        ProjectsViewModel => PageKey.Projects,
+        ProjectDetailViewModel => PageKey.Projects,
         Tasks.TaskDetailViewModel => PageKey.Projects,
         Activity.ActivityViewModel => PageKey.Activity,
         Settings.SettingsViewModel => PageKey.Settings,
@@ -122,6 +151,36 @@ public partial class MainViewModel : ViewModelBase
 
     [RelayCommand]
     private void GoBack() => _navigation.GoBack();
+
+    [RelayCommand]
+    private void OpenCommandPalette()
+    {
+        IsSearchOpen = false;
+        Palette.Reset();
+        IsCommandPaletteOpen = true;
+    }
+
+    [RelayCommand]
+    private void OpenSearch()
+    {
+        IsCommandPaletteOpen = false;
+        Search.Reset();
+        IsSearchOpen = true;
+    }
+
+    [RelayCommand]
+    private void CloseOverlays()
+    {
+        IsCommandPaletteOpen = false;
+        IsSearchOpen = false;
+    }
+
+    [RelayCommand]
+    private void NewProject()
+        => _navigation.NavigateTo<ProjectsViewModel>(vm => vm.IsCreatePanelOpen = true);
+
+    [RelayCommand]
+    private void QuickCapture() => _quickCapture.Show();
 
     private void UpdateThemeGlyph(ThemeMode mode) => ThemeGlyph = mode switch
     {

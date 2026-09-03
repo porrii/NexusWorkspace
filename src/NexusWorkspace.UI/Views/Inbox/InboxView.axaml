@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Inbox.InboxView">
+
+  <StackPanel Spacing="16" MaxWidth="900">
+
+    <TextBlock Text="Inbox" Classes="h1" />
+    <TextBlock Classes="muted"
+               Text="Todo lo que aún no sabes dónde colocar. Escríbelo ahora, clasifícalo después." />
+
+    <Border Classes="card">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <TextBox Width="520" Watermark="Añadir a Inbox…"
+                 Text="{Binding NewCaptureText, Mode=TwoWay}">
+          <TextBox.KeyBindings>
+            <KeyBinding Gesture="Enter" Command="{Binding CaptureCommand}" />
+          </TextBox.KeyBindings>
+        </TextBox>
+        <Button Content="Añadir" Classes="accent" Command="{Binding CaptureCommand}" />
+      </StackPanel>
+    </Border>
+
+    <StackPanel Orientation="Horizontal" Spacing="10">
+      <TextBlock Text="Proyecto de destino" Classes="muted" VerticalAlignment="Center" />
+      <ComboBox Width="260" ItemsSource="{Binding Projects}" SelectedItem="{Binding TargetProject, Mode=TwoWay}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </StackPanel>
+
+    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+
+    <ItemsControl ItemsSource="{Binding Items}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Border Classes="row" Margin="0,0,0,10">
+            <StackPanel Spacing="8">
+              <TextBlock Text="{Binding RawText}" TextWrapping="Wrap" FontSize="14" />
+              <TextBlock Text="{Binding ParsedHint}" Classes="muted" TextWrapping="Wrap"
+                         IsVisible="{Binding ParsedHint, Converter={x:Static conv:AppConverters.HasText}}" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Classes="muted" VerticalAlignment="Center"
+                           Text="{Binding CreatedAtUtc, Converter={x:Static conv:AppConverters.RelativeDateTime}}" />
+                <Button Content="→ Tarea" Classes="quick"
+                        Command="{Binding $parent[ItemsControl].DataContext.ConvertToTaskCommand}"
+                        CommandParameter="{Binding}" />
+                <Button Content="→ Proyecto" Classes="quick"
+                        Command="{Binding $parent[ItemsControl].DataContext.ConvertToProjectCommand}"
+                        CommandParameter="{Binding}" />
+                <Button Content="Descartar" Classes="quick"
+                        Command="{Binding $parent[ItemsControl].DataContext.DismissCommand}"
+                        CommandParameter="{Binding}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <StackPanel Spacing="6" IsVisible="{Binding IsEmpty}" Margin="0,20,0,0" HorizontalAlignment="Center">
+      <mi:MaterialIcon Kind="InboxOutline" Width="34" Height="34" HorizontalAlignment="Center"
+                       Foreground="{DynamicResource AppMutedBrush}" />
+      <TextBlock Text="Inbox vacío. Todo clasificado." Classes="muted" HorizontalAlignment="Center" />
+    </StackPanel>
+
+  </StackPanel>
+
+</UserControl>

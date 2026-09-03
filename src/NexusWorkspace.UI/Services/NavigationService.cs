@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.UI.ViewModels;
 using NexusWorkspace.UI.ViewModels.Activity;
 using NexusWorkspace.UI.ViewModels.Dashboard;
+using NexusWorkspace.UI.ViewModels.Inbox;
 using NexusWorkspace.UI.ViewModels.Projects;
 using NexusWorkspace.UI.ViewModels.Settings;
 
@@ -31,6 +32,7 @@ public sealed class NavigationService(IServiceProvider services) : INavigationSe
         ViewModelBase viewModel = key switch
         {
             PageKey.Dashboard => services.GetRequiredService<DashboardViewModel>(),
+            PageKey.Inbox => services.GetRequiredService<InboxViewModel>(),
             PageKey.Projects => services.GetRequiredService<ProjectsViewModel>(),
             PageKey.Activity => services.GetRequiredService<ActivityViewModel>(),
             PageKey.Settings => services.GetRequiredService<SettingsViewModel>(),

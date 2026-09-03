@@ -19,8 +19,8 @@ Incremental. **La solución permanece compilable y ejecutable al terminar cada f
 
 - [x] **Fase 0** — andamiaje de la solución (6 proyectos + tests), DI, Serilog, EF Core + SQLite, `AppPaths`, `SettingsStore`, shell con barra lateral + temas · *código completo, pendiente de 1ª compilación en el PC de build*
 - [x] **Fase 1** — Proyectos · Tareas · Subtareas · Checklist · Comentarios · **historial inmutable** · **barra de acciones rápidas** · soft-delete + archivado · datos demo · tests · *código completo, pendiente de 1ª compilación*
-- [ ] Fase 2 — Dashboard configurable · Captura rápida + hotkey · Inbox · Command Palette · búsqueda FTS5
-- [ ] Fase 3 …
+- [x] **Fase 2** — Dashboard configurable (widgets on/off persistidos) + captura rápida inline · **ventana flotante de Captura rápida** + **hotkey global** Ctrl+Shift+Espacio (Windows) + parser local de reglas · **Inbox** + convertir a Tarea/Proyecto · **Command Palette** (Ctrl+K) · **búsqueda global FTS5** (Ctrl+F, sin acentos, prefijo) · tests del parser, Inbox y búsqueda · *código completo, pendiente de 1ª compilación*
+- [ ] Fase 3 — Seguimientos (`FollowUp`) + contador de días · Recordatorios + scheduler + notificaciones Windows · Calendario
 
 > Publicado en GitHub: `porrii/NexusWorkspace`, rama `dev`. `main` + release cuando la v1 esté lista.
 > CI: el flujo está en `docs/ci-build.yml`; moverlo a `.github/workflows/build.yml` desde la web de

@@ -1,0 +1,82 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+        x:Class="NexusWorkspace.UI.Views.QuickCaptureWindow"
+        Width="580"
+        SizeToContent="Height"
+        CanResize="False"
+        SystemDecorations="None"
+        ShowInTaskbar="False"
+        Topmost="True"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppSurfaceBrush}">
+
+  <Border BorderBrush="{DynamicResource AppAccentBrush}"
+          BorderThickness="0,3,0,0"
+          Padding="18">
+    <StackPanel Spacing="12">
+
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <mi:MaterialIcon Kind="FlashOutline" Width="18" Height="18"
+                         Foreground="{DynamicResource AppAccentBrush}" VerticalAlignment="Center" />
+        <TextBlock Text="Captura rápida" FontWeight="SemiBold" VerticalAlignment="Center" />
+        <TextBlock Text="Ctrl+Shift+Espacio" Classes="muted" VerticalAlignment="Center" />
+      </StackPanel>
+
+      <TextBox x:Name="InputBox"
+               Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+               Watermark="Escribe y pulsa Enter…  (#etiqueta @persona !alta «mañana»)"
+               FontSize="15"
+               AcceptsReturn="False">
+        <TextBox.KeyBindings>
+          <KeyBinding Gesture="Enter" Command="{Binding SaveCommand}" />
+          <KeyBinding Gesture="Escape" Command="{Binding CancelCommand}" />
+        </TextBox.KeyBindings>
+      </TextBox>
+
+      <Border Background="{DynamicResource AppAccentWashBrush}" CornerRadius="8" Padding="10,7"
+              IsVisible="{Binding HasSuggestion}">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="{Binding Suggestion}" TextWrapping="Wrap" VerticalAlignment="Center"
+                     Foreground="{DynamicResource AppAccentBrush}" />
+          <Button Content="Aplicar" Command="{Binding ApplySuggestionCommand}" Classes="quick" />
+        </StackPanel>
+      </Border>
+
+      <Expander Header="Opciones" IsExpanded="{Binding OptionsExpanded, Mode=TwoWay}">
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,8,0,0">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Tipo" Classes="muted" VerticalAlignment="Center" Margin="0,0,12,6" />
+          <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Kinds}" SelectedItem="{Binding Kind, Mode=TwoWay}" Margin="0,0,0,6" HorizontalAlignment="Left" Width="200" />
+
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="Proyecto" Classes="muted" VerticalAlignment="Center" Margin="0,0,12,6" />
+          <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedProject, Mode=TwoWay}" Margin="0,0,0,6" HorizontalAlignment="Left" Width="260">
+            <ComboBox.ItemTemplate>
+              <DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Prioridad" Classes="muted" VerticalAlignment="Center" Margin="0,0,12,6" />
+          <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Priorities}" SelectedItem="{Binding Priority, Mode=TwoWay}" Margin="0,0,0,6" HorizontalAlignment="Left" Width="160">
+            <ComboBox.ItemTemplate>
+              <DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+
+          <TextBlock Grid.Row="3" Grid.Column="0" Text="Fecha" Classes="muted" VerticalAlignment="Center" Margin="0,0,12,0" />
+          <DatePicker Grid.Row="3" Grid.Column="1" SelectedDate="{Binding DueDate, Mode=TwoWay}" HorizontalAlignment="Left" />
+        </Grid>
+      </Expander>
+
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+                 IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+
+      <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+        <Button Content="Cancelar" Command="{Binding CancelCommand}" />
+        <Button Content="Guardar" Classes="accent" Command="{Binding SaveCommand}" />
+      </StackPanel>
+
+    </StackPanel>
+  </Border>
+
+</Window>
