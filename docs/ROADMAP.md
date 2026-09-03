@@ -17,6 +17,11 @@ Incremental. **La solución permanece compilable y ejecutable al terminar cada f
 
 ## Progreso
 
-- [ ] **Fase 0** — andamiaje de la solución, DI, EF Core, shell + temas
-- [ ] **Fase 1** — Proyectos · Tareas · Historial
-- [ ] Fase 2 …
+- [x] **Fase 0** — andamiaje de la solución (6 proyectos + tests), DI, Serilog, EF Core + SQLite, `AppPaths`, `SettingsStore`, shell con barra lateral + temas · *código completo, pendiente de 1ª compilación en el PC de build*
+- [x] **Fase 1** — Proyectos · Tareas · Subtareas · Checklist · Comentarios · **historial inmutable** · **barra de acciones rápidas** · soft-delete + archivado · datos demo · tests · *código completo, pendiente de 1ª compilación*
+- [ ] Fase 2 — Dashboard configurable · Captura rápida + hotkey · Inbox · Command Palette · búsqueda FTS5
+- [ ] Fase 3 …
+
+> Publicado en GitHub: `porrii/NexusWorkspace`, rama `dev`. `main` + release cuando la v1 esté lista.
+> CI: el flujo está en `docs/ci-build.yml`; moverlo a `.github/workflows/build.yml` desde la web de
+> GitHub (o tras `gh auth refresh -s workflow`) para activarlo.
