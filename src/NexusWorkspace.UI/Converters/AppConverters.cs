@@ -1,6 +1,9 @@
+using System.IO;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using NexusWorkspace.Application.Calendar;
+using NexusWorkspace.Application.Common;
 using NexusWorkspace.Application.Localization;
 using NexusWorkspace.Domain.Enums;
 
@@ -135,6 +138,77 @@ public static class AppConverters
         catch (FormatException)
         {
             return Brush("#6A7183");
+        }
+    });
+
+    public static readonly FuncValueConverter<AttachmentKind, string> AttachmentKindIcon = new(kind => kind switch
+    {
+        AttachmentKind.Image => "FileImageOutline",
+        AttachmentKind.Pdf => "FilePdfBox",
+        AttachmentKind.Document => "FileWordOutline",
+        AttachmentKind.Spreadsheet => "FileExcelOutline",
+        AttachmentKind.Archive => "FolderZipOutline",
+        AttachmentKind.Audio => "FileMusicOutline",
+        AttachmentKind.Video => "FileVideoOutline",
+        AttachmentKind.Text => "FileDocumentOutline",
+        _ => "FileOutline",
+    });
+
+    public static readonly FuncValueConverter<ActivityType, string> ActivityTypeIcon = new(type => type switch
+    {
+        ActivityType.Created => "PlusCircleOutline",
+        ActivityType.StatusChanged => "SwapHorizontal",
+        ActivityType.PriorityChanged => "FlagOutline",
+        ActivityType.DueDateChanged => "CalendarClock",
+        ActivityType.CommentAdded => "CommentTextOutline",
+        ActivityType.AttachmentAdded => "PaperclipPlus",
+        ActivityType.AttachmentRemoved => "PaperclipOff",
+        ActivityType.FollowUpStarted or ActivityType.FollowUpReminderSent => "ClockAlertOutline",
+        ActivityType.FollowUpResolved => "ClockCheckOutline",
+        ActivityType.QuickAction => "FlashOutline",
+        ActivityType.CommunicationLogged => "MessageOutline",
+        ActivityType.MeetingScheduled or ActivityType.MeetingUpdated => "CalendarAccountOutline",
+        ActivityType.RelationAdded or ActivityType.RelationRemoved => "LinkVariant",
+        ActivityType.TagAdded or ActivityType.TagRemoved => "TagOutline",
+        ActivityType.Archived or ActivityType.Restored => "ArchiveOutline",
+        ActivityType.Trashed or ActivityType.RestoredFromTrash or ActivityType.Deleted => "DeleteOutline",
+        ActivityType.Renamed => "RenameBox",
+        _ => "CircleSmall",
+    });
+
+    public static readonly FuncValueConverter<ActivityType, IBrush> ActivityTypeBrush = new(type => type switch
+    {
+        ActivityType.Created => Brush("#2E9E63"),
+        ActivityType.StatusChanged => Brush("#4A43D9"),
+        ActivityType.PriorityChanged => Brush("#DD8330"),
+        ActivityType.CommentAdded => Brush("#5C7CB0"),
+        ActivityType.AttachmentAdded => Brush("#2F7DA3"),
+        ActivityType.AttachmentRemoved => Brush("#9A2F3A"),
+        ActivityType.FollowUpStarted or ActivityType.FollowUpReminderSent => Brush("#7A5AD1"),
+        ActivityType.FollowUpResolved => Brush("#2E9E63"),
+        ActivityType.QuickAction => Brush("#B8951F"),
+        ActivityType.CommunicationLogged => Brush("#4A43D9"),
+        ActivityType.MeetingScheduled or ActivityType.MeetingUpdated => Brush("#2F7DA3"),
+        ActivityType.Trashed or ActivityType.Deleted => Brush("#9A2F3A"),
+        _ => Brush("#6A7183"),
+    });
+
+    /// <summary>File path → a decoded, down-scaled bitmap for image thumbnails. Null on any failure.</summary>
+    public static readonly FuncValueConverter<string?, Bitmap?> Thumbnail = new(path =>
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            {
+                return null;
+            }
+
+            using var stream = File.OpenRead(path);
+            return Bitmap.DecodeToWidth(stream, 260);
+        }
+        catch (Exception)
+        {
+            return null;
         }
     });
 

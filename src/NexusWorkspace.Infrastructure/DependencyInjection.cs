@@ -30,6 +30,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<ISettingsStore, JsonSettingsStore>();
+        services.AddSingleton<IAttachmentStore, FileSystemAttachmentStore>();
 
         services.AddSingleton<AuditableEntityInterceptor>();
         services.AddSingleton<SearchIndexInterceptor>();

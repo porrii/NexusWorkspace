@@ -35,4 +35,45 @@ public sealed class WindowsPlatformLauncher(ILogger<WindowsPlatformLauncher> log
             logger.LogWarning(ex, "No se pudo abrir el enlace {Url}.", url);
         }
     }
+
+    public void OpenPath(string path)
+    {
+        try
+        {
+            if (!File.Exists(path) && !Directory.Exists(path))
+            {
+                logger.LogWarning("El archivo {Path} ya no existe.", path);
+                return;
+            }
+
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "No se pudo abrir el archivo {Path}.", path);
+        }
+    }
+
+    public void RevealInFolder(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true });
+            }
+            else
+            {
+                var directory = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    OpenFolder(directory);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "No se pudo mostrar {Path} en el explorador.", path);
+        }
+    }
 }

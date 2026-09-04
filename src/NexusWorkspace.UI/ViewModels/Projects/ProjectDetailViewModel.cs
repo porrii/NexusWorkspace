@@ -5,19 +5,31 @@ using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
 using NexusWorkspace.Application.FollowUps;
+using NexusWorkspace.Application.Localization;
 using NexusWorkspace.Application.Projects;
 using NexusWorkspace.Application.Reminders;
 using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Domain.Enums;
 using NexusWorkspace.Domain.Projects;
+using NexusWorkspace.Domain.Tasks;
 using NexusWorkspace.UI.Services;
+using NexusWorkspace.UI.ViewModels.Shared;
 using NexusWorkspace.UI.ViewModels.Tasks;
 
 namespace NexusWorkspace.UI.ViewModels.Projects;
 
-public partial class ProjectDetailViewModel(IUnitOfWorkRunner unitOfWork, INavigationService navigation) : ViewModelBase
+public partial class ProjectDetailViewModel(
+    IUnitOfWorkRunner unitOfWork,
+    INavigationService navigation,
+    IPlatformLauncher launcher) : ViewModelBase
 {
     private Guid _projectId;
+
+    private static readonly WorkTaskStatus[] BoardOrder =
+    [
+        WorkTaskStatus.Pending, WorkTaskStatus.InProgress, WorkTaskStatus.WaitingClient,
+        WorkTaskStatus.WaitingProvider, WorkTaskStatus.Blocked, WorkTaskStatus.Finished, WorkTaskStatus.Cancelled,
+    ];
 
     [ObservableProperty]
     private ProjectDetail? _header;
@@ -65,6 +77,12 @@ public partial class ProjectDetailViewModel(IUnitOfWorkRunner unitOfWork, INavig
 
     public ObservableCollection<ProjectStatus> AvailableStatuses { get; } = [];
 
+    public ObservableCollection<KanbanColumn> Board { get; } = [];
+
+    public ObservableCollection<TimelineDay> TimelineDays { get; } = [];
+
+    public AttachmentsSectionViewModel Attachments { get; } = new(unitOfWork, launcher);
+
     public IReadOnlyList<Priority> Priorities { get; } = Enum.GetValues<Priority>();
 
     public void Load(Guid projectId)
@@ -101,10 +119,11 @@ public partial class ProjectDetailViewModel(IUnitOfWorkRunner unitOfWork, INavig
 
                 var header = await projectReads.GetDetailAsync(_projectId, ct);
                 var taskList = await taskReads.GetForProjectAsync(_projectId, scope, ct);
+                var boardTasks = await taskReads.GetForProjectAsync(_projectId, TaskListScope.All, ct);
                 var events = await activityReads.GetForProjectAsync(_projectId, 200, ct);
                 var followUps = await followUpReads.GetForEntityAsync(EntityKind.Project, _projectId, ct);
                 var reminders = await reminderReads.GetForEntityAsync(EntityKind.Project, _projectId, ct);
-                return (header, taskList, events, followUps, reminders);
+                return (header, taskList, boardTasks, events, followUps, reminders);
             });
 
             var detail = data.header;
@@ -124,6 +143,12 @@ public partial class ProjectDetailViewModel(IUnitOfWorkRunner unitOfWork, INavig
                 new[] { detail.Status }
                     .Concat(ProjectStateMachine.NextStates(detail.Status))
                     .Distinct());
+
+            BuildBoard(data.boardTasks);
+            BuildTimeline(data.events);
+
+            Attachments.Bind(EntityKind.Project, _projectId, _projectId, RefreshAsync);
+            await Attachments.LoadAsync();
         }
         catch (Exception ex)
         {
@@ -136,6 +161,77 @@ public partial class ProjectDetailViewModel(IUnitOfWorkRunner unitOfWork, INavig
     }
 
     partial void OnShowFinishedTasksChanged(bool value) => _ = RefreshAsync();
+
+    private void BuildBoard(IReadOnlyList<WorkTaskListItem> tasks)
+    {
+        var byStatus = tasks.Where(t => !t.IsArchived).ToLookup(t => t.Status);
+        Board.Reset(BoardOrder.Select(status =>
+        {
+            var column = new KanbanColumn(status, DisplayNames.Of(status));
+            foreach (var card in byStatus[status].OrderBy(t => t.SortKey))
+            {
+                column.Cards.Add(card);
+            }
+
+            return column;
+        }));
+    }
+
+    private void BuildTimeline(IReadOnlyList<ActivityEntry> events)
+    {
+        var groups = events
+            .GroupBy(e => DateOnly.FromDateTime(DateTime.SpecifyKind(e.OccurredAtUtc, DateTimeKind.Utc).ToLocalTime()))
+            .OrderByDescending(g => g.Key);
+
+        var days = new List<TimelineDay>();
+        foreach (var group in groups)
+        {
+            var day = new TimelineDay(group.Key, DayLabel(group.Key));
+            foreach (var entry in group.OrderByDescending(e => e.OccurredAtUtc))
+            {
+                day.Events.Add(entry);
+            }
+
+            days.Add(day);
+        }
+
+        TimelineDays.Reset(days);
+    }
+
+    private static string DayLabel(DateOnly date)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        if (date == today)
+        {
+            return "Hoy";
+        }
+
+        if (date == today.AddDays(-1))
+        {
+            return "Ayer";
+        }
+
+        return date.ToString("dddd d 'de' MMMM yyyy");
+    }
+
+    [RelayCommand]
+    private async Task MoveCardAsync((WorkTaskListItem Card, WorkTaskStatus Target) move)
+    {
+        if (move.Card is null || move.Card.Status == move.Target)
+        {
+            return;
+        }
+
+        var result = await unitOfWork.RunAsync((sp, ct) =>
+            sp.GetRequiredService<WorkTaskService>().ChangeStatusAsync(move.Card.Id, move.Target, ct));
+
+        if (result.IsFailure)
+        {
+            ErrorMessage = result.Error.Message;
+        }
+
+        await RefreshAsync();
+    }
 
     [RelayCommand]
     private void OpenTask(WorkTaskListItem? task)

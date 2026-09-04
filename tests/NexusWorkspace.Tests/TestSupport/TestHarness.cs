@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
+using NexusWorkspace.Application.Attachments;
 using NexusWorkspace.Application.Communications;
 using NexusWorkspace.Application.Companies;
 using NexusWorkspace.Application.FollowUps;
@@ -18,6 +19,7 @@ using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Infrastructure.Persistence;
 using NexusWorkspace.Infrastructure.Persistence.Interceptors;
 using NexusWorkspace.Infrastructure.Search;
+using NexusWorkspace.Infrastructure.Storage;
 
 namespace NexusWorkspace.Tests.TestSupport;
 
@@ -69,6 +71,11 @@ public sealed class TestHarness : IAsyncDisposable
         SavedSearches = new SavedSearchService(Db, Clock);
         SavedSearchReads = new SavedSearchReadService(Db);
         Activity = new ActivityReadService(Db);
+
+        Paths = new TempPaths();
+        AttachmentStore = new FileSystemAttachmentStore(Paths);
+        Attachments = new AttachmentService(Db, AttachmentStore, activityLog);
+        AttachmentReads = new AttachmentReadService(Db, AttachmentStore);
     }
 
     public FixedClock Clock { get; }
@@ -119,9 +126,18 @@ public sealed class TestHarness : IAsyncDisposable
 
     public ActivityReadService Activity { get; }
 
+    public TempPaths Paths { get; }
+
+    public FileSystemAttachmentStore AttachmentStore { get; }
+
+    public AttachmentService Attachments { get; }
+
+    public AttachmentReadService AttachmentReads { get; }
+
     public async ValueTask DisposeAsync()
     {
         await Db.DisposeAsync();
         await _connection.DisposeAsync();
+        Paths.Dispose();
     }
 }

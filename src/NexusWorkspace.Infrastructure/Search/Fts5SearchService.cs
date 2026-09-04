@@ -115,6 +115,11 @@ public sealed class Fts5SearchService(NexusDbContext db) : ISearchService
             "COALESCE(PersonId, CompanyId, WorkTaskId, ProjectId, Id), ProjectId, Subject, COALESCE(Body, '') " +
             "FROM Communications WHERE IsDeleted = 0;",
             cancellationToken).ConfigureAwait(false);
+
+        await db.Database.ExecuteSqlRawAsync(
+            "INSERT INTO SearchIndex(entity_kind, entity_id, navigate_kind, navigate_id, project_id, title, body) " +
+            "SELECT 'Attachment', Id, TargetKind, TargetId, ProjectId, FileName, '' FROM Attachments WHERE IsDeleted = 0;",
+            cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)

@@ -16,6 +16,10 @@ Todas las entidades relevantes heredan de `AuditableEntity` e implementan
   en minúsculas (`GuidToStringConverter`). Legible en la BD, consistente con el SQL crudo
   del índice de búsqueda y aún ordenable en el tiempo (v7).
 - **Enums como texto** (`HaveConversion<string>()`).
+- **Adjuntos fuera de la BD**: solo metadatos en `Attachments`; los bytes viven en
+  `files/<xx>/<sha256><ext>` vía `IAttachmentStore`. Direccionado por contenido y
+  deduplicado: dos subidas idénticas comparten un único blob físico, que solo se
+  borra cuando ningún adjunto vivo lo referencia.
 
 ## Búsqueda (FTS5)
 

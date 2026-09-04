@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             xmlns:shared="clr-namespace:NexusWorkspace.UI.Views.Shared"
              x:Class="NexusWorkspace.UI.Views.Projects.ProjectDetailView">
 
   <StackPanel Spacing="16" MaxWidth="1040">
@@ -204,18 +205,91 @@
         </StackPanel>
       </TabItem>
 
-      <TabItem Header="Actividad">
-        <ItemsControl ItemsSource="{Binding Timeline}" Margin="0,12,0,0">
+      <TabItem Header="Tablero">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,12,0,0">
+          <ItemsControl ItemsSource="{Binding Board}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="12" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Width="240" Padding="10" CornerRadius="10" VerticalAlignment="Top"
+                        Background="{DynamicResource AppSurfaceAltBrush}"
+                        BorderBrush="{DynamicResource AppLineBrush}" BorderThickness="1"
+                        DragDrop.AllowDrop="True">
+                  <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Grid.Column="0" Text="{Binding Title}" FontWeight="SemiBold" FontSize="12.5" />
+                      <Border Grid.Column="1" Classes="pill" BorderBrush="{DynamicResource AppLineStrongBrush}">
+                        <TextBlock Text="{Binding Count}" Foreground="{DynamicResource AppMutedBrush}" />
+                      </Border>
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding Cards}" MinHeight="40">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Border Classes="row" Margin="0,0,0,8" Padding="10,8" Tag="{Binding}"
+                                  PointerPressed="OnCardPointerPressed" PointerReleased="OnCardClicked">
+                            <StackPanel Spacing="4">
+                              <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12.5" TextWrapping="Wrap" />
+                              <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Border Classes="pill"
+                                        BorderBrush="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}">
+                                  <TextBlock Text="{Binding Priority, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                                             Foreground="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}" />
+                                </Border>
+                                <TextBlock Classes="muted" VerticalAlignment="Center"
+                                           Text="{Binding DueDateUtc, Converter={x:Static conv:AppConverters.LocalDate}}"
+                                           IsVisible="{Binding DueDateUtc, Converter={x:Static conv:AppConverters.IsNotNull}}" />
+                              </StackPanel>
+                            </StackPanel>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="Cronología">
+        <ItemsControl ItemsSource="{Binding TimelineDays}" Margin="0,12,0,0">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,9">
-                <TextBlock Grid.Column="0" Classes="muted" MinWidth="130"
-                           Text="{Binding OccurredAtUtc, Converter={x:Static conv:AppConverters.LocalDateTime}}" />
-                <TextBlock Grid.Column="1" Text="{Binding Summary}" TextWrapping="Wrap" />
-              </Grid>
+              <StackPanel Spacing="6" Margin="0,0,0,14">
+                <TextBlock Text="{Binding Label}" Classes="kicker" />
+                <ItemsControl ItemsSource="{Binding Events}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,8">
+                        <Border Grid.Column="0" Width="26" Margin="0,0,10,0">
+                          <mi:MaterialIcon Width="17" Height="17" VerticalAlignment="Top"
+                                           Kind="{Binding Type, Converter={x:Static conv:AppConverters.ActivityTypeIcon}}"
+                                           Foreground="{Binding Type, Converter={x:Static conv:AppConverters.ActivityTypeBrush}}" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="2">
+                          <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" />
+                          <TextBlock Text="{Binding Note}" Classes="muted" TextWrapping="Wrap"
+                                     IsVisible="{Binding Note, Converter={x:Static conv:AppConverters.HasText}}" />
+                          <TextBlock Classes="muted"
+                                     Text="{Binding OccurredAtUtc, Converter={x:Static conv:AppConverters.RelativeDateTime}}" />
+                        </StackPanel>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
+      </TabItem>
+
+      <TabItem Header="Adjuntos">
+        <shared:AttachmentsPanel DataContext="{Binding Attachments}" Margin="0,12,0,0" />
       </TabItem>
 
     </TabControl>

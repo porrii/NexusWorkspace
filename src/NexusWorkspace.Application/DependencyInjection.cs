@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
+using NexusWorkspace.Application.Attachments;
 using NexusWorkspace.Application.Calendar;
 using NexusWorkspace.Application.Common;
 using NexusWorkspace.Application.Communications;
@@ -47,6 +48,7 @@ public static class DependencyInjection
         services.AddScoped<TagService>();
         services.AddScoped<RelationService>();
         services.AddScoped<SavedSearchService>();
+        services.AddScoped<AttachmentService>();
 
         services.AddScoped<NotificationService>();
         services.AddScoped<INotificationService>(sp => sp.GetRequiredService<NotificationService>());
@@ -66,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<TagReadService>();
         services.AddScoped<RelationReadService>();
         services.AddScoped<SavedSearchReadService>();
+        services.AddScoped<AttachmentReadService>();
 
         services.AddScoped<IValidator<CreateProjectRequest>, CreateProjectRequestValidator>();
         services.AddScoped<IValidator<CreateWorkTaskRequest>, CreateWorkTaskRequestValidator>();

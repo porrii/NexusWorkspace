@@ -87,6 +87,9 @@ public sealed class SearchIndexInterceptor : SaveChangesInterceptor
                 case Communication communication:
                     refs.Add(new Ref("Communication", communication.Id.ToString()));
                     break;
+                case Attachment attachment:
+                    refs.Add(new Ref("Attachment", attachment.Id.ToString()));
+                    break;
             }
         }
 
@@ -221,6 +224,18 @@ public sealed class SearchIndexInterceptor : SaveChangesInterceptor
 
                 return new IndexRow("Communication", communication.Id.ToString(), navKind, navId.ToString(),
                     communication.ProjectId?.ToString(), communication.Subject, communication.Body ?? string.Empty);
+            }
+
+            case "Attachment":
+            {
+                var attachment = Find<Attachment>(context, reference.Id);
+                if (attachment is null || attachment.IsDeleted)
+                {
+                    return null;
+                }
+
+                return new IndexRow("Attachment", attachment.Id.ToString(), attachment.TargetKind.ToString(),
+                    attachment.TargetId.ToString(), attachment.ProjectId?.ToString(), attachment.FileName, string.Empty);
             }
 
             default:

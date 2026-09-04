@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Shared.AttachmentsPanel">
+
+  <StackPanel Spacing="12">
+
+    <Border x:Name="DropZone" BorderThickness="1.5" CornerRadius="10" Padding="16"
+            BorderBrush="{DynamicResource AppLineStrongBrush}" Background="{DynamicResource AppSurfaceAltBrush}">
+      <StackPanel Spacing="8" HorizontalAlignment="Center">
+        <mi:MaterialIcon Kind="CloudUploadOutline" Width="28" Height="28" HorizontalAlignment="Center"
+                         Foreground="{DynamicResource AppMutedBrush}" />
+        <TextBlock Text="Arrastra archivos aquí, pégalos o selecciónalos" Classes="muted" HorizontalAlignment="Center" />
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+          <Button Content="Seleccionar archivos" Classes="accent" Click="OnPickClicked" />
+          <Button Content="Pegar" Classes="quick" Click="OnPasteClicked" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+
+    <ItemsControl ItemsSource="{Binding Items}">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <WrapPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Border Classes="tile" Width="180" Margin="0,0,10,10" Padding="0" ClipToBounds="True">
+            <StackPanel>
+              <Panel Height="110" Background="{DynamicResource AppSurfaceAltBrush}">
+                <Image Stretch="UniformToFill" MaxHeight="110"
+                       Source="{Binding AbsolutePath, Converter={x:Static conv:AppConverters.Thumbnail}}"
+                       IsVisible="{Binding IsImage}" />
+                <mi:MaterialIcon Width="40" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                 Kind="{Binding Kind, Converter={x:Static conv:AppConverters.AttachmentKindIcon}}"
+                                 Foreground="{DynamicResource AppMutedBrush}"
+                                 IsVisible="{Binding !IsImage}" />
+              </Panel>
+              <StackPanel Spacing="4" Margin="10">
+                <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" FontSize="12.5"
+                           TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding FileName}" />
+                <TextBlock Text="{Binding HumanSize}" Classes="muted" />
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Abrir"
+                          Command="{Binding $parent[ItemsControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
+                    <mi:MaterialIcon Kind="OpenInNew" Width="13" Height="13" />
+                  </Button>
+                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Mostrar en carpeta"
+                          Command="{Binding $parent[ItemsControl].DataContext.RevealCommand}" CommandParameter="{Binding}">
+                    <mi:MaterialIcon Kind="FolderSearchOutline" Width="13" Height="13" />
+                  </Button>
+                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Quitar"
+                          Command="{Binding $parent[ItemsControl].DataContext.RemoveCommand}" CommandParameter="{Binding}">
+                    <mi:MaterialIcon Kind="TrashCanOutline" Width="13" Height="13" />
+                  </Button>
+                </StackPanel>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <TextBlock Text="Sin archivos adjuntos todavía." Classes="muted" IsVisible="{Binding IsEmpty}" />
+
+  </StackPanel>
+
+</UserControl>

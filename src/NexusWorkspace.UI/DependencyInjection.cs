@@ -8,6 +8,7 @@ using NexusWorkspace.UI.ViewModels.Calendar;
 using NexusWorkspace.UI.ViewModels.CommandPalette;
 using NexusWorkspace.UI.ViewModels.Companies;
 using NexusWorkspace.UI.ViewModels.Dashboard;
+using NexusWorkspace.UI.ViewModels.Files;
 using NexusWorkspace.UI.ViewModels.FollowUps;
 using NexusWorkspace.UI.ViewModels.Inbox;
 using NexusWorkspace.UI.ViewModels.People;
@@ -54,6 +55,7 @@ public static class DependencyInjection
         services.AddTransient<CompaniesViewModel>();
         services.AddTransient<CompanyDetailViewModel>();
         services.AddTransient<TagsViewModel>();
+        services.AddTransient<FilesViewModel>();
         services.AddTransient<ActivityViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<PlaceholderViewModel>();

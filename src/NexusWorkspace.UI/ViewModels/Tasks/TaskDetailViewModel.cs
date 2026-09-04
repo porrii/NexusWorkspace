@@ -11,10 +11,14 @@ using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Domain.Enums;
 using NexusWorkspace.Domain.Tasks;
 using NexusWorkspace.UI.Services;
+using NexusWorkspace.UI.ViewModels.Shared;
 
 namespace NexusWorkspace.UI.ViewModels.Tasks;
 
-public partial class TaskDetailViewModel(IUnitOfWorkRunner unitOfWork, INavigationService navigation) : ViewModelBase
+public partial class TaskDetailViewModel(
+    IUnitOfWorkRunner unitOfWork,
+    INavigationService navigation,
+    IPlatformLauncher launcher) : ViewModelBase
 {
     private Guid _taskId;
 
@@ -64,6 +68,8 @@ public partial class TaskDetailViewModel(IUnitOfWorkRunner unitOfWork, INavigati
     public ObservableCollection<ActivityEntry> History { get; } = [];
 
     public ObservableCollection<WorkTaskStatus> AvailableStatuses { get; } = [];
+
+    public AttachmentsSectionViewModel Attachments { get; } = new(unitOfWork, launcher);
 
     public IReadOnlyList<Priority> Priorities { get; } = Enum.GetValues<Priority>();
 
@@ -131,6 +137,9 @@ public partial class TaskDetailViewModel(IUnitOfWorkRunner unitOfWork, INavigati
                 new[] { detail.Status }
                     .Concat(WorkTaskStateMachine.NextStates(detail.Status))
                     .Distinct());
+
+            Attachments.Bind(EntityKind.WorkTask, _taskId, detail.ProjectId, RefreshAsync);
+            await Attachments.LoadAsync();
 
             OnPropertyChanged(nameof(SubTaskProgress));
             OnPropertyChanged(nameof(ChecklistProgress));
