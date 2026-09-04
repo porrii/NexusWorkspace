@@ -1,0 +1,122 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.People.PeopleView">
+
+  <StackPanel Spacing="16" MaxWidth="1000">
+
+    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+      <TextBlock Grid.Column="0" Text="Personas" Classes="h1" VerticalAlignment="Center" />
+      <TextBox Grid.Column="1" Width="220" Watermark="Buscar…" Margin="0,0,10,0"
+               Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+      <ComboBox Grid.Column="2" Width="180" Margin="0,0,10,0"
+                ItemsSource="{Binding TagFilters}" SelectedItem="{Binding SelectedTag, Mode=TwoWay}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding Name}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <ToggleSwitch Grid.Column="3" OnContent="Archivadas" OffContent="Activas" Margin="0,0,10,0"
+                    IsChecked="{Binding ShowArchived, Mode=TwoWay}" />
+      <Button Grid.Column="4" Command="{Binding ToggleCreatePanelCommand}" Classes="accent">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <mi:MaterialIcon Kind="AccountPlus" Width="16" Height="16" />
+          <TextBlock Text="Nueva persona" />
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <Border Classes="card" IsVisible="{Binding IsCreatePanelOpen}">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Nueva persona" Classes="h2" />
+        <TextBox Watermark="Nombre" Text="{Binding NewPersonName, Mode=TwoWay}" />
+        <TextBox Watermark="Rol / puesto (opcional)" Text="{Binding NewPersonRole, Mode=TwoWay}" />
+        <TextBox Watermark="Email (opcional)" Text="{Binding NewPersonEmail, Mode=TwoWay}" />
+        <ComboBox HorizontalAlignment="Stretch" PlaceholderText="Empresa (opcional)"
+                  ItemsSource="{Binding Companies}" SelectedItem="{Binding NewPersonCompany, Mode=TwoWay}">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Name}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+                   IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+          <Button Content="Cancelar" Command="{Binding ToggleCreatePanelCommand}" />
+          <Button Content="Crear" Classes="accent" Command="{Binding CreatePersonCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <ItemsControl ItemsSource="{Binding People}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Border Classes="row" Margin="0,0,0,10" Tag="{Binding}" PointerReleased="OnPersonClicked">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <Border Grid.Column="0" Width="34" Height="34" CornerRadius="99" Margin="0,0,12,0"
+                      VerticalAlignment="Center" Background="{DynamicResource AppAccentWashBrush}">
+                <TextBlock Text="{Binding Name, Converter={x:Static conv:AppConverters.Initials}}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold"
+                           Foreground="{DynamicResource AppAccentBrush}" />
+              </Border>
+              <StackPanel Grid.Column="1" Spacing="4">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" />
+                  <mi:MaterialIcon Kind="Star" Width="14" Height="14" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SemWaitingBrush}"
+                                   IsVisible="{Binding IsFavorite}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <TextBlock Classes="muted" Text="{Binding Role}"
+                             IsVisible="{Binding Role, Converter={x:Static conv:AppConverters.HasText}}" />
+                  <TextBlock Classes="muted" Text="{Binding CompanyName}"
+                             IsVisible="{Binding CompanyName, Converter={x:Static conv:AppConverters.HasText}}" />
+                  <TextBlock Classes="muted" Text="{Binding Email}"
+                             IsVisible="{Binding Email, Converter={x:Static conv:AppConverters.HasText}}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Classes="muted" Text="{Binding ProjectCount, StringFormat='{}{0} proyectos'}" />
+                  <TextBlock Classes="muted" Text="{Binding OpenTaskCount, StringFormat='{}{0} tareas abiertas'}" />
+                  <TextBlock Classes="muted"
+                             Text="{Binding LastContactedUtc, Converter={x:Static conv:AppConverters.RelativeDate}, StringFormat='{}últ. contacto {0}'}"
+                             IsVisible="{Binding LastContactedUtc, Converter={x:Static conv:AppConverters.IsNotNull}}" />
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Tags}" Margin="0,2,0,0">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Classes="pill" Margin="0,0,6,0"
+                              BorderBrush="{Binding DisplayColor, Converter={x:Static conv:AppConverters.HexBrush}}">
+                        <TextBlock Text="{Binding Name}"
+                                   Foreground="{Binding DisplayColor, Converter={x:Static conv:AppConverters.HexBrush}}" />
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+              <Button Grid.Column="2" Classes="quick" VerticalAlignment="Center"
+                      Command="{Binding $parent[ItemsControl].DataContext.ToggleFavoriteCommand}" CommandParameter="{Binding}">
+                <mi:MaterialIcon Kind="StarOutline" Width="15" Height="15" />
+              </Button>
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <StackPanel Spacing="6" IsVisible="{Binding IsEmpty}" Margin="0,20,0,0" HorizontalAlignment="Center">
+      <mi:MaterialIcon Kind="AccountGroupOutline" Width="34" Height="34" HorizontalAlignment="Center"
+                       Foreground="{DynamicResource AppMutedBrush}" />
+      <TextBlock Text="Aún no hay personas registradas." Classes="muted" HorizontalAlignment="Center" />
+    </StackPanel>
+
+  </StackPanel>
+
+</UserControl>

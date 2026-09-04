@@ -1,0 +1,331 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Companies.CompanyDetailView">
+
+  <StackPanel Spacing="16" MaxWidth="1040">
+
+    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+
+    <Border Classes="card" IsVisible="{Binding Header, Converter={x:Static conv:AppConverters.IsNotNull}}">
+      <StackPanel Spacing="12">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <mi:MaterialIcon Grid.Column="0" Kind="OfficeBuilding" Width="28" Height="28" Margin="0,0,14,0"
+                           VerticalAlignment="Center" Foreground="{DynamicResource AppAccentBrush}" />
+          <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="{Binding Header.Name}" Classes="h1" />
+              <Border Classes="pill" VerticalAlignment="Center"
+                      BorderBrush="{Binding Header.Kind, Converter={x:Static conv:AppConverters.CompanyKindBrush}}">
+                <TextBlock Text="{Binding Header.Kind, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                           Foreground="{Binding Header.Kind, Converter={x:Static conv:AppConverters.CompanyKindBrush}}" />
+              </Border>
+              <mi:MaterialIcon Kind="Star" Width="16" Height="16" VerticalAlignment="Center"
+                               Foreground="{DynamicResource SemWaitingBrush}" IsVisible="{Binding Header.IsFavorite}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="14">
+              <TextBlock Classes="muted" Text="{Binding Header.Website}"
+                         IsVisible="{Binding Header.Website, Converter={x:Static conv:AppConverters.HasText}}" />
+              <TextBlock Classes="muted" Text="{Binding Header.PeopleCount, StringFormat='{}{0} personas'}" />
+              <TextBlock Classes="muted"
+                         Text="{Binding Header.LastContactedUtc, Converter={x:Static conv:AppConverters.RelativeDate}, StringFormat='{}últ. contacto {0}'}"
+                         IsVisible="{Binding Header.LastContactedUtc, Converter={x:Static conv:AppConverters.IsNotNull}}" />
+            </StackPanel>
+          </StackPanel>
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <Button Classes="quick" Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="Favorito">
+              <mi:MaterialIcon Kind="StarOutline" Width="16" Height="16" />
+            </Button>
+            <Button Classes="quick" Content="Editar" Command="{Binding ToggleEditPanelCommand}" />
+            <Button Classes="quick" Content="Archivar" Command="{Binding ArchiveCommand}" />
+          </StackPanel>
+        </Grid>
+
+        <ItemsControl ItemsSource="{Binding Header.Tags}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="pill" Margin="0,0,6,4"
+                      BorderBrush="{Binding DisplayColor, Converter={x:Static conv:AppConverters.HexBrush}}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <TextBlock Text="{Binding Name}"
+                             Foreground="{Binding DisplayColor, Converter={x:Static conv:AppConverters.HexBrush}}" />
+                  <Button Padding="0" Background="Transparent" BorderThickness="0"
+                          Command="{Binding $parent[ItemsControl].DataContext.RemoveTagCommand}" CommandParameter="{Binding}">
+                    <mi:MaterialIcon Kind="Close" Width="11" Height="11" />
+                  </Button>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Añadir etiqueta" Classes="muted" VerticalAlignment="Center" />
+          <ComboBox Width="200" PlaceholderText="Elegir…" ItemsSource="{Binding AllTags}" SelectionChanged="OnAddTagSelected">
+            <ComboBox.ItemTemplate>
+              <DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Border Classes="card" IsVisible="{Binding IsEditPanelOpen}">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Editar empresa" Classes="h2" />
+        <TextBox Watermark="Nombre" Text="{Binding EditName, Mode=TwoWay}" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Tipo" VerticalAlignment="Center" Classes="muted" />
+          <ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding EditKind, Mode=TwoWay}" Width="160">
+            <ComboBox.ItemTemplate>
+              <DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <TextBox Watermark="Sitio web" Text="{Binding EditWebsite, Mode=TwoWay}" />
+        <TextBox Watermark="Notas" AcceptsReturn="True" MinHeight="70" TextWrapping="Wrap" Text="{Binding EditNotes, Mode=TwoWay}" />
+        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+          <Button Content="Cancelar" Command="{Binding ToggleEditPanelCommand}" />
+          <Button Content="Guardar" Classes="accent" Command="{Binding SaveDetailsCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+
+      <TabItem Header="Personas">
+        <ItemsControl ItemsSource="{Binding People}" Margin="0,12,0,0">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Button Classes="tile" Margin="0,0,0,8" HorizontalAlignment="Stretch"
+                      Command="{Binding $parent[ItemsControl].DataContext.OpenPersonCommand}" CommandParameter="{Binding}">
+                <StackPanel Spacing="3">
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Classes="muted" Text="{Binding Role}"
+                               IsVisible="{Binding Role, Converter={x:Static conv:AppConverters.HasText}}" />
+                    <TextBlock Classes="muted" Text="{Binding Email}"
+                               IsVisible="{Binding Email, Converter={x:Static conv:AppConverters.HasText}}" />
+                  </StackPanel>
+                </StackPanel>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </TabItem>
+
+      <TabItem Header="Proyectos">
+        <ItemsControl ItemsSource="{Binding Projects}" Margin="0,12,0,0">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Button Classes="tile" Margin="0,0,0,8" HorizontalAlignment="Stretch"
+                      Command="{Binding $parent[ItemsControl].DataContext.OpenProjectCommand}" CommandParameter="{Binding}">
+                <StackPanel Spacing="3">
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Classes="muted" Text="{Binding Status, Converter={x:Static conv:AppConverters.EnumLabel}}" />
+                    <TextBlock Classes="muted" Text="{Binding OpenTaskCount, StringFormat='{}{0} tareas abiertas'}" />
+                  </StackPanel>
+                </StackPanel>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </TabItem>
+
+      <TabItem Header="Tareas">
+        <ItemsControl ItemsSource="{Binding Tasks}" Margin="0,12,0,0">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Button Classes="tile" Margin="0,0,0,8" HorizontalAlignment="Stretch"
+                      Command="{Binding $parent[ItemsControl].DataContext.OpenTaskCommand}" CommandParameter="{Binding}">
+                <StackPanel Spacing="3">
+                  <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Classes="muted" Text="{Binding ProjectName}" />
+                    <TextBlock Classes="muted" Text="{Binding Status, Converter={x:Static conv:AppConverters.EnumLabel}}" />
+                  </StackPanel>
+                </StackPanel>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </TabItem>
+
+      <TabItem Header="Seguimientos">
+        <ItemsControl ItemsSource="{Binding FollowUps}" Margin="0,12,0,0">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="row" Margin="0,0,0,8">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="{Binding Subject}" FontWeight="SemiBold" />
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Classes="muted" Text="{Binding State, Converter={x:Static conv:AppConverters.EnumLabel}}" />
+                    <TextBlock Classes="muted" Text="{Binding DaysWaiting, StringFormat='{}{0} días esperando'}" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </TabItem>
+
+      <TabItem Header="Comunicaciones">
+        <StackPanel Spacing="12" Margin="0,12,0,0">
+          <Button Classes="accent" HorizontalAlignment="Left" Command="{Binding ToggleComposerCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <mi:MaterialIcon Kind="Plus" Width="15" Height="15" />
+              <TextBlock Text="Registrar comunicación" />
+            </StackPanel>
+          </Button>
+
+          <Border Classes="card" IsVisible="{Binding Composer.IsOpen}">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,*">
+                <ComboBox Grid.Column="0" Margin="0,0,6,0" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding Composer.Channels}" SelectedItem="{Binding Composer.Channel, Mode=TwoWay}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ComboBox Grid.Column="1" Margin="6,0,0,0" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding Composer.Directions}" SelectedItem="{Binding Composer.Direction, Mode=TwoWay}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+              </Grid>
+              <TextBox Watermark="Asunto" Text="{Binding Composer.Subject, Mode=TwoWay}" />
+              <TextBox Watermark="Resumen / notas" AcceptsReturn="True" MinHeight="60" TextWrapping="Wrap"
+                       Text="{Binding Composer.Body, Mode=TwoWay}" />
+              <DatePicker SelectedDate="{Binding Composer.When, Mode=TwoWay}" />
+              <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                <Button Content="Cancelar" Command="{Binding ToggleComposerCommand}" />
+                <Button Content="Guardar" Classes="accent" Command="{Binding LogCommunicationCommand}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <ItemsControl ItemsSource="{Binding Communications}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Classes="row" Margin="0,0,0,8">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <mi:MaterialIcon Grid.Column="0" Width="18" Height="18" Margin="0,0,12,0" VerticalAlignment="Top"
+                                     Kind="{Binding Channel, Converter={x:Static conv:AppConverters.CommunicationChannelIcon}}"
+                                     Foreground="{Binding Direction, Converter={x:Static conv:AppConverters.CommunicationDirectionBrush}}" />
+                    <StackPanel Grid.Column="1" Spacing="3">
+                      <TextBlock Text="{Binding Subject}" FontWeight="SemiBold" />
+                      <TextBlock Text="{Binding Body}" Classes="muted" TextWrapping="Wrap" MaxLines="3" TextTrimming="CharacterEllipsis"
+                                 IsVisible="{Binding Body, Converter={x:Static conv:AppConverters.HasText}}" />
+                      <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Classes="muted" Text="{Binding With}" />
+                        <TextBlock Classes="muted" Text="{Binding ProjectName}"
+                                   IsVisible="{Binding ProjectName, Converter={x:Static conv:AppConverters.HasText}}" />
+                      </StackPanel>
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Classes="muted" VerticalAlignment="Top"
+                               Text="{Binding OccurredAtUtc, Converter={x:Static conv:AppConverters.RelativeDateTime}}" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="Relaciones">
+        <StackPanel Spacing="12" Margin="0,12,0,0">
+          <Button Classes="accent" HorizontalAlignment="Left" Command="{Binding ToggleRelationComposerCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <mi:MaterialIcon Kind="LinkVariantPlus" Width="15" Height="15" />
+              <TextBlock Text="Añadir relación" />
+            </StackPanel>
+          </Button>
+
+          <Border Classes="card" IsVisible="{Binding RelationComposer.IsOpen}">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,*">
+                <ComboBox Grid.Column="0" Margin="0,0,6,0" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding RelationComposer.TargetKinds}" SelectedItem="{Binding RelationComposer.TargetKind, Mode=TwoWay}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ComboBox Grid.Column="1" Margin="6,0,0,0" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding RelationComposer.RelationKinds}" SelectedItem="{Binding RelationComposer.Kind, Mode=TwoWay}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+              </Grid>
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0" Watermark="Buscar…" Text="{Binding RelationComposer.SearchText, Mode=TwoWay}" />
+                <Button Grid.Column="1" Margin="8,0,0,0" Content="Buscar" Command="{Binding SearchRelationTargetsCommand}" />
+              </Grid>
+              <TextBox Watermark="Nota (opcional)" Text="{Binding RelationComposer.Note, Mode=TwoWay}" />
+              <ItemsControl ItemsSource="{Binding RelationComposer.Results}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Button Classes="quick" Margin="0,0,0,4" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            Command="{Binding $parent[ItemsControl].DataContext.AddRelationCommand}" CommandParameter="{Binding}">
+                      <TextBlock Text="{Binding Label}" />
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+
+          <ItemsControl ItemsSource="{Binding Relations}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Classes="row" Margin="0,0,0,8" Tag="{Binding}" PointerReleased="OnRelationClicked">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="3">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Classes="pill" BorderBrush="{DynamicResource AppAccentBrush}">
+                          <TextBlock Text="{Binding Kind, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                                     Foreground="{DynamicResource AppAccentBrush}" />
+                        </Border>
+                        <TextBlock Text="{Binding OtherKind, Converter={x:Static conv:AppConverters.EnumLabel}}" Classes="muted" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding OtherLabel}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                      </StackPanel>
+                      <TextBlock Text="{Binding Note}" Classes="muted"
+                                 IsVisible="{Binding Note, Converter={x:Static conv:AppConverters.HasText}}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Classes="quick" Content="Quitar"
+                            Command="{Binding $parent[ItemsControl].DataContext.RemoveRelationCommand}" CommandParameter="{Binding}" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="Historial">
+        <ItemsControl ItemsSource="{Binding Timeline}" Margin="0,12,0,0">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="row" Margin="0,0,0,6">
+                <StackPanel Spacing="2">
+                  <TextBlock Text="{Binding Summary}" />
+                  <TextBlock Classes="muted" Text="{Binding OccurredAtUtc, Converter={x:Static conv:AppConverters.RelativeDateTime}}" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </TabItem>
+
+    </TabControl>
+
+  </StackPanel>
+
+</UserControl>

@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using NexusWorkspace.Domain.Collaboration;
 using NexusWorkspace.Domain.Common;
+using NexusWorkspace.Domain.Communications;
+using NexusWorkspace.Domain.Companies;
+using NexusWorkspace.Domain.People;
 using NexusWorkspace.Domain.Projects;
 using NexusWorkspace.Domain.Tasks;
 
@@ -74,6 +77,15 @@ public sealed class SearchIndexInterceptor : SaveChangesInterceptor
                     break;
                 case Comment c:
                     refs.Add(new Ref("Comment", c.Id.ToString()));
+                    break;
+                case Person person:
+                    refs.Add(new Ref("Person", person.Id.ToString()));
+                    break;
+                case Company company:
+                    refs.Add(new Ref("Company", company.Id.ToString()));
+                    break;
+                case Communication communication:
+                    refs.Add(new Ref("Communication", communication.Id.ToString()));
                     break;
             }
         }
@@ -165,6 +177,50 @@ public sealed class SearchIndexInterceptor : SaveChangesInterceptor
 
                 return new IndexRow("Comment", comment.Id.ToString(), comment.TargetKind.ToString(),
                     comment.TargetId.ToString(), comment.ProjectId?.ToString(), string.Empty, comment.Body);
+            }
+
+            case "Person":
+            {
+                var person = Find<Person>(context, reference.Id);
+                if (person is null || person.IsDeleted)
+                {
+                    return null;
+                }
+
+                var body = string.Join(' ', new[] { person.Role, person.Email, person.Notes }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                return new IndexRow("Person", person.Id.ToString(), "Person", person.Id.ToString(), null, person.Name, body);
+            }
+
+            case "Company":
+            {
+                var company = Find<Company>(context, reference.Id);
+                if (company is null || company.IsDeleted)
+                {
+                    return null;
+                }
+
+                var body = string.Join(' ', new[] { company.Website, company.Notes }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                return new IndexRow("Company", company.Id.ToString(), "Company", company.Id.ToString(), null, company.Name, body);
+            }
+
+            case "Communication":
+            {
+                var communication = Find<Communication>(context, reference.Id);
+                if (communication is null || communication.IsDeleted)
+                {
+                    return null;
+                }
+
+                var navKind = communication.PersonId is not null ? "Person"
+                    : communication.CompanyId is not null ? "Company"
+                    : communication.WorkTaskId is not null ? "WorkTask"
+                    : communication.ProjectId is not null ? "Project"
+                    : "Communication";
+                var navId = communication.PersonId ?? communication.CompanyId
+                    ?? communication.WorkTaskId ?? communication.ProjectId ?? communication.Id;
+
+                return new IndexRow("Communication", communication.Id.ToString(), navKind, navId.ToString(),
+                    communication.ProjectId?.ToString(), communication.Subject, communication.Body ?? string.Empty);
             }
 
             default:

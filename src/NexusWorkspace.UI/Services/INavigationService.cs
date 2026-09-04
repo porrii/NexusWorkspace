@@ -13,6 +13,7 @@ public enum PageKey
     Calendar,
     People,
     Companies,
+    Tags,
     Files,
     Activity,
     Statistics,
@@ -22,6 +23,8 @@ public enum PageKey
     // Detail pages (not in the rail)
     ProjectDetail,
     TaskDetail,
+    PersonDetail,
+    CompanyDetail,
 }
 
 /// <summary>

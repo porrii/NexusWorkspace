@@ -41,18 +41,20 @@ apuntan a cualquier entidad con **`TargetKind` (`EntityKind`) + `TargetId` (`Gui
 | `SubTask` | `WorkTaskId, ParentSubTaskId (recursivo), Title, IsDone, SortKey` | árbol ilimitado; % completado calculado |
 | `ChecklistItem` | `WorkTaskId, Text, IsChecked, SortKey` | ∞—1 `WorkTask` |
 | `TaskDependency` | `WorkTaskId, DependsOnWorkTaskId, Kind` | `WorkTask` ↔ `WorkTask` |
-| `Person` | `Name, Role, CompanyId, Email, Phone, Notes` | ∞—∞ `Project`/`WorkTask` · 1—∞ `Communication`/`Meeting`/`FollowUp` |
-| `Company` | `Name, Kind (cliente/proveedor/interno), Notes` | 1—∞ `Person` · ∞—∞ `Project` · 1—∞ `Communication` |
-| `Tag` | `Name, Color` | ∞—∞ `Project`/`WorkTask` (`ProjectTag`, `WorkTaskTag`) |
+| `Person` | `Name, Role, CompanyId, Email, Phone, Notes, IsFavorite, LastContactedUtc` | ∞—1 `Company` · ∞—∞ `Project`/`WorkTask`/`Tag` (`ProjectPerson`, `WorkTaskPerson`, `PersonTag`) · 1—∞ `Communication` · ∞—∞ `Meeting` (`MeetingParticipant`) · detalle **agrega** todo lo vinculado |
+| `Company` | `Name, Kind (cliente/proveedor/interno/otro), Website, Notes, IsFavorite, LastContactedUtc` | 1—∞ `Person` · ∞—∞ `Project`/`Tag` (`ProjectCompany`, `CompanyTag`) · 1—∞ `Communication` |
+| `Tag` | `Name, Color, Description, IsPinned` | ∞—∞ `Project`/`WorkTask`/`Person`/`Company` (`ProjectTag`, `WorkTaskTag`, `PersonTag`, `CompanyTag`) · color de reserva determinista por nombre |
 | `Comment` | `TargetKind, TargetId, Body` | polimórfico |
 | `Attachment` | `TargetKind, TargetId, FileName, RelativePath, ContentHash, SizeBytes, ThumbnailPath, MimeType` | polimórfico · fichero en disco |
 | `ActivityEvent` | `TargetKind, TargetId, ProjectId, Type, ActorLabel, OccurredAtUtc, OldValue, NewValue, Note` | **append-only**, toca todo, nunca se borra |
 | `FollowUp` | `TargetKind, TargetId, ProjectId, WaitingOnPersonId, WaitingOnCompanyId, WaitingSinceUtc, LastContactUtc, NextFollowUpUtc, ReminderCount, State` | "esperando respuesta de" · días en espera calculados |
-| `Communication` | `TargetKind, TargetId, ProjectId, Kind, Direction, PersonId, CompanyId, OccurredAtUtc, Summary, Body` | polimórfico + `Person`/`Company` |
-| `Meeting` | `ProjectId, Title, StartUtc, EndUtc, Location, Notes` | ∞—∞ `Person` (asistentes) |
+| `Communication` | `Channel, Direction, Subject, Body, OccurredAtUtc, PersonId, CompanyId, ProjectId, WorkTaskId, ContactLabel` | enlaces directos (FK `SetNull`) a persona/empresa/proyecto/tarea; registrar una alimenta el histórico de cada extremo y su `LastContactedUtc` |
+| `Meeting` | `Title, Agenda, Notes, StartUtc, EndUtc, Location, Status (Scheduled/Held/Cancelled), ProjectId` | 1—∞ `MeetingParticipant` · aparece en el Calendario |
+| `MeetingParticipant` | `MeetingId, PersonId?, ExternalName?, Role, Attended` | persona guardada **o** nombre externo libre |
+| `EntityRelation` | `FromKind, FromId, ToKind, ToId, Kind, Note` | cross-reference tipada entre cualquier par de entidades; visible desde ambos extremos con deep-link; soft-delete |
 | `Reminder` | `TargetKind, TargetId, Text, RemindAtUtc, Status` | a cualquier entidad |
 | `InboxItem` | `RawText, ParsedHint, State (Pending/Converted/Dismissed), ConvertedToKind, ConvertedToId, ProcessedAtUtc` | captura rápida; se convierte en `WorkTask`/`Project` (descartar = soft-delete) |
-| `SavedSearch` | `Name, QueryJson, IsFavorite` | filtros guardados |
+| `SavedSearch` | `Name, Kind (superficie), QueryText, FiltersJson, IsPinned, SortKey, LastRunUtc` | búsquedas/filtros guardados por superficie; los fijados se muestran como chips |
 | `Template` | `Name, Kind, DefinitionJson` | genera árboles de proyecto/tarea |
 | `Notification` | `Text, Kind, CreatedAtUtc, IsRead, DeepLink` | centro de notificaciones local |
 | `Setting` | `Key, Value` | solo ajustes de negocio (UI/app → `settings.json`) |
@@ -62,15 +64,19 @@ apuntan a cualquier entidad con **`TargetKind` (`EntityKind`) + `TargetId` (`Gui
 - **`ProjectStatus`**: `Planning, Active, OnHold, Blocked, Finished` (archivado = flag ortogonal).
 - **`WorkTaskStatus`**: `Pending, InProgress, WaitingClient, WaitingProvider, Blocked, Finished, Cancelled` (archivada = flag ortogonal).
 - **`Priority`**: `Critical, High, Medium, Low`.
-- **`ActivityType`**: `Created, Updated, StatusChanged, PriorityChanged, DueDateChanged, AssigneeChanged, CommentAdded, AttachmentAdded, AttachmentRemoved, SubTaskAdded, SubTaskCompleted, ChecklistItemToggled, DependencyAdded, DependencyRemoved, FollowUpStarted, FollowUpReminderSent, FollowUpResolved, QuickAction, RelationAdded, RelationRemoved, MovedProject, Archived, Restored, Trashed, RestoredFromTrash, Deleted, Duplicated, TemplateApplied, Imported`.
+- **`ActivityType`**: `… RelationAdded, RelationRemoved, MovedProject, Archived, Restored, Trashed, RestoredFromTrash, Deleted, Duplicated, TemplateApplied, Imported, Renamed, CommunicationLogged, MeetingScheduled, MeetingUpdated, TagAdded, TagRemoved, LinkedPerson, UnlinkedPerson, LinkedCompany, UnlinkedCompany` (append-only; los valores numéricos existentes nunca cambian).
 - **`QuickActionKind`**: `EmailSent, EmailReceived, CallMade, MeetingHeld, InfoSent, InfoReceived, PendingClient, PendingProvider, IncidentDetected, IncidentResolved, DeployedDev, DeployedPre, DeployedPro, ReminderSent, ChangeRequested, TestPerformed`.
-- **`EntityKind`**: `Project, WorkTask, SubTask, ChecklistItem, Person, Company, Tag, Comment, Attachment, FollowUp, Communication, Meeting, Reminder, InboxItem`.
-- **`CompanyKind`**: `Client, Provider, Internal, Other`.
-- **`CommunicationKind`**: `Email, Call, Meeting, Message, InfoExchange, Other`.
-- **`CommunicationDirection`**: `Outgoing, Incoming, Internal`.
+- **`EntityKind`**: `Project, WorkTask, SubTask, ChecklistItem, Person, Company, Tag, Comment, Attachment, FollowUp, Communication, Meeting, Reminder, InboxItem, SavedSearch, Relation`.
+- **`CompanyKind`**: `Other, Client, Provider, Internal`.
+- **`CommunicationChannel`**: `Email, Call, Chat, InPerson, Letter, Ticket, Other`.
+- **`CommunicationDirection`**: `Outbound, Inbound, Internal`.
+- **`MeetingStatus`**: `Scheduled, Held, Cancelled`.
+- **`RelationKind`**: `RelatesTo, Blocks, DependsOn, Duplicates, References, PartOf, Mentions`.
+- **`SavedSearchKind`**: `Global, Projects, Tasks, People, Companies, FollowUps, Communications`.
 - **`DependencyKind`**: `FinishToStart, Blocks, Related`.
-- **`FollowUpState`**: `Waiting, Answered, Escalated, Closed`.
+- **`FollowUpState`**: `Waiting, Escalated, Answered, Closed`.
 - **`ReminderStatus`**: `Pending, Done, Dismissed`.
+- **`NotificationKind`**: `System, Reminder, FollowUp, DueDate, Meeting`.
 
 ## Transiciones de estado (`WorkTaskStatus`)
 

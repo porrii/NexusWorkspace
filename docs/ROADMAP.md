@@ -23,9 +23,11 @@ Incremental. **La solución permanece compilable y ejecutable al terminar cada f
 
 - [x] **Fase 3** — **Seguimientos** (`FollowUp`): esperando respuesta de persona/empresa/etiqueta, contador de días, "enviar recordatorio" (nº + historial), escalar, marcar respondido/cerrado; página propia + widget en Dashboard + sección en Tarea/Proyecto. **Recordatorios** (`Reminder`) + **scheduler en proceso** (cada 45 s) que lanza notificaciones al vencer. **Centro de notificaciones** local (campana + badge) + **toasts** in-app. **Calendario** mensual que agrega vencimientos de tareas/proyectos, próximos seguimientos y recordatorios.
 
-> **Estado 2026-09-03**: Fases 0–2 validadas en el PC de compilación (`dotnet build` 0/0,
-> migración EF `Initial`, **39/39 tests**). Fase 3 código completo, pendiente de compilar
-> — añade tablas nuevas, ejecutar **`build.bat migrate`**.
+- [x] **Fase 4** — **Personas** y **Empresas** con pantalla de detalle que **agrega** todo lo vinculado (proyectos, tareas, seguimientos, comunicaciones, reuniones, relaciones, historial) + contadores. **Comunicaciones** (`Communication`): registrar correo/llamada/chat/en persona con dirección y fecha; alimenta el histórico de persona/empresa/proyecto/tarea y actualiza "último contacto". **Reuniones** (`Meeting` + `MeetingParticipant`): programar con orden del día, participantes (persona o externo), lugar; aparecen en el Calendario. **Etiquetas**: página propia con recuento de usos por tipo, fijar, fusionar, eliminar; etiquetado de personas y empresas (`PersonTag`, `CompanyTag`) + **filtro por etiqueta** en las listas. **Relaciones y referencias cruzadas** (`EntityRelation`): enlaces tipados (relacionado con, bloquea, depende de, duplica, menciona…) entre cualquier par de entidades, visibles desde ambos extremos con navegación **deep-link**. **Búsquedas guardadas** (`SavedSearch`) por superficie, con fijado. Índice FTS5 ampliado a personas, empresas y comunicaciones.
+
+> **Estado 2026-09-04**: Fases 0–4 compiladas en verde en este PC (`dotnet build` **0/0**,
+> migración EF `Update_202609041201_PeopleContext` aplicada, **51/51 tests**). App arranca,
+> aplica la migración y todas las consultas de la Fase 4 corren sin avisos.
 
 > Publicado en GitHub: `porrii/NexusWorkspace`, rama `dev`. `main` + release cuando la v1 esté lista.
 > CI: el flujo está en `docs/ci-build.yml`; moverlo a `.github/workflows/build.yml` desde la web de

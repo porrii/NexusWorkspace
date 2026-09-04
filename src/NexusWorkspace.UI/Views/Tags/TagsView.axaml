@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Tags.TagsView">
+
+  <StackPanel Spacing="16" MaxWidth="900">
+
+    <Grid ColumnDefinitions="*,Auto">
+      <StackPanel Grid.Column="0" Spacing="2">
+        <TextBlock Text="Etiquetas" Classes="h1" />
+        <TextBlock Text="Vocabulario compartido. Fija las más usadas y fusiona duplicados." Classes="muted" />
+      </StackPanel>
+      <Button Grid.Column="1" Command="{Binding ToggleCreatePanelCommand}" Classes="accent" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <mi:MaterialIcon Kind="TagPlus" Width="16" Height="16" />
+          <TextBlock Text="Nueva etiqueta" />
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+
+    <Border Classes="card" IsVisible="{Binding IsCreatePanelOpen}">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Nueva etiqueta" Classes="h2" />
+        <TextBox Watermark="Nombre" Text="{Binding NewName, Mode=TwoWay}" />
+        <TextBox Watermark="Color hex (opcional, p. ej. #4A43D9)" Text="{Binding NewColor, Mode=TwoWay}" />
+        <TextBox Watermark="Descripción (opcional)" Text="{Binding NewDescription, Mode=TwoWay}" />
+        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+          <Button Content="Cancelar" Command="{Binding ToggleCreatePanelCommand}" />
+          <Button Content="Crear" Classes="accent" Command="{Binding CreateTagCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Fusionar etiquetas" Classes="h2" />
+        <Grid ColumnDefinitions="*,Auto,*,Auto">
+          <ComboBox Grid.Column="0" HorizontalAlignment="Stretch" PlaceholderText="Origen (se elimina)"
+                    ItemsSource="{Binding Tags}" SelectedItem="{Binding MergeSource, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <mi:MaterialIcon Grid.Column="1" Kind="ArrowRight" Width="18" Height="18" Margin="10,0" VerticalAlignment="Center" />
+          <ComboBox Grid.Column="2" HorizontalAlignment="Stretch" PlaceholderText="Destino (se conserva)"
+                    ItemsSource="{Binding Tags}" SelectedItem="{Binding MergeTarget, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Grid.Column="3" Content="Fusionar" Margin="10,0,0,0" Command="{Binding MergeCommand}" />
+        </Grid>
+      </StackPanel>
+    </Border>
+
+    <ItemsControl ItemsSource="{Binding Tags}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Border Classes="row" Margin="0,0,0,8">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+              <Border Grid.Column="0" Width="14" Height="14" CornerRadius="99" Margin="0,0,12,0" VerticalAlignment="Center"
+                      Background="{Binding DisplayColor, Converter={x:Static conv:AppConverters.HexBrush}}" />
+              <StackPanel Grid.Column="1" Spacing="2">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13.5" />
+                  <mi:MaterialIcon Kind="Pin" Width="13" Height="13" VerticalAlignment="Center" IsVisible="{Binding IsPinned}"
+                                   Foreground="{DynamicResource AppAccentBrush}" />
+                </StackPanel>
+                <TextBlock Text="{Binding Description}" Classes="muted"
+                           IsVisible="{Binding Description, Converter={x:Static conv:AppConverters.HasText}}" />
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Classes="muted" Text="{Binding ProjectCount, StringFormat='{}{0} proyectos'}" />
+                  <TextBlock Classes="muted" Text="{Binding TaskCount, StringFormat='{}{0} tareas'}" />
+                  <TextBlock Classes="muted" Text="{Binding PersonCount, StringFormat='{}{0} personas'}" />
+                  <TextBlock Classes="muted" Text="{Binding CompanyCount, StringFormat='{}{0} empresas'}" />
+                </StackPanel>
+              </StackPanel>
+              <Button Grid.Column="2" Classes="quick" ToolTip.Tip="Fijar / desfijar" VerticalAlignment="Center"
+                      Command="{Binding $parent[ItemsControl].DataContext.TogglePinCommand}" CommandParameter="{Binding}">
+                <mi:MaterialIcon Kind="PinOutline" Width="14" Height="14" />
+              </Button>
+              <Button Grid.Column="3" Classes="quick" Content="Eliminar" VerticalAlignment="Center" Margin="8,0,0,0"
+                      Command="{Binding $parent[ItemsControl].DataContext.DeleteCommand}" CommandParameter="{Binding}" />
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <StackPanel Spacing="6" IsVisible="{Binding IsEmpty}" Margin="0,20,0,0" HorizontalAlignment="Center">
+      <mi:MaterialIcon Kind="TagOutline" Width="34" Height="34" HorizontalAlignment="Center"
+                       Foreground="{DynamicResource AppMutedBrush}" />
+      <TextBlock Text="Todavía no hay etiquetas." Classes="muted" HorizontalAlignment="Center" />
+    </StackPanel>
+
+  </StackPanel>
+
+</UserControl>

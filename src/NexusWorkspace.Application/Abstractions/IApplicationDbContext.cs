@@ -1,13 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using NexusWorkspace.Domain.Activity;
 using NexusWorkspace.Domain.Collaboration;
+using NexusWorkspace.Domain.Communications;
 using NexusWorkspace.Domain.Companies;
 using NexusWorkspace.Domain.FollowUps;
 using NexusWorkspace.Domain.Inbox;
+using NexusWorkspace.Domain.Meetings;
 using NexusWorkspace.Domain.Notifications;
 using NexusWorkspace.Domain.People;
 using NexusWorkspace.Domain.Projects;
+using NexusWorkspace.Domain.Relations;
 using NexusWorkspace.Domain.Reminders;
+using NexusWorkspace.Domain.SavedSearches;
 using NexusWorkspace.Domain.Tags;
 using NexusWorkspace.Domain.Tasks;
 
@@ -40,11 +44,25 @@ public interface IApplicationDbContext
 
     DbSet<WorkTaskTag> WorkTaskTags { get; }
 
+    DbSet<PersonTag> PersonTags { get; }
+
+    DbSet<CompanyTag> CompanyTags { get; }
+
     DbSet<ProjectPerson> ProjectPeople { get; }
 
     DbSet<ProjectCompany> ProjectCompanies { get; }
 
     DbSet<WorkTaskPerson> WorkTaskPeople { get; }
+
+    DbSet<Communication> Communications { get; }
+
+    DbSet<Meeting> Meetings { get; }
+
+    DbSet<MeetingParticipant> MeetingParticipants { get; }
+
+    DbSet<EntityRelation> EntityRelations { get; }
+
+    DbSet<SavedSearch> SavedSearches { get; }
 
     DbSet<Comment> Comments { get; }
 

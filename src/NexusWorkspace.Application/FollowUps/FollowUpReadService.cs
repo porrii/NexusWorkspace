@@ -109,6 +109,22 @@ public sealed class FollowUpReadService(IApplicationDbContext db, IClock clock)
         return all.Where(f => f.TargetKind == kind && f.TargetId == id).ToList();
     }
 
+    public async Task<IReadOnlyList<FollowUpListItem>> GetWaitingOnPersonAsync(Guid personId, CancellationToken cancellationToken = default)
+    {
+        var ids = await db.FollowUps.AsNoTracking().Where(f => f.WaitingOnPersonId == personId)
+            .Select(f => f.Id).ToListAsync(cancellationToken);
+        var all = await GetListAsync(FollowUpScope.All, cancellationToken);
+        return all.Where(f => ids.Contains(f.Id)).ToList();
+    }
+
+    public async Task<IReadOnlyList<FollowUpListItem>> GetWaitingOnCompanyAsync(Guid companyId, CancellationToken cancellationToken = default)
+    {
+        var ids = await db.FollowUps.AsNoTracking().Where(f => f.WaitingOnCompanyId == companyId)
+            .Select(f => f.Id).ToListAsync(cancellationToken);
+        var all = await GetListAsync(FollowUpScope.All, cancellationToken);
+        return all.Where(f => ids.Contains(f.Id)).ToList();
+    }
+
     public Task<int> CountOpenAsync(CancellationToken cancellationToken = default)
         => db.FollowUps.AsNoTracking()
             .CountAsync(f => f.State == FollowUpState.Waiting || f.State == FollowUpState.Escalated, cancellationToken);

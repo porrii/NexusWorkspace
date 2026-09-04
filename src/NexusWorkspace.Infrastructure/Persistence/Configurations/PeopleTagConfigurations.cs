@@ -28,6 +28,9 @@ internal sealed class PersonConfiguration : IEntityTypeConfiguration<Person>
 
         builder.HasIndex(p => p.Name);
         builder.HasIndex(p => p.IsDeleted);
+        builder.HasIndex(p => p.IsArchived);
+        builder.HasIndex(p => p.IsFavorite);
+        builder.HasIndex(p => p.LastContactedUtc);
     }
 }
 
@@ -39,10 +42,13 @@ internal sealed class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.HasKey(c => c.Id);
 
         builder.Property(c => c.Name).HasMaxLength(200).IsRequired();
+        builder.Property(c => c.Website).HasMaxLength(300);
         builder.Property(c => c.Notes).HasMaxLength(8000);
 
         builder.HasIndex(c => c.Name);
         builder.HasIndex(c => c.IsDeleted);
+        builder.HasIndex(c => c.IsArchived);
+        builder.HasIndex(c => c.IsFavorite);
     }
 }
 
@@ -55,8 +61,38 @@ internal sealed class TagConfiguration : IEntityTypeConfiguration<Tag>
 
         builder.Property(t => t.Name).HasMaxLength(60).IsRequired();
         builder.Property(t => t.Color).HasMaxLength(9);
+        builder.Property(t => t.Description).HasMaxLength(400);
 
         builder.HasIndex(t => t.Name).IsUnique();
+        builder.HasIndex(t => t.IsPinned);
+    }
+}
+
+internal sealed class PersonTagConfiguration : IEntityTypeConfiguration<PersonTag>
+{
+    public void Configure(EntityTypeBuilder<PersonTag> builder)
+    {
+        builder.ToTable("PersonTags");
+        builder.HasKey(x => new { x.PersonId, x.TagId });
+
+        builder.HasOne(x => x.Person).WithMany(p => p.Tags)
+            .HasForeignKey(x => x.PersonId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(x => x.Tag).WithMany(t => t.People)
+            .HasForeignKey(x => x.TagId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class CompanyTagConfiguration : IEntityTypeConfiguration<CompanyTag>
+{
+    public void Configure(EntityTypeBuilder<CompanyTag> builder)
+    {
+        builder.ToTable("CompanyTags");
+        builder.HasKey(x => new { x.CompanyId, x.TagId });
+
+        builder.HasOne(x => x.Company).WithMany(c => c.Tags)
+            .HasForeignKey(x => x.CompanyId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(x => x.Tag).WithMany(t => t.Companies)
+            .HasForeignKey(x => x.TagId).OnDelete(DeleteBehavior.Cascade);
     }
 }
 

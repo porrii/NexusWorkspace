@@ -5,13 +5,17 @@ using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Domain.Activity;
 using NexusWorkspace.Domain.Collaboration;
 using NexusWorkspace.Domain.Common;
+using NexusWorkspace.Domain.Communications;
 using NexusWorkspace.Domain.Companies;
 using NexusWorkspace.Domain.FollowUps;
 using NexusWorkspace.Domain.Inbox;
+using NexusWorkspace.Domain.Meetings;
 using NexusWorkspace.Domain.Notifications;
 using NexusWorkspace.Domain.People;
 using NexusWorkspace.Domain.Projects;
+using NexusWorkspace.Domain.Relations;
 using NexusWorkspace.Domain.Reminders;
+using NexusWorkspace.Domain.SavedSearches;
 using NexusWorkspace.Domain.Tags;
 using NexusWorkspace.Domain.Tasks;
 
@@ -41,11 +45,25 @@ public sealed class NexusDbContext(DbContextOptions<NexusDbContext> options)
 
     public DbSet<WorkTaskTag> WorkTaskTags => Set<WorkTaskTag>();
 
+    public DbSet<PersonTag> PersonTags => Set<PersonTag>();
+
+    public DbSet<CompanyTag> CompanyTags => Set<CompanyTag>();
+
     public DbSet<ProjectPerson> ProjectPeople => Set<ProjectPerson>();
 
     public DbSet<ProjectCompany> ProjectCompanies => Set<ProjectCompany>();
 
     public DbSet<WorkTaskPerson> WorkTaskPeople => Set<WorkTaskPerson>();
+
+    public DbSet<Communication> Communications => Set<Communication>();
+
+    public DbSet<Meeting> Meetings => Set<Meeting>();
+
+    public DbSet<MeetingParticipant> MeetingParticipants => Set<MeetingParticipant>();
+
+    public DbSet<EntityRelation> EntityRelations => Set<EntityRelation>();
+
+    public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
 
     public DbSet<Comment> Comments => Set<Comment>();
 

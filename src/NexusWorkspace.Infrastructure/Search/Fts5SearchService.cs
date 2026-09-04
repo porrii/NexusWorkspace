@@ -94,6 +94,27 @@ public sealed class Fts5SearchService(NexusDbContext db) : ISearchService
             "INSERT INTO SearchIndex(entity_kind, entity_id, navigate_kind, navigate_id, project_id, title, body) " +
             "SELECT 'Comment', Id, TargetKind, TargetId, ProjectId, '', Body FROM Comments WHERE IsDeleted = 0;",
             cancellationToken).ConfigureAwait(false);
+
+        await db.Database.ExecuteSqlRawAsync(
+            "INSERT INTO SearchIndex(entity_kind, entity_id, navigate_kind, navigate_id, project_id, title, body) " +
+            "SELECT 'Person', Id, 'Person', Id, NULL, Name, " +
+            "TRIM(COALESCE(Role, '') || ' ' || COALESCE(Email, '') || ' ' || COALESCE(Notes, '')) FROM People WHERE IsDeleted = 0;",
+            cancellationToken).ConfigureAwait(false);
+
+        await db.Database.ExecuteSqlRawAsync(
+            "INSERT INTO SearchIndex(entity_kind, entity_id, navigate_kind, navigate_id, project_id, title, body) " +
+            "SELECT 'Company', Id, 'Company', Id, NULL, Name, " +
+            "TRIM(COALESCE(Website, '') || ' ' || COALESCE(Notes, '')) FROM Companies WHERE IsDeleted = 0;",
+            cancellationToken).ConfigureAwait(false);
+
+        await db.Database.ExecuteSqlRawAsync(
+            "INSERT INTO SearchIndex(entity_kind, entity_id, navigate_kind, navigate_id, project_id, title, body) " +
+            "SELECT 'Communication', Id, " +
+            "CASE WHEN PersonId IS NOT NULL THEN 'Person' WHEN CompanyId IS NOT NULL THEN 'Company' " +
+            "WHEN WorkTaskId IS NOT NULL THEN 'WorkTask' WHEN ProjectId IS NOT NULL THEN 'Project' ELSE 'Communication' END, " +
+            "COALESCE(PersonId, CompanyId, WorkTaskId, ProjectId, Id), ProjectId, Subject, COALESCE(Body, '') " +
+            "FROM Communications WHERE IsDeleted = 0;",
+            cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<long> CountAsync(CancellationToken cancellationToken = default)

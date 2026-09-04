@@ -55,6 +55,41 @@ public sealed class ProjectReadService(IApplicationDbContext db)
         return rows;
     }
 
+    public Task<IReadOnlyList<ProjectListItem>> GetForPersonAsync(Guid personId, CancellationToken cancellationToken = default)
+        => ProjectRowsAsync(
+            db.Projects.AsNoTracking().Where(p => p.OwnerPersonId == personId || p.People.Any(x => x.PersonId == personId)),
+            cancellationToken);
+
+    public Task<IReadOnlyList<ProjectListItem>> GetForCompanyAsync(Guid companyId, CancellationToken cancellationToken = default)
+        => ProjectRowsAsync(
+            db.Projects.AsNoTracking().Where(p => p.Companies.Any(x => x.CompanyId == companyId)),
+            cancellationToken);
+
+    private static async Task<IReadOnlyList<ProjectListItem>> ProjectRowsAsync(
+        IQueryable<Domain.Projects.Project> query,
+        CancellationToken cancellationToken)
+        => await query
+            .OrderByDescending(p => p.UpdatedAtUtc)
+            .Select(p => new ProjectListItem
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Icon = p.Icon,
+                Color = p.Color,
+                Status = p.Status,
+                Priority = p.Priority,
+                DueDateUtc = p.DueDateUtc,
+                IsFavorite = p.IsFavorite,
+                IsArchived = p.IsArchived,
+                TotalTaskCount = p.Tasks.Count(t => !t.IsDeleted),
+                OpenTaskCount = p.Tasks.Count(t => !t.IsDeleted
+                    && t.Status != WorkTaskStatus.Finished
+                    && t.Status != WorkTaskStatus.Cancelled),
+                FinishedTaskCount = p.Tasks.Count(t => !t.IsDeleted && t.Status == WorkTaskStatus.Finished),
+            })
+            .ToListAsync(cancellationToken);
+
     public async Task<ProjectDetail?> GetDetailAsync(Guid projectId, CancellationToken cancellationToken = default)
     {
         return await db.Projects.AsNoTracking().IgnoreQueryFilters()

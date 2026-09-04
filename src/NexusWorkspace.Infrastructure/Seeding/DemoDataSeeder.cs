@@ -3,8 +3,13 @@ using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Localization;
 using NexusWorkspace.Domain.Activity;
 using NexusWorkspace.Domain.Collaboration;
+using NexusWorkspace.Domain.Communications;
+using NexusWorkspace.Domain.Companies;
 using NexusWorkspace.Domain.Enums;
+using NexusWorkspace.Domain.Meetings;
+using NexusWorkspace.Domain.People;
 using NexusWorkspace.Domain.Projects;
+using NexusWorkspace.Domain.Tags;
 using NexusWorkspace.Domain.Tasks;
 
 namespace NexusWorkspace.Infrastructure.Seeding;
@@ -96,6 +101,74 @@ public sealed class DemoDataSeeder(IApplicationDbContext db, IClock clock) : IDe
         AddEvent(project.Id, doneTask.Id, ActivityType.Created, "Tarea «Alta de máquina virtual» creada.", now.AddDays(-18));
         AddEvent(project.Id, doneTask.Id, ActivityType.StatusChanged, "Estado: En progreso → Finalizada.", now.AddDays(-15), "InProgress", "Finished");
 
+        // --- People / companies / context (Fase 4) ---
+        var company = new Company
+        {
+            Name = "Axon (demo)",
+            Kind = CompanyKind.Provider,
+            Website = "https://axon.example",
+            Notes = "Proveedor del componente SIP en el espacio de demostración.",
+        };
+        db.Companies.Add(company);
+        AddPersonEvent(company.Id, EntityKind.Company, ActivityType.Created, "Empresa «Axon (demo)» creada.", now.AddDays(-20));
+
+        var igor = new Person
+        {
+            Name = "Igor Ríos (demo)",
+            Role = "Contacto técnico",
+            Email = "igor.rios@axon.example",
+            CompanyId = company.Id,
+            IsFavorite = true,
+            LastContactedUtc = now.AddDays(-6),
+        };
+        var marta = new Person
+        {
+            Name = "Marta Lidón (demo)",
+            Role = "Jefa de proyecto",
+            Email = "marta.lidon@interno.example",
+        };
+        db.People.AddRange(igor, marta);
+        AddPersonEvent(igor.Id, EntityKind.Person, ActivityType.Created, "Persona «Igor Ríos (demo)» creada.", now.AddDays(-20));
+        AddPersonEvent(marta.Id, EntityKind.Person, ActivityType.Created, "Persona «Marta Lidón (demo)» creada.", now.AddDays(-20));
+
+        var sipTag = new Tag { Name = "SIP", Color = "#4A43D9", Description = "Todo lo relacionado con la integración SIP.", IsPinned = true };
+        db.Tags.Add(sipTag);
+
+        db.ProjectPeople.Add(new ProjectPerson { ProjectId = project.Id, PersonId = igor.Id, Role = "Proveedor SIP", LinkedAtUtc = now.AddDays(-19) });
+        db.ProjectPeople.Add(new ProjectPerson { ProjectId = project.Id, PersonId = marta.Id, Role = "Responsable", LinkedAtUtc = now.AddDays(-19) });
+        db.ProjectCompanies.Add(new ProjectCompany { ProjectId = project.Id, CompanyId = company.Id, LinkedAtUtc = now.AddDays(-19) });
+        db.ProjectTags.Add(new ProjectTag { ProjectId = project.Id, TagId = sipTag.Id });
+        db.PersonTags.Add(new PersonTag { PersonId = igor.Id, TagId = sipTag.Id });
+        db.CompanyTags.Add(new CompanyTag { CompanyId = company.Id, TagId = sipTag.Id });
+
+        db.Communications.Add(new Communication
+        {
+            Channel = CommunicationChannel.Email,
+            Direction = CommunicationDirection.Outbound,
+            Subject = "Recordatorio: endpoint de PRE para SIP",
+            Body = "Enviado recordatorio a Igor pidiendo la confirmación del endpoint de PRE.",
+            OccurredAtUtc = now.AddDays(-6),
+            PersonId = igor.Id,
+            CompanyId = company.Id,
+            ProjectId = project.Id,
+        });
+        AddPersonEvent(igor.Id, EntityKind.Person, ActivityType.CommunicationLogged, "Correo · Enviado: Recordatorio endpoint de PRE.", now.AddDays(-6), project.Id);
+
+        var meeting = new Meeting
+        {
+            Title = "Seguimiento integración SIP",
+            Agenda = "Estado del endpoint de PRE, plan de pruebas de PRO.",
+            StartUtc = now.AddDays(3).Date.AddHours(9),
+            EndUtc = now.AddDays(3).Date.AddHours(10),
+            Location = "Sala Teams",
+            Status = MeetingStatus.Scheduled,
+            ProjectId = project.Id,
+        };
+        meeting.Participants.Add(new MeetingParticipant { PersonId = igor.Id, Role = "Proveedor" });
+        meeting.Participants.Add(new MeetingParticipant { PersonId = marta.Id, Role = "Responsable" });
+        db.Meetings.Add(meeting);
+        AddPersonEvent(meeting.Id, EntityKind.Meeting, ActivityType.MeetingScheduled, "Reunión «Seguimiento integración SIP» programada.", now.AddDays(-1), project.Id);
+
         await db.SaveChangesAsync(cancellationToken);
     }
 
@@ -108,15 +181,42 @@ public sealed class DemoDataSeeder(IApplicationDbContext db, IClock clock) : IDe
             return;
         }
 
-        var events = await db.ActivityEvents.Where(a => a.ProjectId == project.Id).ToListAsync(cancellationToken);
+        var demoPeople = await db.People.IgnoreQueryFilters()
+            .Where(p => p.Name.EndsWith("(demo)")).Select(p => p.Id).ToListAsync(cancellationToken);
+        var demoCompanies = await db.Companies.IgnoreQueryFilters()
+            .Where(c => c.Name.EndsWith("(demo)")).Select(c => c.Id).ToListAsync(cancellationToken);
+
+        var events = await db.ActivityEvents
+            .Where(a => a.ProjectId == project.Id
+                        || (a.TargetKind == EntityKind.Person && demoPeople.Contains(a.TargetId))
+                        || (a.TargetKind == EntityKind.Company && demoCompanies.Contains(a.TargetId)))
+            .ToListAsync(cancellationToken);
         db.ActivityEvents.RemoveRange(events);
 
         var comments = await db.Comments.IgnoreQueryFilters()
             .Where(c => c.ProjectId == project.Id).ToListAsync(cancellationToken);
         db.Comments.RemoveRange(comments);
 
-        // Tasks, subtasks, checklist items and dependencies cascade from the project.
+        var meetings = await db.Meetings.IgnoreQueryFilters()
+            .Where(m => m.ProjectId == project.Id).ToListAsync(cancellationToken);
+        db.Meetings.RemoveRange(meetings);
+
+        var communications = await db.Communications.IgnoreQueryFilters()
+            .Where(c => c.ProjectId == project.Id).ToListAsync(cancellationToken);
+        db.Communications.RemoveRange(communications);
+
+        var demoTags = await db.Tags.IgnoreQueryFilters()
+            .Where(t => t.Name == "SIP").ToListAsync(cancellationToken);
+        db.Tags.RemoveRange(demoTags);
+
+        // Tasks, subtasks, checklist items, dependencies and join rows cascade from their parents.
         db.Projects.Remove(project);
+
+        var people = await db.People.IgnoreQueryFilters().Where(p => demoPeople.Contains(p.Id)).ToListAsync(cancellationToken);
+        db.People.RemoveRange(people);
+
+        var companies = await db.Companies.IgnoreQueryFilters().Where(c => demoCompanies.Contains(c.Id)).ToListAsync(cancellationToken);
+        db.Companies.RemoveRange(companies);
 
         await db.SaveChangesAsync(cancellationToken);
     }
@@ -152,6 +252,20 @@ public sealed class DemoDataSeeder(IApplicationDbContext db, IClock clock) : IDe
         IsChecked = isChecked,
         SortKey = sortKey,
     };
+
+    private void AddPersonEvent(Guid targetId, EntityKind kind, ActivityType type, string summary, DateTime occurredAtUtc, Guid? projectId = null)
+    {
+        db.ActivityEvents.Add(new ActivityEvent
+        {
+            TargetKind = kind,
+            TargetId = targetId,
+            ProjectId = projectId,
+            Type = type,
+            Summary = summary,
+            OccurredAtUtc = occurredAtUtc,
+            ActorLabel = "yo",
+        });
+    }
 
     private void AddEvent(
         Guid projectId,

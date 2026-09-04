@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Companies.CompaniesView">
+
+  <StackPanel Spacing="16" MaxWidth="1000">
+
+    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+      <TextBlock Grid.Column="0" Text="Empresas" Classes="h1" VerticalAlignment="Center" />
+      <TextBox Grid.Column="1" Width="220" Watermark="Buscar…" Margin="0,0,10,0"
+               Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+      <ComboBox Grid.Column="2" Width="180" Margin="0,0,10,0"
+                ItemsSource="{Binding TagFilters}" SelectedItem="{Binding SelectedTag, Mode=TwoWay}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding Name}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <ToggleSwitch Grid.Column="3" OnContent="Archivadas" OffContent="Activas" Margin="0,0,10,0"
+                    IsChecked="{Binding ShowArchived, Mode=TwoWay}" />
+      <Button Grid.Column="4" Command="{Binding ToggleCreatePanelCommand}" Classes="accent">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <mi:MaterialIcon Kind="OfficeBuildingPlus" Width="16" Height="16" />
+          <TextBlock Text="Nueva empresa" />
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <Border Classes="card" IsVisible="{Binding IsCreatePanelOpen}">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Nueva empresa" Classes="h2" />
+        <TextBox Watermark="Nombre" Text="{Binding NewName, Mode=TwoWay}" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Tipo" VerticalAlignment="Center" Classes="muted" />
+          <ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding NewKind, Mode=TwoWay}" Width="160">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <TextBox Watermark="Sitio web (opcional)" Text="{Binding NewWebsite, Mode=TwoWay}" />
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+                   IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+          <Button Content="Cancelar" Command="{Binding ToggleCreatePanelCommand}" />
+          <Button Content="Crear" Classes="accent" Command="{Binding CreateCompanyCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <ItemsControl ItemsSource="{Binding Companies}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Border Classes="row" Margin="0,0,0,10" Tag="{Binding}" PointerReleased="OnCompanyClicked">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <mi:MaterialIcon Grid.Column="0" Kind="OfficeBuildingOutline" Width="22" Height="22" Margin="0,0,12,0"
+                               VerticalAlignment="Center" Foreground="{DynamicResource AppAccentBrush}" />
+              <StackPanel Grid.Column="1" Spacing="4">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" />
+                  <Border Classes="pill" BorderBrush="{Binding Kind, Converter={x:Static conv:AppConverters.CompanyKindBrush}}">
+                    <TextBlock Text="{Binding Kind, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                               Foreground="{Binding Kind, Converter={x:Static conv:AppConverters.CompanyKindBrush}}" />
+                  </Border>
+                  <mi:MaterialIcon Kind="Star" Width="14" Height="14" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SemWaitingBrush}" IsVisible="{Binding IsFavorite}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <TextBlock Classes="muted" Text="{Binding PeopleCount, StringFormat='{}{0} personas'}" />
+                  <TextBlock Classes="muted" Text="{Binding ProjectCount, StringFormat='{}{0} proyectos'}" />
+                  <TextBlock Classes="muted" Text="{Binding Website}"
+                             IsVisible="{Binding Website, Converter={x:Static conv:AppConverters.HasText}}" />
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Tags}" Margin="0,2,0,0">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Classes="pill" Margin="0,0,6,0"
+                              BorderBrush="{Binding DisplayColor, Converter={x:Static conv:AppConverters.HexBrush}}">
+                        <TextBlock Text="{Binding Name}"
+                                   Foreground="{Binding DisplayColor, Converter={x:Static conv:AppConverters.HexBrush}}" />
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+              <Button Grid.Column="2" Classes="quick" VerticalAlignment="Center"
+                      Command="{Binding $parent[ItemsControl].DataContext.ToggleFavoriteCommand}" CommandParameter="{Binding}">
+                <mi:MaterialIcon Kind="StarOutline" Width="15" Height="15" />
+              </Button>
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <StackPanel Spacing="6" IsVisible="{Binding IsEmpty}" Margin="0,20,0,0" HorizontalAlignment="Center">
+      <mi:MaterialIcon Kind="OfficeBuildingOutline" Width="34" Height="34" HorizontalAlignment="Center"
+                       Foreground="{DynamicResource AppMutedBrush}" />
+      <TextBlock Text="Aún no hay empresas registradas." Classes="muted" HorizontalAlignment="Center" />
+    </StackPanel>
+
+  </StackPanel>
+
+</UserControl>

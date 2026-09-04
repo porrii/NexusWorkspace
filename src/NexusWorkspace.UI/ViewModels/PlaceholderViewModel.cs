@@ -25,6 +25,7 @@ public partial class PlaceholderViewModel : ViewModelBase
             PageKey.Calendar => "Calendario",
             PageKey.People => "Personas",
             PageKey.Companies => "Empresas",
+            PageKey.Tags => "Etiquetas",
             PageKey.Files => "Archivos",
             PageKey.Statistics => "Estadísticas",
             PageKey.Archived => "Archivados",

@@ -224,6 +224,90 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
                     b.ToTable("Comments", (string)null);
                 });
 
+            modelBuilder.Entity("NexusWorkspace.Domain.Communications.Communication", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ArchivedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .HasMaxLength(20000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CompanyId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContactLabel")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PersonId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProjectId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WorkTaskId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("OccurredAtUtc");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("WorkTaskId");
+
+                    b.ToTable("Communications", (string)null);
+                });
+
             modelBuilder.Entity("NexusWorkspace.Domain.Companies.Company", b =>
                 {
                     b.Property<string>("Id")
@@ -254,6 +338,9 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("LastContactedUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -266,13 +353,38 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("UpdatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Website")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("IsArchived");
+
                     b.HasIndex("IsDeleted");
+
+                    b.HasIndex("IsFavorite");
 
                     b.HasIndex("Name");
 
                     b.ToTable("Companies", (string)null);
+                });
+
+            modelBuilder.Entity("NexusWorkspace.Domain.Companies.CompanyTag", b =>
+                {
+                    b.Property<string>("CompanyId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TagId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("CompanyId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("CompanyTags", (string)null);
                 });
 
             modelBuilder.Entity("NexusWorkspace.Domain.FollowUps.FollowUp", b =>
@@ -437,6 +549,112 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
                     b.ToTable("InboxItems", (string)null);
                 });
 
+            modelBuilder.Entity("NexusWorkspace.Domain.Meetings.Meeting", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Agenda")
+                        .HasMaxLength(8000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ArchivedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EndUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(20000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProjectId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("StartUtc");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("Meetings", (string)null);
+                });
+
+            modelBuilder.Entity("NexusWorkspace.Domain.Meetings.MeetingParticipant", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Attended")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ExternalName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MeetingId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PersonId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("MeetingId", "PersonId");
+
+                    b.ToTable("MeetingParticipants", (string)null);
+                });
+
             modelBuilder.Entity("NexusWorkspace.Domain.Notifications.Notification", b =>
                 {
                     b.Property<string>("Id")
@@ -521,6 +739,9 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsFavorite")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("LastContactedUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -545,11 +766,34 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CompanyId");
 
+                    b.HasIndex("IsArchived");
+
                     b.HasIndex("IsDeleted");
+
+                    b.HasIndex("IsFavorite");
+
+                    b.HasIndex("LastContactedUtc");
 
                     b.HasIndex("Name");
 
                     b.ToTable("People", (string)null);
+                });
+
+            modelBuilder.Entity("NexusWorkspace.Domain.People.PersonTag", b =>
+                {
+                    b.Property<string>("PersonId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TagId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("PersonId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("PersonTags", (string)null);
                 });
 
             modelBuilder.Entity("NexusWorkspace.Domain.Projects.Project", b =>
@@ -699,6 +943,71 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
                     b.ToTable("ProjectTags", (string)null);
                 });
 
+            modelBuilder.Entity("NexusWorkspace.Domain.Relations.EntityRelation", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ArchivedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FromId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FromKind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ToId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ToKind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("FromKind", "FromId");
+
+                    b.HasIndex("ToKind", "ToId");
+
+                    b.ToTable("EntityRelations", (string)null);
+                });
+
             modelBuilder.Entity("NexusWorkspace.Domain.Reminders.Reminder", b =>
                 {
                     b.Property<string>("Id")
@@ -772,6 +1081,67 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
                     b.ToTable("Reminders", (string)null);
                 });
 
+            modelBuilder.Entity("NexusWorkspace.Domain.SavedSearches.SavedSearch", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ArchivedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FiltersJson")
+                        .HasMaxLength(8000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastRunUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QueryText")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("SortKey")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsPinned");
+
+                    b.HasIndex("Kind", "SortKey");
+
+                    b.ToTable("SavedSearches", (string)null);
+                });
+
             modelBuilder.Entity("NexusWorkspace.Domain.Tags.Tag", b =>
                 {
                     b.Property<string>("Id")
@@ -792,10 +1162,17 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(400)
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsArchived")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPinned")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
@@ -807,6 +1184,8 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsPinned");
 
                     b.HasIndex("Name")
                         .IsUnique();
@@ -1102,6 +1481,56 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
                     b.ToTable("WorkTaskTags", (string)null);
                 });
 
+            modelBuilder.Entity("NexusWorkspace.Domain.Communications.Communication", b =>
+                {
+                    b.HasOne("NexusWorkspace.Domain.Companies.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("NexusWorkspace.Domain.People.Person", "Person")
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("NexusWorkspace.Domain.Projects.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("NexusWorkspace.Domain.Tasks.WorkTask", "WorkTask")
+                        .WithMany()
+                        .HasForeignKey("WorkTaskId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Person");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("WorkTask");
+                });
+
+            modelBuilder.Entity("NexusWorkspace.Domain.Companies.CompanyTag", b =>
+                {
+                    b.HasOne("NexusWorkspace.Domain.Companies.Company", "Company")
+                        .WithMany("Tags")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NexusWorkspace.Domain.Tags.Tag", "Tag")
+                        .WithMany("Companies")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Tag");
+                });
+
             modelBuilder.Entity("NexusWorkspace.Domain.FollowUps.FollowUp", b =>
                 {
                     b.HasOne("NexusWorkspace.Domain.Projects.Project", "Project")
@@ -1126,6 +1555,34 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
                     b.Navigation("WaitingOnPerson");
                 });
 
+            modelBuilder.Entity("NexusWorkspace.Domain.Meetings.Meeting", b =>
+                {
+                    b.HasOne("NexusWorkspace.Domain.Projects.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("NexusWorkspace.Domain.Meetings.MeetingParticipant", b =>
+                {
+                    b.HasOne("NexusWorkspace.Domain.Meetings.Meeting", "Meeting")
+                        .WithMany("Participants")
+                        .HasForeignKey("MeetingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NexusWorkspace.Domain.People.Person", "Person")
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Meeting");
+
+                    b.Navigation("Person");
+                });
+
             modelBuilder.Entity("NexusWorkspace.Domain.People.Person", b =>
                 {
                     b.HasOne("NexusWorkspace.Domain.Companies.Company", "Company")
@@ -1134,6 +1591,25 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("NexusWorkspace.Domain.People.PersonTag", b =>
+                {
+                    b.HasOne("NexusWorkspace.Domain.People.Person", "Person")
+                        .WithMany("Tags")
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NexusWorkspace.Domain.Tags.Tag", "Tag")
+                        .WithMany("People")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Person");
+
+                    b.Navigation("Tag");
                 });
 
             modelBuilder.Entity("NexusWorkspace.Domain.Projects.Project", b =>
@@ -1327,6 +1803,18 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("NexusWorkspace.Domain.Companies.Company", b =>
                 {
                     b.Navigation("People");
+
+                    b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("NexusWorkspace.Domain.Meetings.Meeting", b =>
+                {
+                    b.Navigation("Participants");
+                });
+
+            modelBuilder.Entity("NexusWorkspace.Domain.People.Person", b =>
+                {
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("NexusWorkspace.Domain.Projects.Project", b =>
@@ -1342,6 +1830,10 @@ namespace NexusWorkspace.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("NexusWorkspace.Domain.Tags.Tag", b =>
                 {
+                    b.Navigation("Companies");
+
+                    b.Navigation("People");
+
                     b.Navigation("Projects");
 
                     b.Navigation("Tasks");

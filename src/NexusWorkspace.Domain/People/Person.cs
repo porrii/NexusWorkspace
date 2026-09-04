@@ -1,5 +1,6 @@
 using NexusWorkspace.Domain.Common;
 using NexusWorkspace.Domain.Companies;
+using NexusWorkspace.Domain.Tags;
 
 namespace NexusWorkspace.Domain.People;
 
@@ -24,4 +25,9 @@ public class Person : AuditableEntity
     public Company? Company { get; set; }
 
     public bool IsFavorite { get; set; }
+
+    /// <summary>Denormalised from the newest logged communication; drives "not contacted in a while".</summary>
+    public DateTime? LastContactedUtc { get; set; }
+
+    public ICollection<PersonTag> Tags { get; } = new List<PersonTag>();
 }

@@ -42,6 +42,32 @@ public sealed class WorkTaskReadService(IApplicationDbContext db)
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<WorkTaskListItem>> GetForPersonAsync(Guid personId, bool openOnly = true, CancellationToken cancellationToken = default)
+    {
+        var query = db.WorkTasks.AsNoTracking()
+            .Where(t => t.AssigneePersonId == personId || t.People.Any(x => x.PersonId == personId));
+        if (openOnly)
+        {
+            query = query.Where(t => t.Status != WorkTaskStatus.Finished && t.Status != WorkTaskStatus.Cancelled);
+        }
+
+        return await query.OrderBy(t => t.DueDateUtc ?? DateTime.MaxValue).ThenBy(t => t.Priority)
+            .Select(ToListItem()).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<WorkTaskListItem>> GetForCompanyAsync(Guid companyId, bool openOnly = true, CancellationToken cancellationToken = default)
+    {
+        var query = db.WorkTasks.AsNoTracking()
+            .Where(t => t.RelatedCompanyId == companyId || t.Project.Companies.Any(x => x.CompanyId == companyId));
+        if (openOnly)
+        {
+            query = query.Where(t => t.Status != WorkTaskStatus.Finished && t.Status != WorkTaskStatus.Cancelled);
+        }
+
+        return await query.OrderBy(t => t.DueDateUtc ?? DateTime.MaxValue).ThenBy(t => t.Priority)
+            .Select(ToListItem()).ToListAsync(cancellationToken);
+    }
+
     public async Task<WorkTaskDetail?> GetDetailAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         var task = await db.WorkTasks.AsNoTracking().IgnoreQueryFilters()

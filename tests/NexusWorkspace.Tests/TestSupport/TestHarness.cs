@@ -2,11 +2,18 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
+using NexusWorkspace.Application.Communications;
+using NexusWorkspace.Application.Companies;
 using NexusWorkspace.Application.FollowUps;
 using NexusWorkspace.Application.Inbox;
+using NexusWorkspace.Application.Meetings;
 using NexusWorkspace.Application.Notifications;
+using NexusWorkspace.Application.People;
 using NexusWorkspace.Application.Projects;
+using NexusWorkspace.Application.Relations;
 using NexusWorkspace.Application.Reminders;
+using NexusWorkspace.Application.SavedSearches;
+using NexusWorkspace.Application.Tags;
 using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Infrastructure.Persistence;
 using NexusWorkspace.Infrastructure.Persistence.Interceptors;
@@ -46,6 +53,22 @@ public sealed class TestHarness : IAsyncDisposable
         Reminders = new ReminderService(Db, Clock, activityLog);
         Notifications = new NotificationService(Db, Clock, new NullAppNotifier());
         Search = new Fts5SearchService(Db);
+
+        People = new PersonService(Db, activityLog);
+        PeopleReads = new PersonReadService(Db);
+        Companies = new CompanyService(Db, activityLog);
+        CompanyReads = new CompanyReadService(Db);
+        Communications = new CommunicationService(Db, Clock, activityLog);
+        CommunicationReads = new CommunicationReadService(Db);
+        Meetings = new MeetingService(Db, activityLog);
+        MeetingReads = new MeetingReadService(Db, Clock);
+        Tags = new TagService(Db, activityLog);
+        TagReads = new TagReadService(Db);
+        Relations = new RelationService(Db, activityLog);
+        RelationReads = new RelationReadService(Db);
+        SavedSearches = new SavedSearchService(Db, Clock);
+        SavedSearchReads = new SavedSearchReadService(Db);
+        Activity = new ActivityReadService(Db);
     }
 
     public FixedClock Clock { get; }
@@ -65,6 +88,36 @@ public sealed class TestHarness : IAsyncDisposable
     public NotificationService Notifications { get; }
 
     public Fts5SearchService Search { get; }
+
+    public PersonService People { get; }
+
+    public PersonReadService PeopleReads { get; }
+
+    public CompanyService Companies { get; }
+
+    public CompanyReadService CompanyReads { get; }
+
+    public CommunicationService Communications { get; }
+
+    public CommunicationReadService CommunicationReads { get; }
+
+    public MeetingService Meetings { get; }
+
+    public MeetingReadService MeetingReads { get; }
+
+    public TagService Tags { get; }
+
+    public TagReadService TagReads { get; }
+
+    public RelationService Relations { get; }
+
+    public RelationReadService RelationReads { get; }
+
+    public SavedSearchService SavedSearches { get; }
+
+    public SavedSearchReadService SavedSearchReads { get; }
+
+    public ActivityReadService Activity { get; }
 
     public async ValueTask DisposeAsync()
     {

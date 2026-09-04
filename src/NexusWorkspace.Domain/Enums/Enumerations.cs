@@ -67,6 +67,15 @@ public enum ActivityType
     TemplateApplied = 27,
     Imported = 28,
     Renamed = 29,
+    CommunicationLogged = 30,
+    MeetingScheduled = 31,
+    MeetingUpdated = 32,
+    TagAdded = 33,
+    TagRemoved = 34,
+    LinkedPerson = 35,
+    UnlinkedPerson = 36,
+    LinkedCompany = 37,
+    UnlinkedCompany = 38,
 }
 
 /// <summary>One-click actions available from any project or task.</summary>
@@ -110,6 +119,8 @@ public enum EntityKind
     Meeting = 11,
     Reminder = 12,
     InboxItem = 13,
+    SavedSearch = 14,
+    Relation = 15,
 }
 
 public enum CompanyKind
@@ -157,4 +168,56 @@ public enum NotificationKind
     Reminder = 1,
     FollowUp = 2,
     DueDate = 3,
+    Meeting = 4,
+}
+
+/// <summary>How a logged communication reached us / left us.</summary>
+public enum CommunicationChannel
+{
+    Email = 0,
+    Call = 1,
+    Chat = 2,
+    InPerson = 3,
+    Letter = 4,
+    Ticket = 5,
+    Other = 6,
+}
+
+/// <summary>Direction of a logged communication relative to the local user.</summary>
+public enum CommunicationDirection
+{
+    Outbound = 0,
+    Inbound = 1,
+    Internal = 2,
+}
+
+public enum MeetingStatus
+{
+    Scheduled = 0,
+    Held = 1,
+    Cancelled = 2,
+}
+
+/// <summary>Semantic of a cross-reference between any two entities.</summary>
+public enum RelationKind
+{
+    RelatesTo = 0,
+    Blocks = 1,
+    DependsOn = 2,
+    Duplicates = 3,
+    References = 4,
+    PartOf = 5,
+    Mentions = 6,
+}
+
+/// <summary>Which surface a saved search / filter belongs to.</summary>
+public enum SavedSearchKind
+{
+    Global = 0,
+    Projects = 1,
+    Tasks = 2,
+    People = 3,
+    Companies = 4,
+    FollowUps = 5,
+    Communications = 6,
 }

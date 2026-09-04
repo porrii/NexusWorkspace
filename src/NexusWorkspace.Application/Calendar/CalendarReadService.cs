@@ -10,6 +10,7 @@ public enum CalendarEntryKind
     ProjectDue = 1,
     FollowUpNext = 2,
     Reminder = 3,
+    Meeting = 4,
 }
 
 /// <summary>One dated item on the calendar. <see cref="Date"/> is the local calendar day.</summary>
@@ -76,7 +77,20 @@ public sealed class CalendarReadService(IApplicationDbContext db)
             })
             .ToListAsync(cancellationToken);
 
-        var entries = new List<CalendarEntry>(tasks.Count + projects.Count + followUps.Count + reminders.Count);
+        var meetings = await db.Meetings.AsNoTracking()
+            .Where(m => m.Status != MeetingStatus.Cancelled && m.StartUtc >= fromUtc && m.StartUtc <= toUtc)
+            .Select(m => new
+            {
+                m.Id,
+                m.Title,
+                At = m.StartUtc,
+                m.ProjectId,
+                ProjectName = m.Project != null ? m.Project.Name : null,
+            })
+            .ToListAsync(cancellationToken);
+
+        var entries = new List<CalendarEntry>(
+            tasks.Count + projects.Count + followUps.Count + reminders.Count + meetings.Count);
 
         entries.AddRange(tasks.Select(t => new CalendarEntry
         {
@@ -124,6 +138,18 @@ public sealed class CalendarReadService(IApplicationDbContext db)
             NavigateId = r.Id,
             ProjectId = r.ProjectId,
             ProjectName = r.ProjectName,
+        }));
+
+        entries.AddRange(meetings.Select(m => new CalendarEntry
+        {
+            Date = LocalDay(m.At),
+            WhenUtc = m.At,
+            Kind = CalendarEntryKind.Meeting,
+            Title = m.Title,
+            NavigateKind = EntityKind.Meeting,
+            NavigateId = m.Id,
+            ProjectId = m.ProjectId,
+            ProjectName = m.ProjectName,
         }));
 
         return entries.OrderBy(e => e.WhenUtc).ToList();

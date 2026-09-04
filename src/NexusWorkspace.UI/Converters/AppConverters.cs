@@ -87,7 +87,69 @@ public static class AppConverters
         CalendarEntryKind.ProjectDue => Brush("#9A2F3A"),
         CalendarEntryKind.FollowUpNext => Brush("#7A5AD1"),
         CalendarEntryKind.Reminder => Brush("#DD8330"),
+        CalendarEntryKind.Meeting => Brush("#2F7DA3"),
         _ => Brush("#6A7183"),
+    });
+
+    public static readonly FuncValueConverter<CompanyKind, IBrush> CompanyKindBrush = new(kind => kind switch
+    {
+        CompanyKind.Client => Brush("#2E9E63"),
+        CompanyKind.Provider => Brush("#DD8330"),
+        CompanyKind.Internal => Brush("#4A43D9"),
+        _ => Brush("#6A7183"),
+    });
+
+    public static readonly FuncValueConverter<CommunicationDirection, IBrush> CommunicationDirectionBrush = new(direction => direction switch
+    {
+        CommunicationDirection.Outbound => Brush("#4A43D9"),
+        CommunicationDirection.Inbound => Brush("#2E9E63"),
+        _ => Brush("#6A7183"),
+    });
+
+    public static readonly FuncValueConverter<CommunicationChannel, string> CommunicationChannelIcon = new(channel => channel switch
+    {
+        CommunicationChannel.Email => "EmailOutline",
+        CommunicationChannel.Call => "PhoneOutline",
+        CommunicationChannel.Chat => "ChatOutline",
+        CommunicationChannel.InPerson => "AccountVoice",
+        CommunicationChannel.Letter => "MailboxOutline",
+        CommunicationChannel.Ticket => "TicketOutline",
+        _ => "MessageOutline",
+    });
+
+    public static readonly FuncValueConverter<MeetingStatus, IBrush> MeetingStatusBrush = new(status => status switch
+    {
+        MeetingStatus.Scheduled => Brush("#4A43D9"),
+        MeetingStatus.Held => Brush("#2E9E63"),
+        MeetingStatus.Cancelled => Brush("#6A7183"),
+        _ => Brush("#6A7183"),
+    });
+
+    /// <summary>Hex string → brush; falls back to a neutral grey for anything unparseable.</summary>
+    public static readonly FuncValueConverter<string?, IBrush> HexBrush = new(hex =>
+    {
+        try
+        {
+            return string.IsNullOrWhiteSpace(hex) ? Brush("#6A7183") : new SolidColorBrush(Color.Parse(hex));
+        }
+        catch (FormatException)
+        {
+            return Brush("#6A7183");
+        }
+    });
+
+    /// <summary>Name → up to two uppercase initials, e.g. "Iván Béznilla" → "IB".</summary>
+    public static readonly FuncValueConverter<string?, string> Initials = new(name =>
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "?";
+        }
+
+        var parts = name.Trim().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+        var first = parts[0][..1];
+        var second = parts.Length > 1 ? parts[^1][..1] : string.Empty;
+        return (first + second).ToUpperInvariant();
     });
 
     /// <summary>UTC datetime → "hoy" / "hace 1 d" / "en 3 d".</summary>
@@ -111,6 +173,13 @@ public static class AppConverters
         Priority p => DisplayNames.Of(p),
         CompanyKind k => DisplayNames.Of(k),
         QuickActionKind q => DisplayNames.Of(q),
+        CommunicationChannel c => DisplayNames.Of(c),
+        CommunicationDirection d => DisplayNames.Of(d),
+        MeetingStatus m => DisplayNames.Of(m),
+        RelationKind r => DisplayNames.Of(r),
+        FollowUpState f => DisplayNames.Of(f),
+        ReminderStatus rs => DisplayNames.Of(rs),
+        EntityKind e => DisplayNames.Of(e),
         null => null,
         _ => value.ToString(),
     };
