@@ -2,9 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using NexusWorkspace.Domain.Activity;
 using NexusWorkspace.Domain.Collaboration;
 using NexusWorkspace.Domain.Companies;
+using NexusWorkspace.Domain.FollowUps;
 using NexusWorkspace.Domain.Inbox;
+using NexusWorkspace.Domain.Notifications;
 using NexusWorkspace.Domain.People;
 using NexusWorkspace.Domain.Projects;
+using NexusWorkspace.Domain.Reminders;
 using NexusWorkspace.Domain.Tags;
 using NexusWorkspace.Domain.Tasks;
 
@@ -50,6 +53,12 @@ public interface IApplicationDbContext
     DbSet<ActivityEvent> ActivityEvents { get; }
 
     DbSet<InboxItem> InboxItems { get; }
+
+    DbSet<FollowUp> FollowUps { get; }
+
+    DbSet<Reminder> Reminders { get; }
+
+    DbSet<Notification> Notifications { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

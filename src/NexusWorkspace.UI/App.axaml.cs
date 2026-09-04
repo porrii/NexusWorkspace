@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,22 +31,40 @@ public partial class App : Avalonia.Application
 
         var shell = Services.GetRequiredService<MainViewModel>();
 
+        var hotkeys = Services.GetService<IGlobalHotkeyService>();
+        var scheduler = Services.GetService<ISchedulerService>();
+        var notifier = Services.GetService<InAppNotifier>();
+
         switch (ApplicationLifetime)
         {
             case IClassicDesktopStyleApplicationLifetime desktop:
                 var window = new MainWindow { DataContext = shell };
-                var hotkeys = Services.GetService<IGlobalHotkeyService>();
-                if (hotkeys is not null)
+                notifier?.Attach(window);
+                window.Opened += (_, _) =>
                 {
-                    window.Opened += (_, _) => hotkeys.Start();
-                    desktop.ShutdownRequested += (_, _) => hotkeys.Stop();
-                }
-
+                    hotkeys?.Start();
+                    scheduler?.Start();
+                };
+                desktop.ShutdownRequested += (_, _) =>
+                {
+                    hotkeys?.Stop();
+                    scheduler?.Stop();
+                };
                 desktop.MainWindow = window;
                 break;
 
             case ISingleViewApplicationLifetime singleView:
-                singleView.MainView = new MainView { DataContext = shell };
+                var view = new MainView { DataContext = shell };
+                singleView.MainView = view;
+                view.AttachedToVisualTree += (_, _) =>
+                {
+                    if (TopLevel.GetTopLevel(view) is { } topLevel)
+                    {
+                        notifier?.Attach(topLevel);
+                    }
+
+                    scheduler?.Start();
+                };
                 break;
         }
 

@@ -6,9 +6,12 @@ using NexusWorkspace.Domain.Activity;
 using NexusWorkspace.Domain.Collaboration;
 using NexusWorkspace.Domain.Common;
 using NexusWorkspace.Domain.Companies;
+using NexusWorkspace.Domain.FollowUps;
 using NexusWorkspace.Domain.Inbox;
+using NexusWorkspace.Domain.Notifications;
 using NexusWorkspace.Domain.People;
 using NexusWorkspace.Domain.Projects;
+using NexusWorkspace.Domain.Reminders;
 using NexusWorkspace.Domain.Tags;
 using NexusWorkspace.Domain.Tasks;
 
@@ -51,6 +54,12 @@ public sealed class NexusDbContext(DbContextOptions<NexusDbContext> options)
     public DbSet<ActivityEvent> ActivityEvents => Set<ActivityEvent>();
 
     public DbSet<InboxItem> InboxItems => Set<InboxItem>();
+
+    public DbSet<FollowUp> FollowUps => Set<FollowUp>();
+
+    public DbSet<Reminder> Reminders => Set<Reminder>();
+
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {

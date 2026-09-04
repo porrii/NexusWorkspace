@@ -21,9 +21,11 @@ Incremental. **La solución permanece compilable y ejecutable al terminar cada f
 - [x] **Fase 1** — Proyectos · Tareas · Subtareas · Checklist · Comentarios · **historial inmutable** · **barra de acciones rápidas** · soft-delete + archivado · datos demo · tests
 - [x] **Fase 2** — Dashboard configurable (widgets on/off persistidos) + captura rápida inline · **ventana flotante de Captura rápida** + **hotkey global** Ctrl+Shift+Espacio (Windows) + parser local de reglas · **Inbox** + convertir a Tarea/Proyecto · **Command Palette** (Ctrl+K) · **búsqueda global FTS5** (Ctrl+F, sin acentos, prefijo) · tests del parser, Inbox y búsqueda
 
-> **Estado 2026-09-03**: `dotnet build` en verde (0/0), migración EF `Initial` creada,
-> **39/39 tests OK** en el PC de compilación. Base de Fases 0–2 validada.
-- [ ] Fase 3 — Seguimientos (`FollowUp`) + contador de días · Recordatorios + scheduler + notificaciones Windows · Calendario
+- [x] **Fase 3** — **Seguimientos** (`FollowUp`): esperando respuesta de persona/empresa/etiqueta, contador de días, "enviar recordatorio" (nº + historial), escalar, marcar respondido/cerrado; página propia + widget en Dashboard + sección en Tarea/Proyecto. **Recordatorios** (`Reminder`) + **scheduler en proceso** (cada 45 s) que lanza notificaciones al vencer. **Centro de notificaciones** local (campana + badge) + **toasts** in-app. **Calendario** mensual que agrega vencimientos de tareas/proyectos, próximos seguimientos y recordatorios.
+
+> **Estado 2026-09-03**: Fases 0–2 validadas en el PC de compilación (`dotnet build` 0/0,
+> migración EF `Initial`, **39/39 tests**). Fase 3 código completo, pendiente de compilar
+> — añade tablas nuevas, ejecutar **`build.bat migrate`**.
 
 > Publicado en GitHub: `porrii/NexusWorkspace`, rama `dev`. `main` + release cuando la v1 esté lista.
 > CI: el flujo está en `docs/ci-build.yml`; moverlo a `.github/workflows/build.yml` desde la web de

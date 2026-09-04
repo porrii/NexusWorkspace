@@ -161,6 +161,75 @@
       </StackPanel>
     </Border>
 
+    <!-- Follow-ups & reminders -->
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Seguimientos y recordatorios" Classes="h2" />
+
+        <ItemsControl ItemsSource="{Binding FollowUps}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
+                <StackPanel Grid.Column="0" Spacing="1">
+                  <TextBlock Text="{Binding Subject}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                  <TextBlock Classes="muted" Text="{Binding WaitingOn, StringFormat='{}⏳ {0}'}" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="8,0" FontWeight="SemiBold"
+                           Foreground="{DynamicResource SemWaitingBrush}"
+                           Text="{Binding DaysWaiting, StringFormat='{}{0} d'}" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"
+                            IsVisible="{Binding IsOpen}">
+                  <Button Content="Recordatorio" Classes="quick"
+                          Command="{Binding $parent[ItemsControl].DataContext.SendFollowUpReminderCommand}" CommandParameter="{Binding}" />
+                  <Button Content="Respondió" Classes="quick"
+                          Command="{Binding $parent[ItemsControl].DataContext.ResolveFollowUpCommand}" CommandParameter="{Binding}" />
+                </StackPanel>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <ItemsControl ItemsSource="{Binding Reminders}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,8">
+                <TextBlock Grid.Column="0" Text="{Binding Text}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                <TextBlock Grid.Column="1" Classes="muted" VerticalAlignment="Center" Margin="8,0"
+                           Text="{Binding RemindAtUtc, Converter={x:Static conv:AppConverters.DayDelta}}" />
+                <Button Grid.Column="2" Content="Hecho" Classes="quick" VerticalAlignment="Center"
+                        Command="{Binding $parent[ItemsControl].DataContext.CompleteReminderCommand}" CommandParameter="{Binding}"
+                        IsVisible="{Binding Status, Converter={x:Static conv:AppConverters.ReminderPending}}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Content="Iniciar seguimiento" Classes="quick" Command="{Binding ToggleFollowUpPanelCommand}" />
+          <Button Content="Nuevo recordatorio" Classes="quick" Command="{Binding ToggleReminderPanelCommand}" />
+        </StackPanel>
+
+        <Border Classes="tile" IsVisible="{Binding IsFollowUpPanelOpen}">
+          <StackPanel Spacing="8">
+            <TextBox Watermark="¿Qué estás esperando?" Text="{Binding FollowUpSubject, Mode=TwoWay}" />
+            <TextBox Watermark="¿De quién? (persona, empresa, «Sistemas»…)" Text="{Binding FollowUpWaitingOn, Mode=TwoWay}" />
+            <Button Content="Empezar a esperar" Classes="accent" HorizontalAlignment="Right"
+                    Command="{Binding StartFollowUpCommand}" />
+          </StackPanel>
+        </Border>
+
+        <Border Classes="tile" IsVisible="{Binding IsReminderPanelOpen}">
+          <StackPanel Spacing="8">
+            <TextBox Watermark="Recordarme…" Text="{Binding NewReminderText, Mode=TwoWay}" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <DatePicker SelectedDate="{Binding NewReminderDate, Mode=TwoWay}" />
+              <Button Content="Crear recordatorio" Classes="accent" Command="{Binding AddReminderCommand}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </Border>
+
     <!-- History -->
     <Border Classes="card">
       <StackPanel Spacing="10">

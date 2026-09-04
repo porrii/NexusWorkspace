@@ -51,6 +51,7 @@ set "CONFIG=Debug"
 set "DO_RUN=0"
 set "DO_CLEAN=0"
 set "DO_TEST=1"
+set "DO_MIGRATE=0"
 
 :parseargs
 if "%~1"=="" goto endargs
@@ -59,6 +60,7 @@ if /i "%~1"=="release" set "CONFIG=Release"
 if /i "%~1"=="run"     set "DO_RUN=1"
 if /i "%~1"=="clean"   set "DO_CLEAN=1"
 if /i "%~1"=="notest"  set "DO_TEST=0"
+if /i "%~1"=="migrate" set "DO_MIGRATE=1"
 if /i "%~1"=="help"    goto usage
 if /i "%~1"=="-h"      goto usage
 if /i "%~1"=="/?"      goto usage
@@ -179,27 +181,40 @@ if errorlevel 1 (
 set "STEP_RESTORE=OK"
 
 rem =====================================================================
-rem  5) migracion EF 'Initial' (solo si no existe ninguna)
+rem  5) migracion EF
+rem     - sin argumento: crea 'Initial' solo si no hay ninguna migracion
+rem     - con 'migrate': crea siempre una migracion Update_<fecha>
 rem =====================================================================
-dir /b "%MIG_DIR%\*.cs" >nul 2>nul
-if errorlevel 1 (
-    where dotnet-ef >nul 2>nul
-    if errorlevel 1 (
-        echo [3/5] migracion: OMITIDA ^(dotnet-ef no disponible; la app usara EnsureCreated^)
-        set "STEP_MIG=OMITIDO (sin dotnet-ef)"
-    ) else (
-        echo [3/5] Creando migracion EF 'Initial' ...
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "dotnet ef migrations add Initial --project '%INFRA%' --startup-project '%DESKTOP%' --output-dir Persistence/Migrations 2>&1 | Tee-Object -FilePath '%MIGLOG%'; exit $LASTEXITCODE"
-        if errorlevel 1 (
-            set "STEP_MIG=FALLO"
-        ) else (
-            set "STEP_MIG=OK (creada)"
-        )
-    )
+set "MIG_NAME="
+if "%DO_MIGRATE%"=="1" (
+    for /f "usebackq delims=" %%m in (`powershell -NoProfile -Command "Get-Date -Format yyyyMMddHHmm"`) do set "MIG_NAME=Update_%%m"
 ) else (
-    echo [3/5] migracion: OMITIDA ^(ya existe^)
-    set "STEP_MIG=OMITIDO (ya existe)"
+    dir /b "%MIG_DIR%\*.cs" >nul 2>nul
+    if errorlevel 1 set "MIG_NAME=Initial"
 )
+
+if "%MIG_NAME%"=="" (
+    echo [3/5] migracion: OMITIDA ^(ya existe; usa 'build.bat migrate' si cambiaste el modelo^)
+    set "STEP_MIG=OMITIDO (ya existe)"
+    goto after_migration
+)
+
+where dotnet-ef >nul 2>nul
+if errorlevel 1 (
+    echo [3/5] migracion: OMITIDA ^(dotnet-ef no disponible; la app usara EnsureCreated^)
+    set "STEP_MIG=OMITIDO (sin dotnet-ef)"
+    goto after_migration
+)
+
+echo [3/5] Creando migracion EF '%MIG_NAME%' ...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "dotnet ef migrations add %MIG_NAME% --project '%INFRA%' --startup-project '%DESKTOP%' --output-dir Persistence/Migrations 2>&1 | Tee-Object -FilePath '%MIGLOG%'; exit $LASTEXITCODE"
+if errorlevel 1 (
+    set "STEP_MIG=FALLO"
+) else (
+    set "STEP_MIG=OK (%MIG_NAME%)"
+)
+
+:after_migration
 
 rem =====================================================================
 rem  6) build
@@ -309,10 +324,11 @@ goto :eof
 
 :usage
 echo.
-echo Uso: build.bat [debug^|release] [run] [clean] [notest]
+echo Uso: build.bat [debug^|release] [run] [clean] [notest] [migrate]
 echo.
 echo   (sin args)   restore + build Debug + test
 echo   release      compila en Release
+echo   migrate      crea una migracion EF Update_^<fecha^> (tras cambiar el modelo)
 echo   run          lanza la app al terminar
 echo   clean        borra bin/obj antes
 echo   notest       no ejecuta los tests

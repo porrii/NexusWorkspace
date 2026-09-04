@@ -2,8 +2,11 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
+using NexusWorkspace.Application.FollowUps;
 using NexusWorkspace.Application.Inbox;
+using NexusWorkspace.Application.Notifications;
 using NexusWorkspace.Application.Projects;
+using NexusWorkspace.Application.Reminders;
 using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Infrastructure.Persistence;
 using NexusWorkspace.Infrastructure.Persistence.Interceptors;
@@ -13,7 +16,7 @@ namespace NexusWorkspace.Tests.TestSupport;
 
 /// <summary>
 /// A real SQLite (in-memory) database plus wired application services, for
-/// integration-style tests of the Phase 1 / Phase 2 core.
+/// integration-style tests of the Phase 1–3 core.
 /// </summary>
 public sealed class TestHarness : IAsyncDisposable
 {
@@ -39,6 +42,9 @@ public sealed class TestHarness : IAsyncDisposable
         Projects = new ProjectService(Db, Clock, activityLog);
         Tasks = new WorkTaskService(Db, Clock, activityLog);
         Inbox = new InboxService(Db, Clock, activityLog);
+        FollowUps = new FollowUpService(Db, Clock, activityLog);
+        Reminders = new ReminderService(Db, Clock, activityLog);
+        Notifications = new NotificationService(Db, Clock, new NullAppNotifier());
         Search = new Fts5SearchService(Db);
     }
 
@@ -51,6 +57,12 @@ public sealed class TestHarness : IAsyncDisposable
     public WorkTaskService Tasks { get; }
 
     public InboxService Inbox { get; }
+
+    public FollowUpService FollowUps { get; }
+
+    public ReminderService Reminders { get; }
+
+    public NotificationService Notifications { get; }
 
     public Fts5SearchService Search { get; }
 

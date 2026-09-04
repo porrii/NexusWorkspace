@@ -1,0 +1,112 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Calendar.CalendarView">
+
+  <Grid ColumnDefinitions="*,340" MaxWidth="1200">
+
+    <!-- Month grid -->
+    <DockPanel Grid.Column="0" Margin="0,0,18,0">
+
+      <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,Auto,*,Auto" Margin="0,0,0,12">
+        <Button Grid.Column="0" Classes="quick" Command="{Binding PrevMonthCommand}" Padding="8">
+          <mi:MaterialIcon Kind="ChevronLeft" Width="16" Height="16" />
+        </Button>
+        <Button Grid.Column="1" Classes="quick" Command="{Binding NextMonthCommand}" Padding="8" Margin="6,0,0,0">
+          <mi:MaterialIcon Kind="ChevronRight" Width="16" Height="16" />
+        </Button>
+        <TextBlock Grid.Column="2" Text="{Binding MonthLabel}" Classes="h1" VerticalAlignment="Center" Margin="14,0,0,0" />
+        <Button Grid.Column="3" Content="Hoy" Classes="quick" Command="{Binding GoTodayCommand}" />
+      </Grid>
+
+      <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding WeekdayHeaders}" Margin="0,0,0,4">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding}" Classes="muted" HorizontalAlignment="Center" FontWeight="SemiBold" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <ItemsControl ItemsSource="{Binding Weeks}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <ItemsControl ItemsSource="{Binding Days}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Margin="2" MinHeight="86" CornerRadius="8" Padding="6"
+                          BorderThickness="1"
+                          BorderBrush="{DynamicResource AppLineBrush}"
+                          Background="{DynamicResource AppSurfaceBrush}"
+                          Tag="{Binding}" PointerReleased="OnDayClicked">
+                    <StackPanel Spacing="4">
+                      <Border CornerRadius="99" Width="22" Height="22" HorizontalAlignment="Left"
+                              Background="{DynamicResource AppAccentBrush}" IsVisible="{Binding IsToday}">
+                        <TextBlock Text="{Binding DayNumber}" Foreground="{DynamicResource AppOnAccentBrush}"
+                                   FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      </Border>
+                      <TextBlock Text="{Binding DayNumber}" FontSize="12" IsVisible="{Binding !IsToday}"
+                                 Opacity="{Binding InCurrentMonth, Converter={x:Static conv:AppConverters.ExpandedToOpacity}}" />
+
+                      <ItemsControl ItemsSource="{Binding TopEntries}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,1">
+                              <Border Width="6" Height="6" CornerRadius="99" VerticalAlignment="Center"
+                                      Background="{Binding Kind, Converter={x:Static conv:AppConverters.CalendarKindBrush}}" />
+                              <TextBlock Text="{Binding Title}" FontSize="10.5" TextTrimming="CharacterEllipsis"
+                                         Foreground="{DynamicResource AppInkSoftBrush}" />
+                            </StackPanel>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                      <TextBlock Text="{Binding OverflowCount, StringFormat='{}+{0}'}" FontSize="10" Classes="muted"
+                                 IsVisible="{Binding OverflowCount, Converter={x:Static conv:AppConverters.Positive}}" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+    </DockPanel>
+
+    <!-- Selected day -->
+    <Border Grid.Column="1" Classes="card">
+      <StackPanel Spacing="12">
+        <TextBlock Text="{Binding SelectedDay.DayHeader}" Classes="h2" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+                   IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+        <ItemsControl ItemsSource="{Binding SelectedDayEntries}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="row" Margin="0,0,0,8" Tag="{Binding}" PointerReleased="OnEntryClicked">
+                <StackPanel Spacing="3">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Border Width="8" Height="8" CornerRadius="99" VerticalAlignment="Center"
+                            Background="{Binding Kind, Converter={x:Static conv:AppConverters.CalendarKindBrush}}" />
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <TextBlock Text="{Binding ProjectName}" Classes="muted"
+                             IsVisible="{Binding ProjectName, Converter={x:Static conv:AppConverters.HasText}}" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Text="Sin eventos este día." Classes="muted"
+                   IsVisible="{Binding SelectedDayEntries.Count, Converter={x:Static conv:AppConverters.IsZero}}" />
+      </StackPanel>
+    </Border>
+
+  </Grid>
+
+</UserControl>

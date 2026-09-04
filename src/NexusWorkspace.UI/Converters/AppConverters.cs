@@ -1,5 +1,6 @@
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using NexusWorkspace.Application.Calendar;
 using NexusWorkspace.Application.Localization;
 using NexusWorkspace.Domain.Enums;
 
@@ -40,6 +41,11 @@ public static class AppConverters
 
     public static readonly FuncValueConverter<int, bool> Positive = new(value => value > 0);
 
+    public static readonly FuncValueConverter<int, bool> IsZero = new(value => value == 0);
+
+    public static readonly FuncValueConverter<ReminderStatus, bool> ReminderPending =
+        new(status => status == ReminderStatus.Pending);
+
     public static readonly FuncValueConverter<Priority, IBrush> PriorityBrush = new(priority => priority switch
     {
         Priority.Critical => Brush("#D93A44"),
@@ -65,6 +71,37 @@ public static class AppConverters
         ProjectStatus.Blocked => Brush("#9A2F3A"),
         ProjectStatus.Finished => Brush("#2E9E63"),
         _ => Brush("#6A7183"),
+    });
+
+    public static readonly FuncValueConverter<FollowUpState, IBrush> FollowUpStateBrush = new(state => state switch
+    {
+        FollowUpState.Escalated => Brush("#D93A44"),
+        FollowUpState.Waiting => Brush("#7A5AD1"),
+        FollowUpState.Answered => Brush("#2E9E63"),
+        _ => Brush("#6A7183"),
+    });
+
+    public static readonly FuncValueConverter<CalendarEntryKind, IBrush> CalendarKindBrush = new(kind => kind switch
+    {
+        CalendarEntryKind.TaskDue => Brush("#4A43D9"),
+        CalendarEntryKind.ProjectDue => Brush("#9A2F3A"),
+        CalendarEntryKind.FollowUpNext => Brush("#7A5AD1"),
+        CalendarEntryKind.Reminder => Brush("#DD8330"),
+        _ => Brush("#6A7183"),
+    });
+
+    /// <summary>UTC datetime → "hoy" / "hace 1 d" / "en 3 d".</summary>
+    public static readonly FuncValueConverter<DateTime, string> DayDelta = new(utc =>
+    {
+        var days = (int)Math.Round((DateTime.SpecifyKind(utc, DateTimeKind.Utc).ToLocalTime().Date - DateTime.Now.Date).TotalDays);
+        return days switch
+        {
+            0 => "hoy",
+            1 => "mañana",
+            -1 => "ayer",
+            > 1 => $"en {days} d",
+            _ => $"hace {-days} d",
+        };
     });
 
     private static string? EnumToLabel(object? value) => value switch

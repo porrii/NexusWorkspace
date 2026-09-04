@@ -1,7 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.UI.ViewModels;
 using NexusWorkspace.UI.ViewModels.Activity;
+using NexusWorkspace.UI.ViewModels.Calendar;
 using NexusWorkspace.UI.ViewModels.Dashboard;
+using NexusWorkspace.UI.ViewModels.FollowUps;
 using NexusWorkspace.UI.ViewModels.Inbox;
 using NexusWorkspace.UI.ViewModels.Projects;
 using NexusWorkspace.UI.ViewModels.Settings;
@@ -34,6 +36,8 @@ public sealed class NavigationService(IServiceProvider services) : INavigationSe
             PageKey.Dashboard => services.GetRequiredService<DashboardViewModel>(),
             PageKey.Inbox => services.GetRequiredService<InboxViewModel>(),
             PageKey.Projects => services.GetRequiredService<ProjectsViewModel>(),
+            PageKey.FollowUps => services.GetRequiredService<FollowUpsViewModel>(),
+            PageKey.Calendar => services.GetRequiredService<CalendarViewModel>(),
             PageKey.Activity => services.GetRequiredService<ActivityViewModel>(),
             PageKey.Settings => services.GetRequiredService<SettingsViewModel>(),
             _ => services.GetRequiredService<PlaceholderViewModel>().For(key),

@@ -126,3 +126,35 @@ public enum DependencyKind
     Blocks = 1,
     Related = 2,
 }
+
+/// <summary>Lifecycle of a "waiting for a reply from…" follow-up.</summary>
+public enum FollowUpState
+{
+    /// <summary>Still waiting.</summary>
+    Waiting = 0,
+
+    /// <summary>Still waiting, but flagged as overdue / chased hard.</summary>
+    Escalated = 1,
+
+    /// <summary>The other party replied.</summary>
+    Answered = 2,
+
+    /// <summary>Closed without needing the reply any more.</summary>
+    Closed = 3,
+}
+
+public enum ReminderStatus
+{
+    Pending = 0,
+    Done = 1,
+    Dismissed = 2,
+}
+
+/// <summary>Kind of a local notification-centre entry.</summary>
+public enum NotificationKind
+{
+    System = 0,
+    Reminder = 1,
+    FollowUp = 2,
+    DueDate = 3,
+}

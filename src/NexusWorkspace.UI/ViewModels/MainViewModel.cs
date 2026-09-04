@@ -44,7 +44,8 @@ public partial class MainViewModel : ViewModelBase
         ISettingsStore settings,
         IQuickCaptureLauncher quickCapture,
         CommandPaletteViewModel palette,
-        SearchViewModel search)
+        SearchViewModel search,
+        NotificationCenterViewModel notifications)
     {
         _navigation = navigation;
         _theme = theme;
@@ -52,6 +53,7 @@ public partial class MainViewModel : ViewModelBase
         _quickCapture = quickCapture;
         Palette = palette;
         Search = search;
+        Notifications = notifications;
 
         IsSidebarExpanded = settings.Current.SidebarExpanded;
         UpdateThemeGlyph(settings.Current.Theme);
@@ -62,8 +64,8 @@ public partial class MainViewModel : ViewModelBase
             new(PageKey.Inbox, "Inbox", "Inbox"),
             new(PageKey.Projects, "Proyectos", "FolderMultiple"),
             new(PageKey.Tasks, "Tareas", "CheckboxMarked", IsImplemented: false),
-            new(PageKey.FollowUps, "Seguimientos", "ClockAlert", IsImplemented: false),
-            new(PageKey.Calendar, "Calendario", "Calendar", IsImplemented: false),
+            new(PageKey.FollowUps, "Seguimientos", "ClockAlert"),
+            new(PageKey.Calendar, "Calendario", "Calendar"),
             new(PageKey.People, "Personas", "AccountMultiple", IsImplemented: false),
             new(PageKey.Companies, "Empresas", "OfficeBuilding", IsImplemented: false),
             new(PageKey.Files, "Archivos", "Paperclip", IsImplemented: false),
@@ -78,6 +80,7 @@ public partial class MainViewModel : ViewModelBase
 
         _navigation.Navigated += OnNavigated;
         _navigation.NavigateTo(PageKey.Dashboard);
+        _ = Notifications.RefreshCountAsync();
     }
 
     public ObservableCollection<NavigationItem> Items { get; }
@@ -85,6 +88,8 @@ public partial class MainViewModel : ViewModelBase
     public CommandPaletteViewModel Palette { get; }
 
     public SearchViewModel Search { get; }
+
+    public NotificationCenterViewModel Notifications { get; }
 
     public bool CanGoBack => _navigation.CanGoBack;
 
@@ -104,6 +109,7 @@ public partial class MainViewModel : ViewModelBase
         IsCommandPaletteOpen = false;
         IsSearchOpen = false;
         OnPropertyChanged(nameof(CanGoBack));
+        _ = Notifications.RefreshCountAsync();
 
         var key = PageKeyFor(page);
         var match = key is null ? null : Items.FirstOrDefault(i => i.Key == key);
@@ -122,6 +128,8 @@ public partial class MainViewModel : ViewModelBase
         ProjectsViewModel => PageKey.Projects,
         ProjectDetailViewModel => PageKey.Projects,
         Tasks.TaskDetailViewModel => PageKey.Projects,
+        FollowUps.FollowUpsViewModel => PageKey.FollowUps,
+        Calendar.CalendarViewModel => PageKey.Calendar,
         Activity.ActivityViewModel => PageKey.Activity,
         Settings.SettingsViewModel => PageKey.Settings,
         PlaceholderViewModel placeholder => placeholder.Key,

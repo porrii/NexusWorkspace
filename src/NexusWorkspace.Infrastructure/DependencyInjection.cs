@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Infrastructure.Persistence;
 using NexusWorkspace.Infrastructure.Persistence.Interceptors;
+using NexusWorkspace.Infrastructure.Scheduling;
 using NexusWorkspace.Infrastructure.Search;
 using NexusWorkspace.Infrastructure.Seeding;
 using NexusWorkspace.Infrastructure.Settings;
@@ -49,6 +50,8 @@ public static class DependencyInjection
         services.AddScoped<DatabaseInitializer>();
         services.AddScoped<DemoDataSeeder>();
         services.AddScoped<IDemoDataService>(sp => sp.GetRequiredService<DemoDataSeeder>());
+
+        services.AddSingleton<ISchedulerService, InProcessScheduler>();
 
         return services;
     }

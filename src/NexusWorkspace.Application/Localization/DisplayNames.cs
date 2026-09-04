@@ -47,6 +47,23 @@ public static class DisplayNames
         _ => "Otro",
     };
 
+    public static string Of(FollowUpState state) => state switch
+    {
+        FollowUpState.Waiting => "Esperando",
+        FollowUpState.Escalated => "Escalado",
+        FollowUpState.Answered => "Respondido",
+        FollowUpState.Closed => "Cerrado",
+        _ => state.ToString(),
+    };
+
+    public static string Of(ReminderStatus status) => status switch
+    {
+        ReminderStatus.Pending => "Pendiente",
+        ReminderStatus.Done => "Hecho",
+        ReminderStatus.Dismissed => "Descartado",
+        _ => status.ToString(),
+    };
+
     public static string Of(QuickActionKind action) => action switch
     {
         QuickActionKind.EmailSent => "Correo enviado",

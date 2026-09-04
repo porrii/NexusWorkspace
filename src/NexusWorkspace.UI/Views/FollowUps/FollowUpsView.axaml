@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.FollowUps.FollowUpsView">
+
+  <StackPanel Spacing="16" MaxWidth="960">
+
+    <Grid ColumnDefinitions="*,Auto">
+      <StackPanel Grid.Column="0" Spacing="2">
+        <TextBlock Text="Seguimientos" Classes="h1" />
+        <TextBlock Text="Esperando respuesta de terceros — ordenado por antigüedad." Classes="muted" />
+      </StackPanel>
+      <ToggleSwitch Grid.Column="1" OnContent="Todos" OffContent="Abiertos"
+                    IsChecked="{Binding ShowResolved, Mode=TwoWay}" VerticalAlignment="Center" />
+    </Grid>
+
+    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+
+    <ItemsControl ItemsSource="{Binding Items}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Border Classes="row" Margin="0,0,0,10" Tag="{Binding}" PointerReleased="OnRowClicked">
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Grid.Column="0" Text="{Binding Subject}" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap" />
+                <Border Grid.Column="1" Classes="pill" Margin="8,0"
+                        BorderBrush="{Binding State, Converter={x:Static conv:AppConverters.FollowUpStateBrush}}">
+                  <TextBlock Text="{Binding State, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                             Foreground="{Binding State, Converter={x:Static conv:AppConverters.FollowUpStateBrush}}" />
+                </Border>
+                <Border Grid.Column="2" Classes="pill" BorderBrush="{DynamicResource SemWaitingBrush}">
+                  <TextBlock Text="{Binding DaysWaiting, StringFormat='{}{0} d'}" Foreground="{DynamicResource SemWaitingBrush}" />
+                </Border>
+              </Grid>
+
+              <StackPanel Orientation="Horizontal" Spacing="14">
+                <TextBlock Classes="muted" Text="{Binding WaitingOn, StringFormat='{}⏳ {0}'}" />
+                <TextBlock Classes="muted" Text="{Binding ProjectName}"
+                           IsVisible="{Binding ProjectName, Converter={x:Static conv:AppConverters.HasText}}" />
+                <TextBlock Classes="muted" Text="{Binding ReminderCount, StringFormat='{}{0} recordatorios'}"
+                           IsVisible="{Binding ReminderCount, Converter={x:Static conv:AppConverters.Positive}}" />
+                <TextBlock Classes="muted"
+                           Text="{Binding LastContactUtc, Converter={x:Static conv:AppConverters.RelativeDateTime}, StringFormat='{}último contacto {0}'}"
+                           IsVisible="{Binding LastContactUtc, Converter={x:Static conv:AppConverters.IsNotNull}}" />
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Enviar recordatorio" Classes="quick"
+                        Command="{Binding $parent[ItemsControl].DataContext.SendReminderCommand}" CommandParameter="{Binding}"
+                        IsVisible="{Binding IsOpen}" />
+                <Button Content="Registrar contacto" Classes="quick"
+                        Command="{Binding $parent[ItemsControl].DataContext.RecordContactCommand}" CommandParameter="{Binding}"
+                        IsVisible="{Binding IsOpen}" />
+                <Button Content="Escalar" Classes="quick"
+                        Command="{Binding $parent[ItemsControl].DataContext.EscalateCommand}" CommandParameter="{Binding}"
+                        IsVisible="{Binding IsOpen}" />
+                <Button Content="Respondió" Classes="quick"
+                        Command="{Binding $parent[ItemsControl].DataContext.MarkAnsweredCommand}" CommandParameter="{Binding}"
+                        IsVisible="{Binding IsOpen}" />
+                <Button Content="Cerrar" Classes="quick"
+                        Command="{Binding $parent[ItemsControl].DataContext.CloseCommand}" CommandParameter="{Binding}"
+                        IsVisible="{Binding IsOpen}" />
+                <Button Content="Reabrir" Classes="quick"
+                        Command="{Binding $parent[ItemsControl].DataContext.ReopenCommand}" CommandParameter="{Binding}"
+                        IsVisible="{Binding !IsOpen}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <StackPanel Spacing="6" IsVisible="{Binding IsEmpty}" Margin="0,20,0,0" HorizontalAlignment="Center">
+      <mi:MaterialIcon Kind="ClockCheckOutline" Width="34" Height="34" HorizontalAlignment="Center"
+                       Foreground="{DynamicResource AppMutedBrush}" />
+      <TextBlock Text="No estás esperando respuesta de nadie." Classes="muted" HorizontalAlignment="Center" />
+      <TextBlock Text="Inicia un seguimiento desde una tarea o un proyecto." Classes="muted" HorizontalAlignment="Center" />
+    </StackPanel>
+
+  </StackPanel>
+
+</UserControl>

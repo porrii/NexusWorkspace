@@ -34,6 +34,8 @@ public partial class CommandPaletteViewModel : ViewModelBase
             new("Ir al Dashboard", "Navegación", "ViewDashboard", Nav(navigation, PageKey.Dashboard)),
             new("Ir a Inbox", "Navegación", "Inbox", Nav(navigation, PageKey.Inbox)),
             new("Ir a Proyectos", "Navegación", "FolderMultiple", Nav(navigation, PageKey.Projects)),
+            new("Ir a Seguimientos", "Navegación", "ClockAlert", Nav(navigation, PageKey.FollowUps)),
+            new("Ir al Calendario", "Navegación", "Calendar", Nav(navigation, PageKey.Calendar)),
             new("Ir a Actividad", "Navegación", "History", Nav(navigation, PageKey.Activity)),
             new("Ir a Configuración", "Navegación", "Cog", Nav(navigation, PageKey.Settings)),
             new("Nuevo proyecto", "Crear", "Plus", () =>

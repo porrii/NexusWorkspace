@@ -4,8 +4,10 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
+using NexusWorkspace.Application.FollowUps;
 using NexusWorkspace.Application.Inbox;
 using NexusWorkspace.Application.Projects;
+using NexusWorkspace.Application.Reminders;
 using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Domain.Enums;
 using NexusWorkspace.UI.Services;
@@ -72,6 +74,24 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty]
     private bool _showUpcoming = true;
 
+    [ObservableProperty]
+    private bool _showWaitingOn = true;
+
+    [ObservableProperty]
+    private bool _showReminders = true;
+
+    [ObservableProperty]
+    private string _reminderText = string.Empty;
+
+    [ObservableProperty]
+    private DateTimeOffset? _reminderDate = DateTimeOffset.Now.Date.AddDays(1);
+
+    [ObservableProperty]
+    private bool _anyWaitingOn;
+
+    [ObservableProperty]
+    private bool _anyReminders;
+
     public DashboardViewModel(
         IUnitOfWorkRunner unitOfWork,
         IClock clock,
@@ -90,6 +110,8 @@ public partial class DashboardViewModel : ViewModelBase
         ShowActiveProjects = widgets.GetValueOrDefault("activeProjects", true);
         ShowRecentActivity = widgets.GetValueOrDefault("recentActivity", true);
         ShowUpcoming = widgets.GetValueOrDefault("upcoming", true);
+        ShowWaitingOn = widgets.GetValueOrDefault("waitingOn", true);
+        ShowReminders = widgets.GetValueOrDefault("reminders", true);
         _loadingWidgetPrefs = false;
     }
 
@@ -98,6 +120,10 @@ public partial class DashboardViewModel : ViewModelBase
     public ObservableCollection<ActivityEntry> RecentActivity { get; } = [];
 
     public ObservableCollection<WorkTaskListItem> UpcomingTasks { get; } = [];
+
+    public ObservableCollection<FollowUpListItem> WaitingOn { get; } = [];
+
+    public ObservableCollection<ReminderView> UpcomingReminders { get; } = [];
 
     public override Task OnActivatedAsync() => RefreshAsync();
 
@@ -109,38 +135,47 @@ public partial class DashboardViewModel : ViewModelBase
 
         try
         {
-            var (projects, openTasks, recent, inbox) = await _unitOfWork.RunAsync(async (sp, ct) =>
+            var data = await _unitOfWork.RunAsync(async (sp, ct) =>
             {
                 var projectReads = sp.GetRequiredService<ProjectReadService>();
                 var taskReads = sp.GetRequiredService<WorkTaskReadService>();
                 var activityReads = sp.GetRequiredService<ActivityReadService>();
                 var inboxReads = sp.GetRequiredService<InboxReadService>();
+                var followUpReads = sp.GetRequiredService<FollowUpReadService>();
+                var reminderReads = sp.GetRequiredService<ReminderReadService>();
 
                 var activeProjects = await projectReads.GetListAsync(ProjectListScope.Active, null, ct);
                 var open = await taskReads.GetOpenAcrossWorkspaceAsync(ct);
                 var recentActivity = await activityReads.GetRecentAsync(12, ct);
                 var inboxCount = await inboxReads.CountPendingAsync(ct);
-                return (activeProjects, open, recentActivity, inboxCount);
+                var waiting = await followUpReads.GetListAsync(FollowUpScope.Open, ct);
+                var reminders = await reminderReads.GetPendingAsync(ct);
+                return (activeProjects, open, recentActivity, inboxCount, waiting, reminders);
             });
 
             var today = DateTime.UtcNow.Date;
+            var openTasks = data.open;
 
             OpenTaskCount = openTasks.Count;
             CriticalTaskCount = openTasks.Count(t => t.Priority == Priority.Critical);
             OverdueTaskCount = openTasks.Count(t => t.DueDateUtc is { } due && due.Date < today);
             WaitingTaskCount = openTasks.Count(t => t.IsWaiting);
-            InboxCount = inbox;
+            InboxCount = data.inboxCount;
 
-            ActiveProjects.Reset(projects.Take(6));
-            RecentActivity.Reset(recent);
+            ActiveProjects.Reset(data.activeProjects.Take(6));
+            RecentActivity.Reset(data.recentActivity);
             UpcomingTasks.Reset(openTasks
                 .Where(t => t.DueDateUtc is not null)
                 .OrderBy(t => t.DueDateUtc)
                 .Take(6));
+            WaitingOn.Reset(data.waiting.Take(6));
+            UpcomingReminders.Reset(data.reminders.Take(6));
 
             AnyActiveProjects = ActiveProjects.Count > 0;
             AnyRecentActivity = RecentActivity.Count > 0;
             AnyUpcoming = UpcomingTasks.Count > 0;
+            AnyWaitingOn = WaitingOn.Count > 0;
+            AnyReminders = UpcomingReminders.Count > 0;
 
             Greeting = BuildGreeting();
             SummaryLine = BuildSummary();
@@ -170,7 +205,64 @@ public partial class DashboardViewModel : ViewModelBase
     private void OpenInbox() => _navigation.NavigateTo(PageKey.Inbox);
 
     [RelayCommand]
+    private void OpenFollowUps() => _navigation.NavigateTo(PageKey.FollowUps);
+
+    [RelayCommand]
+    private void OpenCalendar() => _navigation.NavigateTo(PageKey.Calendar);
+
+    [RelayCommand]
     private void ToggleCustomize() => IsCustomizing = !IsCustomizing;
+
+    [RelayCommand]
+    private async Task SendFollowUpReminderAsync(FollowUpListItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        await _unitOfWork.RunAsync((sp, ct) =>
+            sp.GetRequiredService<FollowUpService>().SendReminderAsync(item.Id, null, ct));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task AddReminderAsync()
+    {
+        var text = ReminderText?.Trim();
+        if (string.IsNullOrWhiteSpace(text) || ReminderDate is null)
+        {
+            return;
+        }
+
+        var result = await _unitOfWork.RunAsync((sp, ct) =>
+            sp.GetRequiredService<ReminderService>().CreateAsync(new CreateReminderRequest
+            {
+                Text = text,
+                RemindAtUtc = ReminderDate.Value.UtcDateTime,
+            }, ct));
+
+        if (result.IsFailure)
+        {
+            ErrorMessage = result.Error.Message;
+            return;
+        }
+
+        ReminderText = string.Empty;
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task CompleteReminderAsync(ReminderView? reminder)
+    {
+        if (reminder is null)
+        {
+            return;
+        }
+
+        await _unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ReminderService>().CompleteAsync(reminder.Id, ct));
+        await RefreshAsync();
+    }
 
     [RelayCommand]
     private async Task CaptureAsync()
@@ -195,6 +287,10 @@ public partial class DashboardViewModel : ViewModelBase
     partial void OnShowRecentActivityChanged(bool value) => PersistWidget("recentActivity", value);
 
     partial void OnShowUpcomingChanged(bool value) => PersistWidget("upcoming", value);
+
+    partial void OnShowWaitingOnChanged(bool value) => PersistWidget("waitingOn", value);
+
+    partial void OnShowRemindersChanged(bool value) => PersistWidget("reminders", value);
 
     private void PersistWidget(string key, bool value)
     {

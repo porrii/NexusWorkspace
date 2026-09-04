@@ -4,7 +4,9 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
+using NexusWorkspace.Application.FollowUps;
 using NexusWorkspace.Application.QuickActions;
+using NexusWorkspace.Application.Reminders;
 using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Domain.Enums;
 using NexusWorkspace.Domain.Tasks;
@@ -30,6 +32,28 @@ public partial class TaskDetailViewModel(IUnitOfWorkRunner unitOfWork, INavigati
 
     [ObservableProperty]
     private string _quickActionNote = string.Empty;
+
+    [ObservableProperty]
+    private bool _isFollowUpPanelOpen;
+
+    [ObservableProperty]
+    private string _followUpSubject = string.Empty;
+
+    [ObservableProperty]
+    private string _followUpWaitingOn = string.Empty;
+
+    [ObservableProperty]
+    private bool _isReminderPanelOpen;
+
+    [ObservableProperty]
+    private string _newReminderText = string.Empty;
+
+    [ObservableProperty]
+    private DateTimeOffset? _newReminderDate = DateTimeOffset.Now.Date.AddDays(1);
+
+    public ObservableCollection<FollowUpListItem> FollowUps { get; } = [];
+
+    public ObservableCollection<ReminderView> Reminders { get; } = [];
 
     public ObservableCollection<SubTaskNode> SubTasks { get; } = [];
 
@@ -75,15 +99,20 @@ public partial class TaskDetailViewModel(IUnitOfWorkRunner unitOfWork, INavigati
 
         try
         {
-            var (detail, history) = await unitOfWork.RunAsync(async (sp, ct) =>
+            var data = await unitOfWork.RunAsync(async (sp, ct) =>
             {
                 var taskReads = sp.GetRequiredService<WorkTaskReadService>();
                 var activityReads = sp.GetRequiredService<ActivityReadService>();
+                var followUpReads = sp.GetRequiredService<FollowUpReadService>();
+                var reminderReads = sp.GetRequiredService<ReminderReadService>();
                 var d = await taskReads.GetDetailAsync(_taskId, ct);
                 var h = await activityReads.GetForEntityAsync(EntityKind.WorkTask, _taskId, 200, ct);
-                return (d, h);
+                var f = await followUpReads.GetForEntityAsync(EntityKind.WorkTask, _taskId, ct);
+                var r = await reminderReads.GetForEntityAsync(EntityKind.WorkTask, _taskId, ct);
+                return (d, h, f, r);
             });
 
+            var detail = data.d;
             if (detail is null)
             {
                 ErrorMessage = "La tarea ya no existe.";
@@ -94,7 +123,9 @@ public partial class TaskDetailViewModel(IUnitOfWorkRunner unitOfWork, INavigati
             SubTasks.Reset(detail.SubTasks);
             Checklist.Reset(detail.Checklist);
             Comments.Reset(detail.Comments);
-            History.Reset(history);
+            History.Reset(data.h);
+            FollowUps.Reset(data.f);
+            Reminders.Reset(data.r);
 
             AvailableStatuses.Reset(
                 new[] { detail.Status }
@@ -213,6 +244,103 @@ public partial class TaskDetailViewModel(IUnitOfWorkRunner unitOfWork, INavigati
                     ? service.UnarchiveAsync(_taskId, ct)
                     : service.ArchiveAsync(_taskId, ct);
             });
+
+    [RelayCommand]
+    private void ToggleFollowUpPanel()
+    {
+        IsFollowUpPanelOpen = !IsFollowUpPanelOpen;
+        if (!IsFollowUpPanelOpen)
+        {
+            FollowUpSubject = string.Empty;
+            FollowUpWaitingOn = string.Empty;
+        }
+    }
+
+    [RelayCommand]
+    private async Task StartFollowUpAsync()
+    {
+        var subject = FollowUpSubject?.Trim();
+        if (string.IsNullOrWhiteSpace(subject))
+        {
+            ErrorMessage = "Indica qué estás esperando.";
+            return;
+        }
+
+        var result = await unitOfWork.RunAsync((sp, ct) =>
+            sp.GetRequiredService<FollowUpService>().StartAsync(new StartFollowUpRequest
+            {
+                TargetKind = EntityKind.WorkTask,
+                TargetId = _taskId,
+                Subject = subject,
+                WaitingOnLabel = string.IsNullOrWhiteSpace(FollowUpWaitingOn) ? null : FollowUpWaitingOn.Trim(),
+            }, ct));
+
+        if (result.IsFailure)
+        {
+            ErrorMessage = result.Error.Message;
+            return;
+        }
+
+        FollowUpSubject = string.Empty;
+        FollowUpWaitingOn = string.Empty;
+        IsFollowUpPanelOpen = false;
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private Task SendFollowUpReminderAsync(FollowUpListItem? item)
+        => item is null ? Task.CompletedTask : RunAndRefreshAsync((sp, ct) =>
+            sp.GetRequiredService<FollowUpService>().SendReminderAsync(item.Id, null, ct));
+
+    [RelayCommand]
+    private Task ResolveFollowUpAsync(FollowUpListItem? item)
+        => item is null ? Task.CompletedTask : RunAndRefreshAsync((sp, ct) =>
+            sp.GetRequiredService<FollowUpService>().ResolveAsync(
+                new ResolveFollowUpRequest { Id = item.Id, State = FollowUpState.Answered }, ct));
+
+    [RelayCommand]
+    private void ToggleReminderPanel()
+    {
+        IsReminderPanelOpen = !IsReminderPanelOpen;
+        if (!IsReminderPanelOpen)
+        {
+            NewReminderText = string.Empty;
+        }
+    }
+
+    [RelayCommand]
+    private async Task AddReminderAsync()
+    {
+        var text = NewReminderText?.Trim();
+        if (string.IsNullOrWhiteSpace(text) || NewReminderDate is null)
+        {
+            return;
+        }
+
+        var result = await unitOfWork.RunAsync((sp, ct) =>
+            sp.GetRequiredService<ReminderService>().CreateAsync(new CreateReminderRequest
+            {
+                Text = text,
+                RemindAtUtc = NewReminderDate.Value.UtcDateTime,
+                TargetKind = EntityKind.WorkTask,
+                TargetId = _taskId,
+            }, ct));
+
+        if (result.IsFailure)
+        {
+            ErrorMessage = result.Error.Message;
+            return;
+        }
+
+        NewReminderText = string.Empty;
+        IsReminderPanelOpen = false;
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private Task CompleteReminderAsync(ReminderView? reminder)
+        => reminder is null ? Task.CompletedTask : RunAndRefreshAsync((sp, ct) =>
+            sp.GetRequiredService<ReminderService>().CompleteAsync(reminder.Id, ct));
 
     [RelayCommand]
     private void Back() => navigation.GoBack();

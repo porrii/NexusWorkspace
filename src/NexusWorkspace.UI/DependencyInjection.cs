@@ -4,13 +4,16 @@ using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.UI.Services;
 using NexusWorkspace.UI.ViewModels;
 using NexusWorkspace.UI.ViewModels.Activity;
+using NexusWorkspace.UI.ViewModels.Calendar;
 using NexusWorkspace.UI.ViewModels.CommandPalette;
 using NexusWorkspace.UI.ViewModels.Dashboard;
+using NexusWorkspace.UI.ViewModels.FollowUps;
 using NexusWorkspace.UI.ViewModels.Inbox;
 using NexusWorkspace.UI.ViewModels.Projects;
 using NexusWorkspace.UI.ViewModels.QuickCapture;
 using NexusWorkspace.UI.ViewModels.Search;
 using NexusWorkspace.UI.ViewModels.Settings;
+using NexusWorkspace.UI.ViewModels.Shell;
 using NexusWorkspace.UI.ViewModels.Tasks;
 
 namespace NexusWorkspace.UI;
@@ -19,7 +22,7 @@ public static class DependencyInjection
 {
     /// <summary>
     /// Registers shared UI services and view models. Platform heads register their
-    /// own <see cref="IPlatformLauncher"/>, notification and hotkey services after this.
+    /// own <see cref="IPlatformLauncher"/>, hotkey and scheduler services after this.
     /// </summary>
     public static IServiceCollection AddUi(this IServiceCollection services)
     {
@@ -28,15 +31,21 @@ public static class DependencyInjection
         services.AddSingleton<IQuickCaptureLauncher, QuickCaptureLauncher>();
         services.TryAddSingleton<IPlatformLauncher, NullPlatformLauncher>();
 
+        services.AddSingleton<InAppNotifier>();
+        services.AddSingleton<IAppNotifier>(sp => sp.GetRequiredService<InAppNotifier>());
+
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<CommandPaletteViewModel>();
         services.AddSingleton<SearchViewModel>();
+        services.AddSingleton<NotificationCenterViewModel>();
 
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<InboxViewModel>();
         services.AddTransient<ProjectsViewModel>();
         services.AddTransient<ProjectDetailViewModel>();
         services.AddTransient<TaskDetailViewModel>();
+        services.AddTransient<FollowUpsViewModel>();
+        services.AddTransient<CalendarViewModel>();
         services.AddTransient<ActivityViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<PlaceholderViewModel>();
