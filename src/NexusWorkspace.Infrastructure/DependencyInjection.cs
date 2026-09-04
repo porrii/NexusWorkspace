@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Infrastructure.Persistence;
@@ -40,6 +41,12 @@ public static class DependencyInjection
             options.AddInterceptors(
                 serviceProvider.GetRequiredService<AuditableEntityInterceptor>(),
                 serviceProvider.GetRequiredService<SearchIndexInterceptor>());
+
+            // Join entities (ProjectTag, WorkTaskPerson…) have no soft-delete filter
+            // while their parents do. We only ever query from the filtered parent, so
+            // this interaction is benign here.
+            options.ConfigureWarnings(w =>
+                w.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
         });
 
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<NexusDbContext>());
