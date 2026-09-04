@@ -1,0 +1,4 @@
+Presence of this file next to the executable makes NexusWorkspace run in PORTABLE
+mode: the workspace (nexus.db, files/, backups/, logs/, settings.json) lives in a
+"data" folder beside the executable instead of %APPDATA%. Delete this file to use
+the normal %APPDATA%\NexusWorkspace location.

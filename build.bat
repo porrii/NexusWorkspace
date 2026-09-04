@@ -27,15 +27,16 @@ rem      listo para enviar.
 rem ============================================================================
 
 rem ---- Configuracion (editable) ---------------------------------------------
-set "TOOLS_BASE=D:\Archivos de Programa"
+set "TOOLS_BASE=D:\Programs"
 set "DOTNET_ROOT=%TOOLS_BASE%\dotnet"
 set "DOTNET_TOOLS=%TOOLS_BASE%\dotnet-tools"
 set "DOTNET_CHANNEL=9.0"
 set "EF_VERSION=9.*"
-rem  Descomenta para tener tambien la cache de NuGet en D:
-rem set "NUGET_PACKAGES=%TOOLS_BASE%\nuget-packages"
 
 rem ---- Interno -------------------------------------------------------------
+rem  Todo fuera de C:  (cache de NuGet y home de dotnet en D:)
+set "NUGET_PACKAGES=%TOOLS_BASE%\nuget-packages"
+set "DOTNET_CLI_HOME=%TOOLS_BASE%\dotnet-home"
 set "DOTNET_CLI_TELEMETRY_OPTOUT=1"
 set "DOTNET_NOLOGO=1"
 set "DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1"

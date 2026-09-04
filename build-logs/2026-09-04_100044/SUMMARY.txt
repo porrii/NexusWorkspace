@@ -1,0 +1,42 @@
+NexusWorkspace build  -  2026-09-04_100044
+Repo:    D:\Programs\NexusWorkspace
+Config:  Debug
+
+.NET SDK 9  : instalado ahora   ("D:\Programs\dotnet")
+dotnet-ef   : instalado ahora
+
+  [1] entorno ....... OK
+  [2] restore ....... OK
+  [3] migracion ..... OK (Update_202609041101)
+  [4] build ......... OK   (errores: 0  avisos: 0)
+  [5] test .......... OK
+
+f44919c Fase 3: Seguimientos · Recordatorios + scheduler + notificaciones · Calendario
+
+--- ERRORES de build ------------------------------------------------
+
+--- ultimas 45 lineas del log de build --------------------------
+  NexusWorkspace.Domain -> D:\Programs\NexusWorkspace\src\NexusWorkspace.Domain\bin\Debug\net9.0\NexusWorkspace.Domain.dll
+  NexusWorkspace.Application -> D:\Programs\NexusWorkspace\src\NexusWorkspace.Application\bin\Debug\net9.0\NexusWorkspace.Application.dll
+  NexusWorkspace.UI -> D:\Programs\NexusWorkspace\src\NexusWorkspace.UI\bin\Debug\net9.0\NexusWorkspace.UI.dll
+  NexusWorkspace.Infrastructure -> D:\Programs\NexusWorkspace\src\NexusWorkspace.Infrastructure\bin\Debug\net9.0\NexusWorkspace.Infrastructure.dll
+  NexusWorkspace.Tests -> D:\Programs\NexusWorkspace\tests\NexusWorkspace.Tests\bin\Debug\net9.0\NexusWorkspace.Tests.dll
+  NexusWorkspace.Desktop -> D:\Programs\NexusWorkspace\src\NexusWorkspace.Desktop\bin\Debug\net9.0\NexusWorkspace.Desktop.dll
+
+Compilación correcta.
+    0 Advertencia(s)
+    0 Errores
+
+Tiempo transcurrido 00:00:40.56
+
+--- avisos de build (primeros 30) ---------------------------------
+
+--- migracion EF (ultimas 40 lineas) ---------------------------
+Build started...
+Build succeeded.
+Done. To undo this action, use 'ef migrations remove'
+
+--- resumen de test ----------------------------------------------
+Correctas! - Con error:     0, Superado:    45, Omitido:     0, Total:    45, Duración: 12 s - NexusWorkspace.Tests.dll (net9.0)
+
+Logs completos: D:\Programs\NexusWorkspace\build-logs\2026-09-04_100044

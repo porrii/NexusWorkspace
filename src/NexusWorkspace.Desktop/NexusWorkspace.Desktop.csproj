@@ -18,6 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Marker: run in portable mode (workspace data lives next to the exe, not in %APPDATA%). -->
+    <Content Include="nexus.portable" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Win32" />
     <PackageReference Include="Avalonia.Fonts.Inter" />
