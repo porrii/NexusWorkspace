@@ -506,9 +506,13 @@ public partial class ProjectDetailViewModel(
     [RelayCommand]
     private async Task ExportReportAsync(string format)
     {
-        var kind = string.Equals(format, "json", StringComparison.OrdinalIgnoreCase)
-            ? Application.Export.ExportFormat.Json
-            : Application.Export.ExportFormat.Csv;
+        var kind = format?.ToLowerInvariant() switch
+        {
+            "json" => Application.Export.ExportFormat.Json,
+            "excel" => Application.Export.ExportFormat.Excel,
+            "pdf" => Application.Export.ExportFormat.Pdf,
+            _ => Application.Export.ExportFormat.Csv,
+        };
 
         try
         {

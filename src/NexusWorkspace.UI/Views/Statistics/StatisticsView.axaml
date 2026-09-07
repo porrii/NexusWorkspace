@@ -2,17 +2,24 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
              x:Class="NexusWorkspace.UI.Views.Statistics.StatisticsView">
 
   <StackPanel Spacing="16" MaxWidth="1100">
 
-    <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+    <Grid ColumnDefinitions="*,Auto,Auto">
       <TextBlock Grid.Column="0" Text="Estadísticas" Classes="h1" VerticalAlignment="Center" />
       <Button Grid.Column="1" Content="Actualizar" Classes="quick" Command="{Binding RefreshCommand}" Margin="0,0,8,0" />
-      <Button Grid.Column="2" Content="Exportar CSV" Classes="quick"
-              Command="{Binding ExportSummaryCommand}" CommandParameter="csv" Margin="0,0,8,0" />
-      <Button Grid.Column="3" Content="Exportar JSON" Classes="quick"
-              Command="{Binding ExportSummaryCommand}" CommandParameter="json" />
+      <Button Grid.Column="2" Content="Exportar resumen" Classes="quick">
+        <Button.Flyout>
+          <MenuFlyout>
+            <MenuItem Header="PDF" Command="{Binding ExportSummaryCommand}" CommandParameter="pdf" />
+            <MenuItem Header="Excel" Command="{Binding ExportSummaryCommand}" CommandParameter="excel" />
+            <MenuItem Header="CSV" Command="{Binding ExportSummaryCommand}" CommandParameter="csv" />
+            <MenuItem Header="JSON" Command="{Binding ExportSummaryCommand}" CommandParameter="json" />
+          </MenuFlyout>
+        </Button.Flyout>
+      </Button>
     </Grid>
 
     <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
@@ -72,6 +79,22 @@
       </Border>
     </WrapPanel>
 
+    <Grid ColumnDefinitions="*,*">
+      <Border Grid.Column="0" Classes="card" Margin="0,0,8,12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Finalizadas por semana (12)" Classes="h2" />
+          <lvc:CartesianChart Height="220" Series="{Binding WeeklySeries}" XAxes="{Binding WeeklyAxes}"
+                              TooltipPosition="Top" />
+        </StackPanel>
+      </Border>
+      <Border Grid.Column="1" Classes="card" Margin="8,0,0,12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Reparto de tareas por estado" Classes="h2" />
+          <lvc:PieChart Height="220" Series="{Binding StatusPie}" LegendPosition="Right" />
+        </StackPanel>
+      </Border>
+    </Grid>
+
     <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
 
       <Border Grid.Row="0" Grid.Column="0" Classes="card" Margin="0,0,8,12">
@@ -114,25 +137,6 @@
 
       <Border Grid.Row="1" Grid.Column="0" Classes="card" Margin="0,0,8,12">
         <StackPanel Spacing="8">
-          <TextBlock Text="Finalizadas por semana (12)" Classes="h2" />
-          <ItemsControl ItemsSource="{Binding FinishedPerWeek}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Grid ColumnDefinitions="60,*,Auto" Margin="0,0,0,5">
-                  <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="muted" VerticalAlignment="Center" />
-                  <Border Grid.Column="1" Height="12" CornerRadius="4" HorizontalAlignment="Left"
-                          Background="{DynamicResource AppAccentBrush}"
-                          Width="{Binding Fraction, Converter={x:Static conv:AppConverters.BarPixels}}" />
-                  <TextBlock Grid.Column="2" Text="{Binding Value}" Margin="8,0,0,0" />
-                </Grid>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </StackPanel>
-      </Border>
-
-      <Border Grid.Row="1" Grid.Column="1" Classes="card" Margin="8,0,0,12">
-        <StackPanel Spacing="8">
           <TextBlock Text="Prioridad de las tareas" Classes="h2" />
           <ItemsControl ItemsSource="{Binding TasksByPriority}">
             <ItemsControl.ItemTemplate>
@@ -150,7 +154,27 @@
         </StackPanel>
       </Border>
 
-      <Border Grid.Row="2" Grid.Column="0" Classes="card" Margin="0,0,8,0">
+      <Border Grid.Row="1" Grid.Column="1" Classes="card" Margin="8,0,0,12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Actividad por tipo (30 d)" Classes="h2" />
+          <ItemsControl ItemsSource="{Binding ActivityTypes}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="160,*,Auto" Margin="0,0,0,6">
+                  <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="muted" VerticalAlignment="Center"
+                             TextTrimming="CharacterEllipsis" />
+                  <Border Grid.Column="1" Height="14" CornerRadius="4" HorizontalAlignment="Left"
+                          Background="{DynamicResource SemWaitingBrush}"
+                          Width="{Binding Fraction, Converter={x:Static conv:AppConverters.BarPixels}}" />
+                  <TextBlock Grid.Column="2" Text="{Binding Value}" FontWeight="SemiBold" Margin="8,0,0,0" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Classes="card" Margin="0">
         <StackPanel Spacing="8">
           <TextBlock Text="Carga por persona (tareas abiertas)" Classes="h2" />
           <ItemsControl ItemsSource="{Binding TopPeople}">
@@ -169,26 +193,6 @@
           </ItemsControl>
           <TextBlock Text="Sin asignaciones todavía." Classes="muted"
                      IsVisible="{Binding TopPeople.Count, Converter={x:Static conv:AppConverters.IsZero}}" />
-        </StackPanel>
-      </Border>
-
-      <Border Grid.Row="2" Grid.Column="1" Classes="card" Margin="8,0,0,0">
-        <StackPanel Spacing="8">
-          <TextBlock Text="Actividad por tipo (30 d)" Classes="h2" />
-          <ItemsControl ItemsSource="{Binding ActivityTypes}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Grid ColumnDefinitions="160,*,Auto" Margin="0,0,0,6">
-                  <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="muted" VerticalAlignment="Center"
-                             TextTrimming="CharacterEllipsis" />
-                  <Border Grid.Column="1" Height="14" CornerRadius="4" HorizontalAlignment="Left"
-                          Background="{DynamicResource SemWaitingBrush}"
-                          Width="{Binding Fraction, Converter={x:Static conv:AppConverters.BarPixels}}" />
-                  <TextBlock Grid.Column="2" Text="{Binding Value}" FontWeight="SemiBold" Margin="8,0,0,0" />
-                </Grid>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
         </StackPanel>
       </Border>
 

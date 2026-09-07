@@ -4,6 +4,8 @@ public enum ExportFormat
 {
     Csv = 0,
     Json = 1,
+    Excel = 2,
+    Pdf = 3,
 }
 
 public sealed record ReportTaskRow(string Title, string Status, string Priority, string? Due, string? Assignee);

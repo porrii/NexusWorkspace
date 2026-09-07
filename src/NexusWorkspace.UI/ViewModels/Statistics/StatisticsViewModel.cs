@@ -1,11 +1,15 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Common;
 using NexusWorkspace.Application.Export;
 using NexusWorkspace.Application.Statistics;
+using SkiaSharp;
 
 namespace NexusWorkspace.UI.ViewModels.Statistics;
 
@@ -14,6 +18,12 @@ public sealed record BarRow(string Label, string Value, double Fraction);
 
 public partial class StatisticsViewModel(IUnitOfWorkRunner unitOfWork, IPlatformLauncher launcher) : ViewModelBase
 {
+    private static readonly SKColor[] Palette =
+    [
+        new(0x4A, 0x43, 0xD9), new(0x2E, 0x9E, 0x63), new(0xDD, 0x83, 0x30), new(0x9A, 0x2F, 0x3A),
+        new(0x7A, 0x5A, 0xD1), new(0x2F, 0x7D, 0xA3), new(0xB8, 0x95, 0x1F),
+    ];
+
     [ObservableProperty]
     private WorkspaceStats? _stats;
 
@@ -22,6 +32,15 @@ public partial class StatisticsViewModel(IUnitOfWorkRunner unitOfWork, IPlatform
 
     [ObservableProperty]
     private string? _exportMessage;
+
+    [ObservableProperty]
+    private ISeries[] _weeklySeries = [];
+
+    [ObservableProperty]
+    private Axis[] _weeklyAxes = [];
+
+    [ObservableProperty]
+    private ISeries[] _statusPie = [];
 
     public ObservableCollection<BarRow> ProjectsByStatus { get; } = [];
 
@@ -55,6 +74,8 @@ public partial class StatisticsViewModel(IUnitOfWorkRunner unitOfWork, IPlatform
             Fill(FinishedPerWeek, stats.FinishedPerWeek.Select(x => (x.WeekStart.ToString("dd/MM"), x.Count)));
             Fill(TopPeople, stats.TopPeopleByOpenTasks.Select(x => (x.Name, x.Count)));
             Fill(ActivityTypes, stats.ActivityByTypeLast30.Select(x => (x.Name, x.Count)));
+
+            BuildCharts(stats);
         }
         catch (Exception ex)
         {
@@ -74,7 +95,13 @@ public partial class StatisticsViewModel(IUnitOfWorkRunner unitOfWork, IPlatform
             return;
         }
 
-        var kind = string.Equals(format, "json", StringComparison.OrdinalIgnoreCase) ? ExportFormat.Json : ExportFormat.Csv;
+        var kind = format?.ToLowerInvariant() switch
+        {
+            "json" => ExportFormat.Json,
+            "excel" => ExportFormat.Excel,
+            "pdf" => ExportFormat.Pdf,
+            _ => ExportFormat.Csv,
+        };
 
         var rows = new List<IReadOnlyList<string?>>
         {
@@ -103,6 +130,43 @@ public partial class StatisticsViewModel(IUnitOfWorkRunner unitOfWork, IPlatform
         {
             ExportMessage = $"No se pudo exportar: {ex.Message}";
         }
+    }
+
+    private void BuildCharts(WorkspaceStats stats)
+    {
+        var weekly = stats.FinishedPerWeek.Select(w => (double)w.Count).ToArray();
+        WeeklySeries =
+        [
+            new LineSeries<double>
+            {
+                Values = weekly,
+                Name = "Finalizadas",
+                GeometrySize = 6,
+                Fill = new SolidColorPaint(Palette[0].WithAlpha(40)),
+                Stroke = new SolidColorPaint(Palette[0]) { StrokeThickness = 2 },
+                GeometryStroke = new SolidColorPaint(Palette[0]) { StrokeThickness = 2 },
+            },
+        ];
+        WeeklyAxes =
+        [
+            new Axis
+            {
+                Labels = stats.FinishedPerWeek.Select(w => w.WeekStart.ToString("dd/MM")).ToArray(),
+                LabelsRotation = 45,
+                TextSize = 10,
+            },
+        ];
+
+        var slices = stats.TasksByStatus.Where(s => s.Count > 0).ToArray();
+        StatusPie = slices.Select((s, i) => (ISeries)new PieSeries<int>
+        {
+            Values = [s.Count],
+            Name = s.Name,
+            Fill = new SolidColorPaint(Palette[i % Palette.Length]),
+            DataLabelsPaint = new SolidColorPaint(SKColors.White),
+            DataLabelsSize = 11,
+            DataLabelsFormatter = point => $"{s.Name}: {point.Coordinate.PrimaryValue:0}",
+        }).ToArray();
     }
 
     private static void Fill(ObservableCollection<BarRow> target, IEnumerable<(string Label, int Count)> items)

@@ -125,6 +125,44 @@
         <TextBox AcceptsReturn="True" MinHeight="140" TextWrapping="NoWrap" FontFamily="Consolas, monospace"
                  Watermark="Pega aquí el contenido a importar…" Text="{Binding ImportText, Mode=TwoWay}"
                  ScrollViewer.HorizontalScrollBarVisibility="Auto" />
+
+        <Border Padding="10" CornerRadius="8" Background="{DynamicResource AppSurfaceAltBrush}" IsVisible="{Binding IsCsvImport}">
+          <StackPanel Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="Separador" Classes="muted" VerticalAlignment="Center" />
+              <TextBox Width="60" Text="{Binding CsvDelimiter, Mode=TwoWay}" />
+              <Button Content="Detectar columnas" Command="{Binding DetectCsvColumnsCommand}" />
+            </StackPanel>
+            <StackPanel Spacing="6">
+              <Grid ColumnDefinitions="130,*">
+                <TextBlock Grid.Column="0" Text="Tarea (título)" Classes="muted" VerticalAlignment="Center" />
+                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding CsvColumns}" SelectedItem="{Binding CsvTaskColumn, Mode=TwoWay}" />
+              </Grid>
+              <Grid ColumnDefinitions="130,*">
+                <TextBlock Grid.Column="0" Text="Proyecto" Classes="muted" VerticalAlignment="Center" />
+                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding CsvColumns}" SelectedItem="{Binding CsvProjectColumn, Mode=TwoWay}" />
+              </Grid>
+              <Grid ColumnDefinitions="130,*">
+                <TextBlock Grid.Column="0" Text="Prioridad" Classes="muted" VerticalAlignment="Center" />
+                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding CsvColumns}" SelectedItem="{Binding CsvPriorityColumn, Mode=TwoWay}" />
+              </Grid>
+              <Grid ColumnDefinitions="130,*">
+                <TextBlock Grid.Column="0" Text="Descripción" Classes="muted" VerticalAlignment="Center" />
+                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding CsvColumns}" SelectedItem="{Binding CsvDescriptionColumn, Mode=TwoWay}" />
+              </Grid>
+              <Grid ColumnDefinitions="130,*">
+                <TextBlock Grid.Column="0" Text="Checklist" Classes="muted" VerticalAlignment="Center" />
+                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding CsvColumns}" SelectedItem="{Binding CsvChecklistColumn, Mode=TwoWay}" />
+              </Grid>
+            </StackPanel>
+            <TextBlock Classes="muted" Text="Se requiere una fila de cabecera. Los ítems de checklist en una celda se separan con «;» o «|»." TextWrapping="Wrap" />
+          </StackPanel>
+        </Border>
         <StackPanel Orientation="Horizontal" Spacing="10">
           <Button Content="Previsualizar" Command="{Binding PreviewImportCommand}" />
           <Button Content="Importar" Classes="accent" Command="{Binding CommitImportCommand}"

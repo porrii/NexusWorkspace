@@ -70,6 +70,24 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private ImportPreview? _importPreview;
 
+    [ObservableProperty]
+    private string _csvDelimiter = ",";
+
+    [ObservableProperty]
+    private string? _csvProjectColumn;
+
+    [ObservableProperty]
+    private string? _csvTaskColumn;
+
+    [ObservableProperty]
+    private string? _csvPriorityColumn;
+
+    [ObservableProperty]
+    private string? _csvDescriptionColumn;
+
+    [ObservableProperty]
+    private string? _csvChecklistColumn;
+
     public SettingsViewModel(
         IThemeService theme,
         ISettingsStore settings,
@@ -99,7 +117,11 @@ public partial class SettingsViewModel : ViewModelBase
 
     public ObservableCollection<BackupInfo> Backups { get; } = [];
 
+    public ObservableCollection<string> CsvColumns { get; } = [];
+
     public bool HasPreview => ImportPreview is { ProjectCount: > 0 };
+
+    public bool IsCsvImport => ImportSource == ImportSource.Csv;
 
     public string DataFolder => _paths.RootDirectory;
 
@@ -280,12 +302,53 @@ public partial class SettingsViewModel : ViewModelBase
 
     partial void OnImportPreviewChanged(ImportPreview? value) => OnPropertyChanged(nameof(HasPreview));
 
+    partial void OnImportSourceChanged(ImportSource value)
+    {
+        OnPropertyChanged(nameof(IsCsvImport));
+        ImportPreview = null;
+    }
+
+    [RelayCommand]
+    private void DetectCsvColumns()
+    {
+        var headers = _unitOfWork.RunAsync((sp, ct) =>
+            Task.FromResult(sp.GetRequiredService<ImportService>().DetectCsvHeaders(ImportText, CsvDelimiter)))
+            .GetAwaiter().GetResult();
+
+        CsvColumns.Clear();
+        CsvColumns.Add(string.Empty);
+        foreach (var header in headers)
+        {
+            CsvColumns.Add(header);
+        }
+
+        CsvTaskColumn ??= headers.FirstOrDefault(h => h.Contains("tarea", StringComparison.OrdinalIgnoreCase)
+                                                      || h.Contains("title", StringComparison.OrdinalIgnoreCase)
+                                                      || h.Contains("titulo", StringComparison.OrdinalIgnoreCase));
+        CsvProjectColumn ??= headers.FirstOrDefault(h => h.Contains("proyecto", StringComparison.OrdinalIgnoreCase)
+                                                         || h.Contains("project", StringComparison.OrdinalIgnoreCase));
+        ImportStatus = headers.Count == 0
+            ? "No se detectó una fila de cabecera en el CSV."
+            : $"Columnas detectadas: {string.Join(", ", headers)}.";
+    }
+
     [RelayCommand]
     private async Task PreviewImportAsync()
     {
         ImportPreview = null;
+
+        var map = new CsvImportMap
+        {
+            Delimiter = string.IsNullOrEmpty(CsvDelimiter) ? "," : CsvDelimiter,
+            ProjectColumn = Blank(CsvProjectColumn),
+            TaskColumn = Blank(CsvTaskColumn),
+            PriorityColumn = Blank(CsvPriorityColumn),
+            DescriptionColumn = Blank(CsvDescriptionColumn),
+            ChecklistColumn = Blank(CsvChecklistColumn),
+        };
+
         var result = await _unitOfWork.RunAsync((sp, ct) =>
-            Task.FromResult(sp.GetRequiredService<ImportService>().Parse(ImportSource, ImportText)));
+            Task.FromResult(sp.GetRequiredService<ImportService>().Parse(ImportSource, ImportText, map)));
 
         if (result.IsFailure)
         {
@@ -297,6 +360,8 @@ public partial class SettingsViewModel : ViewModelBase
         var warnings = ImportPreview.Warnings.Count > 0 ? $" · {ImportPreview.Warnings.Count} aviso(s)" : string.Empty;
         ImportStatus = $"Se crearán {ImportPreview.ProjectCount} proyecto(s) y {ImportPreview.TaskCount} tarea(s).{warnings}";
     }
+
+    private static string? Blank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 
     [RelayCommand]
     private async Task CommitImportAsync()

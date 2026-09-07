@@ -64,13 +64,20 @@
       </ComboBox>
       <Button Content="Archivar / Restaurar" Command="{Binding ArchiveCommand}" />
       <Button Content="Guardar como plantilla" Classes="quick" Command="{Binding ToggleTemplatePanelCommand}" />
-      <Button Classes="quick" Command="{Binding ExportReportCommand}" CommandParameter="csv">
+      <Button Classes="quick">
         <StackPanel Orientation="Horizontal" Spacing="6">
-          <mi:MaterialIcon Kind="FileDelimitedOutline" Width="14" Height="14" />
-          <TextBlock Text="Informe CSV" />
+          <mi:MaterialIcon Kind="FileExportOutline" Width="14" Height="14" />
+          <TextBlock Text="Exportar informe" />
         </StackPanel>
+        <Button.Flyout>
+          <MenuFlyout>
+            <MenuItem Header="PDF" Command="{Binding ExportReportCommand}" CommandParameter="pdf" />
+            <MenuItem Header="Excel" Command="{Binding ExportReportCommand}" CommandParameter="excel" />
+            <MenuItem Header="CSV" Command="{Binding ExportReportCommand}" CommandParameter="csv" />
+            <MenuItem Header="JSON" Command="{Binding ExportReportCommand}" CommandParameter="json" />
+          </MenuFlyout>
+        </Button.Flyout>
       </Button>
-      <Button Content="Informe JSON" Classes="quick" Command="{Binding ExportReportCommand}" CommandParameter="json" />
     </StackPanel>
 
     <Border Classes="card" IsVisible="{Binding IsTemplatePanelOpen}">

@@ -1,4 +1,7 @@
+using System.Globalization;
 using System.Text.Json;
+using CsvHelper;
+using CsvHelper.Configuration;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Common;
 using NexusWorkspace.Domain.Enums;
@@ -16,7 +19,7 @@ public sealed class ImportService(IApplicationDbContext db, IActivityLog activit
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
-    public Result<ImportPreview> Parse(ImportSource source, string input)
+    public Result<ImportPreview> Parse(ImportSource source, string input, CsvImportMap? csvMap = null)
     {
         if (string.IsNullOrWhiteSpace(input))
         {
@@ -25,7 +28,13 @@ public sealed class ImportService(IApplicationDbContext db, IActivityLog activit
 
         try
         {
-            var preview = source == ImportSource.Json ? ParseJson(input) : ParseNotes(input);
+            var preview = source switch
+            {
+                ImportSource.Json => ParseJson(input),
+                ImportSource.Csv => ParseCsv(input, csvMap ?? new CsvImportMap()),
+                _ => ParseNotes(input),
+            };
+
             if (preview.ProjectCount == 0)
             {
                 return Result.Failure<ImportPreview>("import.nothing", "No se ha reconocido ningún proyecto o tarea.");
@@ -37,6 +46,35 @@ public sealed class ImportService(IApplicationDbContext db, IActivityLog activit
         {
             return Result.Failure<ImportPreview>("import.bad_json", $"JSON no válido: {ex.Message}");
         }
+        catch (CsvHelperException ex)
+        {
+            return Result.Failure<ImportPreview>("import.bad_csv", $"CSV no válido: {ex.Message}");
+        }
+    }
+
+    /// <summary>Reads just the header row so the UI can offer column mappings.</summary>
+    public IReadOnlyList<string> DetectCsvHeaders(string csv, string delimiter)
+    {
+        if (string.IsNullOrWhiteSpace(csv))
+        {
+            return [];
+        }
+
+        try
+        {
+            using var reader = new StringReader(csv);
+            using var parser = new CsvReader(reader, CsvConfig(delimiter));
+            if (parser.Read() && parser.ReadHeader() && parser.HeaderRecord is { } header)
+            {
+                return header.Where(h => !string.IsNullOrWhiteSpace(h)).ToList();
+            }
+        }
+        catch (CsvHelperException)
+        {
+            // fall through
+        }
+
+        return [];
     }
 
     public async Task<Result<int>> CommitAsync(ImportPreview preview, CancellationToken cancellationToken = default)
@@ -105,6 +143,81 @@ public sealed class ImportService(IApplicationDbContext db, IActivityLog activit
                 AddSubTasks(taskId, node.SubTasks, sub.Id);
             }
         }
+    }
+
+    private static CsvConfiguration CsvConfig(string delimiter) => new(CultureInfo.InvariantCulture)
+    {
+        Delimiter = string.IsNullOrEmpty(delimiter) ? "," : delimiter,
+        HasHeaderRecord = true,
+        MissingFieldFound = null,
+        BadDataFound = null,
+        TrimOptions = TrimOptions.Trim,
+    };
+
+    private static ImportPreview ParseCsv(string input, CsvImportMap map)
+    {
+        var preview = new ImportPreview();
+
+        if (string.IsNullOrWhiteSpace(map.TaskColumn))
+        {
+            preview.Warnings.Add("Elige la columna que contiene el título de la tarea.");
+            return preview;
+        }
+
+        using var reader = new StringReader(input);
+        using var csv = new CsvReader(reader, CsvConfig(map.Delimiter));
+        csv.Read();
+        csv.ReadHeader();
+
+        var byProject = new Dictionary<string, ImportProjectNode>(StringComparer.OrdinalIgnoreCase);
+
+        while (csv.Read())
+        {
+            var title = Field(csv, map.TaskColumn);
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                continue;
+            }
+
+            var projectName = Field(csv, map.ProjectColumn);
+            if (string.IsNullOrWhiteSpace(projectName))
+            {
+                projectName = "CSV importado";
+            }
+
+            if (!byProject.TryGetValue(projectName, out var project))
+            {
+                project = new ImportProjectNode { Name = projectName };
+                byProject[projectName] = project;
+                preview.Projects.Add(project);
+            }
+
+            var task = new ImportTaskNode
+            {
+                Title = title.Trim(),
+                Priority = ParsePriority(Field(csv, map.PriorityColumn)),
+            };
+
+            var checklist = Field(csv, map.ChecklistColumn);
+            if (!string.IsNullOrWhiteSpace(checklist))
+            {
+                task.Checklist.AddRange(checklist
+                    .Split([';', '|'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+            }
+
+            var description = Field(csv, map.DescriptionColumn);
+            if (!string.IsNullOrWhiteSpace(description))
+            {
+                task.SubTasks.Add(new ImportTaskNode { Title = description.Trim() });
+            }
+
+            project.Tasks.Add(task);
+        }
+
+        return preview;
+
+        static string? Field(CsvReader csv, string? column)
+            => string.IsNullOrWhiteSpace(column) ? null : csv.TryGetField<string>(column, out var value) ? value : null;
     }
 
     private static ImportPreview ParseJson(string input)

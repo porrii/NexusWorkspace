@@ -6,6 +6,26 @@ public enum ImportSource
 {
     Json = 0,
     Notes = 1,
+    Csv = 2,
+}
+
+/// <summary>Maps CSV columns (by header name) onto the import model. A header row is required.</summary>
+public sealed class CsvImportMap
+{
+    public string Delimiter { get; set; } = ",";
+
+    /// <summary>Groups rows into projects. When empty, everything lands in one project.</summary>
+    public string? ProjectColumn { get; set; }
+
+    /// <summary>Required: the task title.</summary>
+    public string? TaskColumn { get; set; }
+
+    public string? DescriptionColumn { get; set; }
+
+    public string? PriorityColumn { get; set; }
+
+    /// <summary>Checklist items inside one cell, separated by ';' or '|'.</summary>
+    public string? ChecklistColumn { get; set; }
 }
 
 public sealed class ImportTaskNode
