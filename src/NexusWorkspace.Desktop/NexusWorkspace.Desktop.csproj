@@ -32,11 +32,15 @@
     <PackageReference Include="Serilog.Extensions.Logging" />
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="Serilog.Sinks.File" />
-    <!-- Startup project for `dotnet ef`: the EF tools require the Design package
-         here (it's PrivateAssets=all in Infrastructure, so it doesn't flow). -->
+    <!-- Startup project for `dotnet ef`: the EF tools need the Design package's
+         runtime assembly present in the *Debug* build output (migrations are only
+         ever created in Debug). In Release / publish we drop `runtime` so the
+         design-time assemblies (Roslyn, MSBuild.Locator, …) stay out of the
+         installer — they added ~15 MB and are never used at runtime. -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <IncludeAssets Condition="'$(Configuration)' == 'Debug'">runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
