@@ -17,8 +17,10 @@ using NexusWorkspace.UI.ViewModels.QuickCapture;
 using NexusWorkspace.UI.ViewModels.Search;
 using NexusWorkspace.UI.ViewModels.Settings;
 using NexusWorkspace.UI.ViewModels.Shell;
+using NexusWorkspace.UI.ViewModels.Statistics;
 using NexusWorkspace.UI.ViewModels.Tags;
 using NexusWorkspace.UI.ViewModels.Tasks;
+using NexusWorkspace.UI.ViewModels.Templates;
 
 namespace NexusWorkspace.UI;
 
@@ -56,6 +58,8 @@ public static class DependencyInjection
         services.AddTransient<CompanyDetailViewModel>();
         services.AddTransient<TagsViewModel>();
         services.AddTransient<FilesViewModel>();
+        services.AddTransient<StatisticsViewModel>();
+        services.AddTransient<TemplatesViewModel>();
         services.AddTransient<ActivityViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<PlaceholderViewModel>();

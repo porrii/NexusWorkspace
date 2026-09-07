@@ -1,0 +1,199 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Statistics.StatisticsView">
+
+  <StackPanel Spacing="16" MaxWidth="1100">
+
+    <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+      <TextBlock Grid.Column="0" Text="Estadísticas" Classes="h1" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Actualizar" Classes="quick" Command="{Binding RefreshCommand}" Margin="0,0,8,0" />
+      <Button Grid.Column="2" Content="Exportar CSV" Classes="quick"
+              Command="{Binding ExportSummaryCommand}" CommandParameter="csv" Margin="0,0,8,0" />
+      <Button Grid.Column="3" Content="Exportar JSON" Classes="quick"
+              Command="{Binding ExportSummaryCommand}" CommandParameter="json" />
+    </Grid>
+
+    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+    <TextBlock Text="{Binding ExportMessage}" Classes="muted"
+               IsVisible="{Binding ExportMessage, Converter={x:Static conv:AppConverters.HasText}}" TextWrapping="Wrap" />
+
+    <WrapPanel>
+      <Border Classes="tile" Width="170" Height="82" Margin="0,0,10,10">
+        <StackPanel>
+          <TextBlock Text="{Binding Stats.ActiveProjectCount}" FontSize="24" FontWeight="SemiBold" />
+          <TextBlock Text="Proyectos activos" Classes="muted" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Width="170" Height="82" Margin="0,0,10,10">
+        <StackPanel>
+          <TextBlock Text="{Binding Stats.OpenTaskCount}" FontSize="24" FontWeight="SemiBold" />
+          <TextBlock Text="Tareas abiertas" Classes="muted" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Width="170" Height="82" Margin="0,0,10,10">
+        <StackPanel>
+          <TextBlock Text="{Binding Stats.OverdueTaskCount}" FontSize="24" FontWeight="SemiBold"
+                     Foreground="{DynamicResource SemCriticalBrush}" />
+          <TextBlock Text="Tareas vencidas" Classes="muted" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Width="170" Height="82" Margin="0,0,10,10">
+        <StackPanel>
+          <TextBlock Text="{Binding Stats.OpenFollowUpCount}" FontSize="24" FontWeight="SemiBold" />
+          <TextBlock Text="Seguimientos abiertos" Classes="muted" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Width="170" Height="82" Margin="0,0,10,10">
+        <StackPanel>
+          <TextBlock Text="{Binding Stats.AvgDaysToFinish}" FontSize="24" FontWeight="SemiBold" />
+          <TextBlock Text="Días medios a fin" Classes="muted" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Width="170" Height="82" Margin="0,0,10,10">
+        <StackPanel>
+          <TextBlock Text="{Binding Stats.CommunicationsLast30}" FontSize="24" FontWeight="SemiBold" />
+          <TextBlock Text="Comunicaciones 30 d" Classes="muted" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Width="170" Height="82" Margin="0,0,10,10">
+        <StackPanel>
+          <TextBlock Text="{Binding Stats.AttachmentCount}" FontSize="24" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding AttachmentSize, StringFormat='{}Adjuntos · {0}'}" Classes="muted" />
+        </StackPanel>
+      </Border>
+      <Border Classes="tile" Width="170" Height="82" Margin="0,0,10,10">
+        <StackPanel>
+          <TextBlock Text="{Binding Stats.PeopleCount}" FontSize="24" FontWeight="SemiBold" />
+          <TextBlock Text="Personas" Classes="muted" />
+        </StackPanel>
+      </Border>
+    </WrapPanel>
+
+    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
+
+      <Border Grid.Row="0" Grid.Column="0" Classes="card" Margin="0,0,8,12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Tareas por estado" Classes="h2" />
+          <ItemsControl ItemsSource="{Binding TasksByStatus}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="150,*,Auto" Margin="0,0,0,6">
+                  <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="muted" VerticalAlignment="Center" />
+                  <Border Grid.Column="1" Height="14" CornerRadius="4" HorizontalAlignment="Left"
+                          Background="{DynamicResource AppAccentBrush}"
+                          Width="{Binding Fraction, Converter={x:Static conv:AppConverters.BarPixels}}" />
+                  <TextBlock Grid.Column="2" Text="{Binding Value}" FontWeight="SemiBold" Margin="8,0,0,0" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="0" Grid.Column="1" Classes="card" Margin="8,0,0,12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Proyectos por estado" Classes="h2" />
+          <ItemsControl ItemsSource="{Binding ProjectsByStatus}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="150,*,Auto" Margin="0,0,0,6">
+                  <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="muted" VerticalAlignment="Center" />
+                  <Border Grid.Column="1" Height="14" CornerRadius="4" HorizontalAlignment="Left"
+                          Background="{DynamicResource SemWaitingBrush}"
+                          Width="{Binding Fraction, Converter={x:Static conv:AppConverters.BarPixels}}" />
+                  <TextBlock Grid.Column="2" Text="{Binding Value}" FontWeight="SemiBold" Margin="8,0,0,0" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="1" Grid.Column="0" Classes="card" Margin="0,0,8,12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Finalizadas por semana (12)" Classes="h2" />
+          <ItemsControl ItemsSource="{Binding FinishedPerWeek}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="60,*,Auto" Margin="0,0,0,5">
+                  <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="muted" VerticalAlignment="Center" />
+                  <Border Grid.Column="1" Height="12" CornerRadius="4" HorizontalAlignment="Left"
+                          Background="{DynamicResource AppAccentBrush}"
+                          Width="{Binding Fraction, Converter={x:Static conv:AppConverters.BarPixels}}" />
+                  <TextBlock Grid.Column="2" Text="{Binding Value}" Margin="8,0,0,0" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="1" Grid.Column="1" Classes="card" Margin="8,0,0,12">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Prioridad de las tareas" Classes="h2" />
+          <ItemsControl ItemsSource="{Binding TasksByPriority}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="90,*,Auto" Margin="0,0,0,6">
+                  <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="muted" VerticalAlignment="Center" />
+                  <Border Grid.Column="1" Height="14" CornerRadius="4" HorizontalAlignment="Left"
+                          Background="{DynamicResource SemCriticalBrush}"
+                          Width="{Binding Fraction, Converter={x:Static conv:AppConverters.BarPixels}}" />
+                  <TextBlock Grid.Column="2" Text="{Binding Value}" FontWeight="SemiBold" Margin="8,0,0,0" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="2" Grid.Column="0" Classes="card" Margin="0,0,8,0">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Carga por persona (tareas abiertas)" Classes="h2" />
+          <ItemsControl ItemsSource="{Binding TopPeople}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="150,*,Auto" Margin="0,0,0,6">
+                  <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="muted" VerticalAlignment="Center"
+                             TextTrimming="CharacterEllipsis" />
+                  <Border Grid.Column="1" Height="14" CornerRadius="4" HorizontalAlignment="Left"
+                          Background="{DynamicResource AppAccentBrush}"
+                          Width="{Binding Fraction, Converter={x:Static conv:AppConverters.BarPixels}}" />
+                  <TextBlock Grid.Column="2" Text="{Binding Value}" FontWeight="SemiBold" Margin="8,0,0,0" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock Text="Sin asignaciones todavía." Classes="muted"
+                     IsVisible="{Binding TopPeople.Count, Converter={x:Static conv:AppConverters.IsZero}}" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="2" Grid.Column="1" Classes="card" Margin="8,0,0,0">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Actividad por tipo (30 d)" Classes="h2" />
+          <ItemsControl ItemsSource="{Binding ActivityTypes}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="160,*,Auto" Margin="0,0,0,6">
+                  <TextBlock Grid.Column="0" Text="{Binding Label}" Classes="muted" VerticalAlignment="Center"
+                             TextTrimming="CharacterEllipsis" />
+                  <Border Grid.Column="1" Height="14" CornerRadius="4" HorizontalAlignment="Left"
+                          Background="{DynamicResource SemWaitingBrush}"
+                          Width="{Binding Fraction, Converter={x:Static conv:AppConverters.BarPixels}}" />
+                  <TextBlock Grid.Column="2" Text="{Binding Value}" FontWeight="SemiBold" Margin="8,0,0,0" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+    </Grid>
+
+  </StackPanel>
+
+</UserControl>

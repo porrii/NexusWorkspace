@@ -13,9 +13,13 @@ using NexusWorkspace.Application.People;
 using NexusWorkspace.Application.Projects;
 using NexusWorkspace.Application.Relations;
 using NexusWorkspace.Application.Reminders;
+using NexusWorkspace.Application.Export;
+using NexusWorkspace.Application.Import;
 using NexusWorkspace.Application.SavedSearches;
+using NexusWorkspace.Application.Statistics;
 using NexusWorkspace.Application.Tags;
 using NexusWorkspace.Application.Tasks;
+using NexusWorkspace.Application.Templates;
 using NexusWorkspace.Infrastructure.Persistence;
 using NexusWorkspace.Infrastructure.Persistence.Interceptors;
 using NexusWorkspace.Infrastructure.Search;
@@ -27,7 +31,7 @@ namespace NexusWorkspace.Tests.TestSupport;
 /// A real SQLite (in-memory) database plus wired application services, for
 /// integration-style tests of the Phase 1–3 core.
 /// </summary>
-public sealed class TestHarness : IAsyncDisposable
+public sealed class TestHarness : IAsyncDisposable, IDisposable
 {
     private readonly SqliteConnection _connection;
 
@@ -76,6 +80,16 @@ public sealed class TestHarness : IAsyncDisposable
         AttachmentStore = new FileSystemAttachmentStore(Paths);
         Attachments = new AttachmentService(Db, AttachmentStore, activityLog);
         AttachmentReads = new AttachmentReadService(Db, AttachmentStore);
+
+        ProjectReads = new ProjectReadService(Db);
+        TaskReads = new WorkTaskReadService(Db);
+        Stats = new StatsReadService(Db, Clock);
+        Templates = new TemplateService(Db, Clock, activityLog);
+        TemplateReads = new TemplateReadService(Db);
+        Import = new ImportService(Db, activityLog);
+        ReportData = new ReportDataService(ProjectReads, TaskReads,
+            new FollowUpReadService(Db, Clock), CommunicationReads, Activity);
+        Exporter = new NexusWorkspace.Infrastructure.Export.ReportExporter(Paths);
     }
 
     public FixedClock Clock { get; }
@@ -134,10 +148,33 @@ public sealed class TestHarness : IAsyncDisposable
 
     public AttachmentReadService AttachmentReads { get; }
 
+    public ProjectReadService ProjectReads { get; }
+
+    public WorkTaskReadService TaskReads { get; }
+
+    public StatsReadService Stats { get; }
+
+    public TemplateService Templates { get; }
+
+    public TemplateReadService TemplateReads { get; }
+
+    public ImportService Import { get; }
+
+    public ReportDataService ReportData { get; }
+
+    public NexusWorkspace.Infrastructure.Export.ReportExporter Exporter { get; }
+
     public async ValueTask DisposeAsync()
     {
         await Db.DisposeAsync();
         await _connection.DisposeAsync();
+        Paths.Dispose();
+    }
+
+    public void Dispose()
+    {
+        Db.Dispose();
+        _connection.Dispose();
         Paths.Dispose();
     }
 }

@@ -48,8 +48,42 @@
       </StackPanel>
     </Border>
 
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Importar datos" Classes="h2" />
+        <TextBlock Classes="muted" TextWrapping="Wrap"
+                   Text="Pega JSON (con un array «projects») o notas indentadas: una línea sin sangría es un proyecto o tarea, la sangría crea subtareas, «- » o «- [ ]» crean ítems de checklist, un «!» final marca prioridad alta y «!!» crítica." />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Formato" Classes="muted" VerticalAlignment="Center" />
+          <ComboBox ItemsSource="{Binding ImportSources}" SelectedItem="{Binding ImportSource, Mode=TwoWay}" Width="140" />
+        </StackPanel>
+        <TextBox AcceptsReturn="True" MinHeight="140" TextWrapping="NoWrap" FontFamily="Consolas, monospace"
+                 Watermark="Pega aquí el contenido a importar…" Text="{Binding ImportText, Mode=TwoWay}"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Button Content="Previsualizar" Command="{Binding PreviewImportCommand}" />
+          <Button Content="Importar" Classes="accent" Command="{Binding CommitImportCommand}"
+                  IsEnabled="{Binding HasPreview}" />
+        </StackPanel>
+        <TextBlock Text="{Binding ImportStatus}" Classes="muted" TextWrapping="Wrap"
+                   IsVisible="{Binding ImportStatus, Converter={x:Static conv:AppConverters.HasText}}" />
+        <ItemsControl ItemsSource="{Binding ImportPreview.Projects}" IsVisible="{Binding HasPreview}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="row" Margin="0,0,0,6">
+                <StackPanel Spacing="2">
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                  <TextBlock Classes="muted" Text="{Binding Tasks.Count, StringFormat='{}{0} tareas de primer nivel'}" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+
     <TextBlock Classes="muted"
-               Text="Más categorías (Atajos, Notificaciones, Backup, Exportación, Plantillas, Privacidad…) llegan en fases posteriores." />
+               Text="Más categorías (Atajos, Notificaciones, Backup, Privacidad…) llegan en fases posteriores." />
 
   </StackPanel>
 

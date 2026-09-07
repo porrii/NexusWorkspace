@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
+using NexusWorkspace.Application.Export;
+using NexusWorkspace.Infrastructure.Export;
 using NexusWorkspace.Infrastructure.Persistence;
 using NexusWorkspace.Infrastructure.Persistence.Interceptors;
 using NexusWorkspace.Infrastructure.Scheduling;
@@ -31,6 +33,7 @@ public static class DependencyInjection
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<ISettingsStore, JsonSettingsStore>();
         services.AddSingleton<IAttachmentStore, FileSystemAttachmentStore>();
+        services.AddSingleton<IReportExporter, ReportExporter>();
 
         services.AddSingleton<AuditableEntityInterceptor>();
         services.AddSingleton<SearchIndexInterceptor>();

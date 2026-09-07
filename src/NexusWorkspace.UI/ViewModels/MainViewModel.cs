@@ -71,7 +71,8 @@ public partial class MainViewModel : ViewModelBase
             new(PageKey.Tags, "Etiquetas", "TagMultiple"),
             new(PageKey.Files, "Archivos", "Paperclip"),
             new(PageKey.Activity, "Actividad", "History"),
-            new(PageKey.Statistics, "Estadísticas", "ChartBox", IsImplemented: false),
+            new(PageKey.Statistics, "Estadísticas", "ChartBox"),
+            new(PageKey.Templates, "Plantillas", "FileTreeOutline"),
             new(PageKey.Archived, "Archivados", "Archive", IsImplemented: false),
             new(PageKey.Settings, "Configuración", "Cog"),
         ];
@@ -137,6 +138,8 @@ public partial class MainViewModel : ViewModelBase
         Companies.CompanyDetailViewModel => PageKey.Companies,
         Tags.TagsViewModel => PageKey.Tags,
         Files.FilesViewModel => PageKey.Files,
+        Statistics.StatisticsViewModel => PageKey.Statistics,
+        Templates.TemplatesViewModel => PageKey.Templates,
         Activity.ActivityViewModel => PageKey.Activity,
         Settings.SettingsViewModel => PageKey.Settings,
         PlaceholderViewModel placeholder => placeholder.Key,

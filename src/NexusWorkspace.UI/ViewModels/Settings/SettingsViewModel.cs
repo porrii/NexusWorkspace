@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
+using NexusWorkspace.Application.Import;
 using NexusWorkspace.Application.Settings;
 using NexusWorkspace.UI.Services;
 
@@ -24,6 +25,18 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
+    [ObservableProperty]
+    private ImportSource _importSource = ImportSource.Notes;
+
+    [ObservableProperty]
+    private string _importText = string.Empty;
+
+    [ObservableProperty]
+    private string _importStatus = string.Empty;
+
+    [ObservableProperty]
+    private ImportPreview? _importPreview;
+
     public SettingsViewModel(
         IThemeService theme,
         ISettingsStore settings,
@@ -40,6 +53,10 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     public IReadOnlyList<ThemeMode> ThemeOptions { get; } = Enum.GetValues<ThemeMode>();
+
+    public IReadOnlyList<ImportSource> ImportSources { get; } = Enum.GetValues<ImportSource>();
+
+    public bool HasPreview => ImportPreview is { ProjectCount: > 0 };
 
     public string DataFolder => _paths.RootDirectory;
 
@@ -73,6 +90,61 @@ public partial class SettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             StatusMessage = $"No se pudo cargar la demo: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    partial void OnImportPreviewChanged(ImportPreview? value) => OnPropertyChanged(nameof(HasPreview));
+
+    [RelayCommand]
+    private async Task PreviewImportAsync()
+    {
+        ImportPreview = null;
+        var result = await _unitOfWork.RunAsync((sp, ct) =>
+            Task.FromResult(sp.GetRequiredService<ImportService>().Parse(ImportSource, ImportText)));
+
+        if (result.IsFailure)
+        {
+            ImportStatus = result.Error.Message;
+            return;
+        }
+
+        ImportPreview = result.Value;
+        var warnings = ImportPreview.Warnings.Count > 0 ? $" · {ImportPreview.Warnings.Count} aviso(s)" : string.Empty;
+        ImportStatus = $"Se crearán {ImportPreview.ProjectCount} proyecto(s) y {ImportPreview.TaskCount} tarea(s).{warnings}";
+    }
+
+    [RelayCommand]
+    private async Task CommitImportAsync()
+    {
+        if (ImportPreview is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var preview = ImportPreview;
+            var result = await _unitOfWork.RunAsync((sp, ct) =>
+                sp.GetRequiredService<ImportService>().CommitAsync(preview, ct));
+
+            if (result.IsFailure)
+            {
+                ImportStatus = result.Error.Message;
+                return;
+            }
+
+            ImportStatus = $"Importados {result.Value} proyecto(s).";
+            ImportPreview = null;
+            ImportText = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            ImportStatus = $"No se pudo importar: {ex.Message}";
         }
         finally
         {

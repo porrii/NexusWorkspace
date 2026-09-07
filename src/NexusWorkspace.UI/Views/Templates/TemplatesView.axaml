@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Templates.TemplatesView">
+
+  <StackPanel Spacing="16" MaxWidth="960">
+
+    <StackPanel Spacing="2">
+      <TextBlock Text="Plantillas" Classes="h1" />
+      <TextBlock Text="Guarda un proyecto o una tarea como árbol reutilizable y vuélvelo a crear en un clic." Classes="muted" />
+    </StackPanel>
+
+    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Plantillas de proyecto" Classes="h2" />
+        <TextBox Watermark="Nombre para el nuevo proyecto (opcional)" Text="{Binding NewProjectName, Mode=TwoWay}" />
+        <ItemsControl ItemsSource="{Binding ProjectTemplates}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="row" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                  <StackPanel Grid.Column="0" Spacing="2">
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <TextBlock Classes="muted" Text="{Binding TaskCount, StringFormat='{}{0} tareas'}" />
+                      <TextBlock Classes="muted" Text="{Binding UseCount, StringFormat='{}usada {0} veces'}" />
+                    </StackPanel>
+                  </StackPanel>
+                  <Button Grid.Column="1" Classes="accent" Content="Crear proyecto" Margin="0,0,8,0"
+                          Command="{Binding $parent[ItemsControl].DataContext.ApplyProjectTemplateCommand}" CommandParameter="{Binding}" />
+                  <Button Grid.Column="2" Classes="quick" Content="Eliminar"
+                          Command="{Binding $parent[ItemsControl].DataContext.DeleteCommand}" CommandParameter="{Binding}" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Text="Sin plantillas de proyecto. Usa «Guardar como plantilla» desde un proyecto." Classes="muted"
+                   IsVisible="{Binding ProjectTemplates.Count, Converter={x:Static conv:AppConverters.IsZero}}" />
+      </StackPanel>
+    </Border>
+
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Plantillas de tarea" Classes="h2" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Proyecto de destino" Classes="muted" VerticalAlignment="Center" />
+          <ComboBox Width="260" ItemsSource="{Binding Projects}" SelectedItem="{Binding TargetProject, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <ItemsControl ItemsSource="{Binding TaskTemplates}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="row" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                  <StackPanel Grid.Column="0" Spacing="2">
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <TextBlock Classes="muted" Text="{Binding TaskCount, StringFormat='{}{0} subtareas'}" />
+                      <TextBlock Classes="muted" Text="{Binding UseCount, StringFormat='{}usada {0} veces'}" />
+                    </StackPanel>
+                  </StackPanel>
+                  <Button Grid.Column="1" Classes="accent" Content="Añadir al proyecto" Margin="0,0,8,0"
+                          Command="{Binding $parent[ItemsControl].DataContext.ApplyTaskTemplateCommand}" CommandParameter="{Binding}" />
+                  <Button Grid.Column="2" Classes="quick" Content="Eliminar"
+                          Command="{Binding $parent[ItemsControl].DataContext.DeleteCommand}" CommandParameter="{Binding}" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Text="Sin plantillas de tarea. Usa «Guardar como plantilla» desde una tarea." Classes="muted"
+                   IsVisible="{Binding TaskTemplates.Count, Converter={x:Static conv:AppConverters.IsZero}}" />
+      </StackPanel>
+    </Border>
+
+  </StackPanel>
+
+</UserControl>

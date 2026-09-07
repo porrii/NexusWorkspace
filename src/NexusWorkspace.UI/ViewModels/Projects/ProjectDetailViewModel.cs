@@ -9,6 +9,7 @@ using NexusWorkspace.Application.Localization;
 using NexusWorkspace.Application.Projects;
 using NexusWorkspace.Application.Reminders;
 using NexusWorkspace.Application.Tasks;
+using NexusWorkspace.Application.Templates;
 using NexusWorkspace.Domain.Enums;
 using NexusWorkspace.Domain.Projects;
 using NexusWorkspace.Domain.Tasks;
@@ -66,6 +67,15 @@ public partial class ProjectDetailViewModel(
 
     [ObservableProperty]
     private DateTimeOffset? _newReminderDate = DateTimeOffset.Now.Date.AddDays(1);
+
+    [ObservableProperty]
+    private bool _isTemplatePanelOpen;
+
+    [ObservableProperty]
+    private string _templateName = string.Empty;
+
+    [ObservableProperty]
+    private string? _exportMessage;
 
     public ObservableCollection<WorkTaskListItem> Tasks { get; } = [];
 
@@ -457,6 +467,75 @@ public partial class ProjectDetailViewModel(
 
         await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ReminderService>().CompleteAsync(reminder.Id, ct));
         await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private void ToggleTemplatePanel()
+    {
+        IsTemplatePanelOpen = !IsTemplatePanelOpen;
+        if (IsTemplatePanelOpen && Header is not null && string.IsNullOrWhiteSpace(TemplateName))
+        {
+            TemplateName = Header.Name;
+        }
+    }
+
+    [RelayCommand]
+    private async Task SaveAsTemplateAsync()
+    {
+        if (Header is null)
+        {
+            return;
+        }
+
+        var name = string.IsNullOrWhiteSpace(TemplateName) ? Header.Name : TemplateName.Trim();
+        var result = await unitOfWork.RunAsync((sp, ct) =>
+            sp.GetRequiredService<TemplateService>().CreateFromProjectAsync(_projectId, name, ct));
+
+        if (result.IsFailure)
+        {
+            ErrorMessage = result.Error.Message;
+            return;
+        }
+
+        IsTemplatePanelOpen = false;
+        TemplateName = string.Empty;
+        ExportMessage = $"Plantilla «{name}» guardada.";
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task ExportReportAsync(string format)
+    {
+        var kind = string.Equals(format, "json", StringComparison.OrdinalIgnoreCase)
+            ? Application.Export.ExportFormat.Json
+            : Application.Export.ExportFormat.Csv;
+
+        try
+        {
+            var path = await unitOfWork.RunAsync(async (sp, ct) =>
+            {
+                var data = await sp.GetRequiredService<Application.Export.ReportDataService>().BuildProjectReportAsync(_projectId, ct);
+                if (data is null)
+                {
+                    return null;
+                }
+
+                return await sp.GetRequiredService<Application.Export.IReportExporter>().ExportProjectReportAsync(data, kind, ct);
+            });
+
+            if (path is null)
+            {
+                ErrorMessage = "No se pudo generar el informe.";
+                return;
+            }
+
+            ExportMessage = $"Informe guardado en {path}";
+            launcher.RevealInFolder(path);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"No se pudo exportar: {ex.Message}";
+        }
     }
 
     [RelayCommand]

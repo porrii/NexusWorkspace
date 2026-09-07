@@ -55,6 +55,15 @@ public partial class TaskDetailViewModel(
     [ObservableProperty]
     private DateTimeOffset? _newReminderDate = DateTimeOffset.Now.Date.AddDays(1);
 
+    [ObservableProperty]
+    private bool _isTemplatePanelOpen;
+
+    [ObservableProperty]
+    private string _templateName = string.Empty;
+
+    [ObservableProperty]
+    private string? _templateMessage;
+
     public ObservableCollection<FollowUpListItem> FollowUps { get; } = [];
 
     public ObservableCollection<ReminderView> Reminders { get; } = [];
@@ -350,6 +359,39 @@ public partial class TaskDetailViewModel(
     private Task CompleteReminderAsync(ReminderView? reminder)
         => reminder is null ? Task.CompletedTask : RunAndRefreshAsync((sp, ct) =>
             sp.GetRequiredService<ReminderService>().CompleteAsync(reminder.Id, ct));
+
+    [RelayCommand]
+    private void ToggleTemplatePanel()
+    {
+        IsTemplatePanelOpen = !IsTemplatePanelOpen;
+        if (IsTemplatePanelOpen && Detail is not null && string.IsNullOrWhiteSpace(TemplateName))
+        {
+            TemplateName = Detail.Title;
+        }
+    }
+
+    [RelayCommand]
+    private async Task SaveAsTemplateAsync()
+    {
+        if (Detail is null)
+        {
+            return;
+        }
+
+        var name = string.IsNullOrWhiteSpace(TemplateName) ? Detail.Title : TemplateName.Trim();
+        var result = await unitOfWork.RunAsync((sp, ct) =>
+            sp.GetRequiredService<Application.Templates.TemplateService>().CreateFromTaskAsync(_taskId, name, ct));
+
+        if (result.IsFailure)
+        {
+            ErrorMessage = result.Error.Message;
+            return;
+        }
+
+        IsTemplatePanelOpen = false;
+        TemplateName = string.Empty;
+        TemplateMessage = $"Plantilla «{name}» guardada.";
+    }
 
     [RelayCommand]
     private void Back() => navigation.GoBack();

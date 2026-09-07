@@ -18,6 +18,7 @@ using NexusWorkspace.Domain.Reminders;
 using NexusWorkspace.Domain.SavedSearches;
 using NexusWorkspace.Domain.Tags;
 using NexusWorkspace.Domain.Tasks;
+using NexusWorkspace.Domain.Templates;
 
 namespace NexusWorkspace.Infrastructure.Persistence;
 
@@ -64,6 +65,8 @@ public sealed class NexusDbContext(DbContextOptions<NexusDbContext> options)
     public DbSet<EntityRelation> EntityRelations => Set<EntityRelation>();
 
     public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
+
+    public DbSet<Template> Templates => Set<Template>();
 
     public DbSet<Comment> Comments => Set<Comment>();
 

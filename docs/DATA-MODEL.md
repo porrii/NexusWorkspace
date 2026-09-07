@@ -59,7 +59,7 @@ apuntan a cualquier entidad con **`TargetKind` (`EntityKind`) + `TargetId` (`Gui
 | `Reminder` | `TargetKind, TargetId, Text, RemindAtUtc, Status` | a cualquier entidad |
 | `InboxItem` | `RawText, ParsedHint, State (Pending/Converted/Dismissed), ConvertedToKind, ConvertedToId, ProcessedAtUtc` | captura rápida; se convierte en `WorkTask`/`Project` (descartar = soft-delete) |
 | `SavedSearch` | `Name, Kind (superficie), QueryText, FiltersJson, IsPinned, SortKey, LastRunUtc` | búsquedas/filtros guardados por superficie; los fijados se muestran como chips |
-| `Template` | `Name, Kind, DefinitionJson` | genera árboles de proyecto/tarea |
+| `Template` | `Name, Kind (Project/Task), Description, DefinitionJson (opaco), UseCount, LastUsedAtUtc` | árbol reutilizable: proyecto (tareas → subtareas → checklist + etiquetas) o tarea suelta; aplicarla los recrea y suma a `UseCount` |
 | `Notification` | `Text, Kind, CreatedAtUtc, IsRead, DeepLink` | centro de notificaciones local |
 | `Setting` | `Key, Value` | solo ajustes de negocio (UI/app → `settings.json`) |
 
@@ -77,6 +77,7 @@ apuntan a cualquier entidad con **`TargetKind` (`EntityKind`) + `TargetId` (`Gui
 - **`MeetingStatus`**: `Scheduled, Held, Cancelled`.
 - **`RelationKind`**: `RelatesTo, Blocks, DependsOn, Duplicates, References, PartOf, Mentions`.
 - **`SavedSearchKind`**: `Global, Projects, Tasks, People, Companies, FollowUps, Communications`.
+- **`TemplateKind`**: `Project, Task`.
 - **`DependencyKind`**: `FinishToStart, Blocks, Related`.
 - **`FollowUpState`**: `Waiting, Escalated, Answered, Closed`.
 - **`ReminderStatus`**: `Pending, Done, Dismissed`.

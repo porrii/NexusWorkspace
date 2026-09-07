@@ -4,6 +4,7 @@ using NexusWorkspace.Domain.Communications;
 using NexusWorkspace.Domain.Meetings;
 using NexusWorkspace.Domain.Relations;
 using NexusWorkspace.Domain.SavedSearches;
+using NexusWorkspace.Domain.Templates;
 
 namespace NexusWorkspace.Infrastructure.Persistence.Configurations;
 
@@ -106,5 +107,21 @@ internal sealed class SavedSearchConfiguration : IEntityTypeConfiguration<SavedS
 
         builder.HasIndex(s => new { s.Kind, s.SortKey });
         builder.HasIndex(s => s.IsPinned);
+    }
+}
+
+internal sealed class TemplateConfiguration : IEntityTypeConfiguration<Template>
+{
+    public void Configure(EntityTypeBuilder<Template> builder)
+    {
+        builder.ToTable("Templates");
+        builder.HasKey(t => t.Id);
+
+        builder.Property(t => t.Name).HasMaxLength(160).IsRequired();
+        builder.Property(t => t.Description).HasMaxLength(2000);
+        builder.Property(t => t.DefinitionJson).IsRequired();
+
+        builder.HasIndex(t => t.Kind);
+        builder.HasIndex(t => t.IsDeleted);
     }
 }

@@ -7,7 +7,9 @@ using NexusWorkspace.Application.Calendar;
 using NexusWorkspace.Application.Common;
 using NexusWorkspace.Application.Communications;
 using NexusWorkspace.Application.Companies;
+using NexusWorkspace.Application.Export;
 using NexusWorkspace.Application.FollowUps;
+using NexusWorkspace.Application.Import;
 using NexusWorkspace.Application.Inbox;
 using NexusWorkspace.Application.Meetings;
 using NexusWorkspace.Application.Notifications;
@@ -17,8 +19,10 @@ using NexusWorkspace.Application.QuickCapture;
 using NexusWorkspace.Application.Relations;
 using NexusWorkspace.Application.Reminders;
 using NexusWorkspace.Application.SavedSearches;
+using NexusWorkspace.Application.Statistics;
 using NexusWorkspace.Application.Tags;
 using NexusWorkspace.Application.Tasks;
+using NexusWorkspace.Application.Templates;
 
 namespace NexusWorkspace.Application;
 
@@ -49,6 +53,9 @@ public static class DependencyInjection
         services.AddScoped<RelationService>();
         services.AddScoped<SavedSearchService>();
         services.AddScoped<AttachmentService>();
+        services.AddScoped<TemplateService>();
+        services.AddScoped<ImportService>();
+        services.AddScoped<ReportDataService>();
 
         services.AddScoped<NotificationService>();
         services.AddScoped<INotificationService>(sp => sp.GetRequiredService<NotificationService>());
@@ -69,6 +76,8 @@ public static class DependencyInjection
         services.AddScoped<RelationReadService>();
         services.AddScoped<SavedSearchReadService>();
         services.AddScoped<AttachmentReadService>();
+        services.AddScoped<StatsReadService>();
+        services.AddScoped<TemplateReadService>();
 
         services.AddScoped<IValidator<CreateProjectRequest>, CreateProjectRequestValidator>();
         services.AddScoped<IValidator<CreateWorkTaskRequest>, CreateWorkTaskRequestValidator>();

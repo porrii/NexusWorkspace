@@ -17,6 +17,7 @@ public enum PageKey
     Files,
     Activity,
     Statistics,
+    Templates,
     Archived,
     Settings,
 

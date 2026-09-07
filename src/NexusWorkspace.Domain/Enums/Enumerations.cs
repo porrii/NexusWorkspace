@@ -221,3 +221,10 @@ public enum SavedSearchKind
     FollowUps = 5,
     Communications = 6,
 }
+
+/// <summary>What a reusable template produces when applied.</summary>
+public enum TemplateKind
+{
+    Project = 0,
+    Task = 1,
+}

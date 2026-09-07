@@ -32,6 +32,10 @@ public static class AppConverters
 
     public static readonly FuncValueConverter<bool, double> SidebarWidth = new(expanded => expanded ? 234d : 64d);
 
+    /// <summary>Bar-chart fraction (0..1) → pixel width, with a visible minimum.</summary>
+    public static readonly FuncValueConverter<double, double> BarPixels =
+        new(fraction => Math.Max(3d, Math.Clamp(fraction, 0d, 1d) * 240d));
+
     public static readonly FuncValueConverter<bool, double> ExpandedToOpacity = new(expanded => expanded ? 1d : 0d);
 
     public static readonly FuncValueConverter<string?, bool> HasText =

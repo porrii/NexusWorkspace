@@ -14,6 +14,7 @@ using NexusWorkspace.Domain.Reminders;
 using NexusWorkspace.Domain.SavedSearches;
 using NexusWorkspace.Domain.Tags;
 using NexusWorkspace.Domain.Tasks;
+using NexusWorkspace.Domain.Templates;
 
 namespace NexusWorkspace.Application.Abstractions;
 
@@ -63,6 +64,8 @@ public interface IApplicationDbContext
     DbSet<EntityRelation> EntityRelations { get; }
 
     DbSet<SavedSearch> SavedSearches { get; }
+
+    DbSet<Template> Templates { get; }
 
     DbSet<Comment> Comments { get; }
 

@@ -239,6 +239,26 @@
       </StackPanel>
     </Border>
 
+    <!-- Template -->
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Grid.Column="0" Text="Plantilla" Classes="h2" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Content="Guardar como plantilla" Classes="quick"
+                  Command="{Binding ToggleTemplatePanelCommand}" />
+        </Grid>
+        <StackPanel Spacing="8" IsVisible="{Binding IsTemplatePanelOpen}">
+          <TextBox Watermark="Nombre de la plantilla" Text="{Binding TemplateName, Mode=TwoWay}" />
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+            <Button Content="Cancelar" Command="{Binding ToggleTemplatePanelCommand}" />
+            <Button Content="Guardar" Classes="accent" Command="{Binding SaveAsTemplateCommand}" />
+          </StackPanel>
+        </StackPanel>
+        <TextBlock Text="{Binding TemplateMessage}" Classes="muted"
+                   IsVisible="{Binding TemplateMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+      </StackPanel>
+    </Border>
+
     <!-- History -->
     <Border Classes="card">
       <StackPanel Spacing="10">

@@ -27,9 +27,12 @@ Incremental. **La solución permanece compilable y ejecutable al terminar cada f
 
 - [x] **Fase 5** — **Tablero Kanban** por proyecto: columnas por estado, arrastrar y soltar una tarjeta cambia el estado (con validación de transición) y deja **historial**. **Cronología** del proyecto: actividad agrupada por día con marcadores por tipo. **Adjuntos** (`IAttachmentStore` / `FileSystemAttachmentStore`): almacén externo en `files/`, **direccionado por contenido** (SHA-256) y deduplicado; panel reutilizable con **selector, arrastrar-soltar y pegar**, **miniaturas** para imágenes (decodificadas y escaladas al vuelo), abrir / mostrar en carpeta / quitar; secciones en Tarea y Proyecto. **Página Archivos**: todos los adjuntos del espacio de trabajo con filtro por proyecto, tipo y nombre; abrir, mostrar en carpeta e ir al elemento. `IPlatformLauncher` +`OpenPath` / `RevealInFolder`. Índice FTS5 ampliado a nombres de archivo. Sin nueva migración (reutiliza la tabla `Attachments`).
 
-> **Estado 2026-09-04**: Fases 0–5 compiladas en verde en este PC (`dotnet build` **0/0**,
-> sin migración nueva en Fase 5, **56/56 tests**). App arranca, índice de búsqueda
-> reconstruido con adjuntos, todas las consultas corren sin avisos.
+- [x] **Fase 6** — **Estadísticas** (`StatsReadService`): KPIs + gráficos de barras nativos (tareas/proyectos por estado, prioridad, finalizadas por semana ×12, carga por persona, actividad por tipo 30 d, medias); export del resumen a CSV/JSON. **Plantillas** (`Template` + `TemplateKind`, con migración): «Guardar como plantilla» desde proyecto/tarea captura el árbol (tareas → subtareas → checklist + etiquetas) como JSON; página **Plantillas** para aplicarlas (nuevo proyecto / añadir tarea a un proyecto), con recuento de usos; las etiquetas se reutilizan por nombre. **Informes** (`IReportExporter` / `ReportExporter`): tabla de proyectos/tareas e informe de proyecto (cabecera + tareas + seguimientos + comunicaciones + cronología) a **CSV** y **JSON** en `exports/`. **Importación** (`ImportService`) en Configuración: **JSON** (array `projects` con tareas anidadas) y **notas indentadas** (línea = proyecto/tarea, sangría = subtareas, `- `/`- [ ]` = checklist, `!`/`!!`/`?` = prioridad) con **previsualización** antes de confirmar; todo lo importado deja historial `Imported`.
+
+> **Estado 2026-09-07**: Fases 0–6 compiladas en verde en este PC (`dotnet build` **0/0**,
+> migración `Update_202609071017_Templates` aplicada, **64/64 tests**). App arranca sin
+> avisos. Pendiente para una 6b: informes **PDF** (QuestPDF) y **Excel** (ClosedXML),
+> mapeo de columnas para importar **CSV**, y gráficos LiveCharts2.
 
 > Publicado en GitHub: `porrii/NexusWorkspace`, rama `dev`. `main` + release cuando la v1 esté lista.
 > CI: el flujo está en `docs/ci-build.yml`; moverlo a `.github/workflows/build.yml` desde la web de

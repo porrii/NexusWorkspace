@@ -75,6 +75,13 @@ public static class DisplayNames
         _ => direction.ToString(),
     };
 
+    public static string Of(TemplateKind kind) => kind switch
+    {
+        TemplateKind.Project => "Proyecto",
+        TemplateKind.Task => "Tarea",
+        _ => kind.ToString(),
+    };
+
     public static string Of(MeetingStatus status) => status switch
     {
         MeetingStatus.Scheduled => "Programada",

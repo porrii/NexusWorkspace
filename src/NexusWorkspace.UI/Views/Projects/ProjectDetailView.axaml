@@ -63,7 +63,30 @@
         </ComboBox.ItemTemplate>
       </ComboBox>
       <Button Content="Archivar / Restaurar" Command="{Binding ArchiveCommand}" />
+      <Button Content="Guardar como plantilla" Classes="quick" Command="{Binding ToggleTemplatePanelCommand}" />
+      <Button Classes="quick" Command="{Binding ExportReportCommand}" CommandParameter="csv">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <mi:MaterialIcon Kind="FileDelimitedOutline" Width="14" Height="14" />
+          <TextBlock Text="Informe CSV" />
+        </StackPanel>
+      </Button>
+      <Button Content="Informe JSON" Classes="quick" Command="{Binding ExportReportCommand}" CommandParameter="json" />
     </StackPanel>
+
+    <Border Classes="card" IsVisible="{Binding IsTemplatePanelOpen}">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Guardar el proyecto como plantilla" Classes="h2" />
+        <TextBlock Classes="muted" Text="Captura las tareas, subtareas, checklist y etiquetas como un árbol reutilizable." />
+        <TextBox Watermark="Nombre de la plantilla" Text="{Binding TemplateName, Mode=TwoWay}" />
+        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+          <Button Content="Cancelar" Command="{Binding ToggleTemplatePanelCommand}" />
+          <Button Content="Guardar plantilla" Classes="accent" Command="{Binding SaveAsTemplateCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <TextBlock Text="{Binding ExportMessage}" Classes="muted" TextWrapping="Wrap"
+               IsVisible="{Binding ExportMessage, Converter={x:Static conv:AppConverters.HasText}}" />
 
     <!-- Tabs -->
     <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
