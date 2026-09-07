@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Export;
+using NexusWorkspace.Infrastructure.Backups;
 using NexusWorkspace.Infrastructure.Export;
 using NexusWorkspace.Infrastructure.Persistence;
 using NexusWorkspace.Infrastructure.Persistence.Interceptors;
@@ -34,6 +35,7 @@ public static class DependencyInjection
         services.AddSingleton<ISettingsStore, JsonSettingsStore>();
         services.AddSingleton<IAttachmentStore, FileSystemAttachmentStore>();
         services.AddSingleton<IReportExporter, ReportExporter>();
+        services.AddSingleton<IBackupService, FileSystemBackupService>();
 
         services.AddSingleton<AuditableEntityInterceptor>();
         services.AddSingleton<SearchIndexInterceptor>();

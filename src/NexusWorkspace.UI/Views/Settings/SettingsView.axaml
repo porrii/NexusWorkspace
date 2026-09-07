@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
              x:Class="NexusWorkspace.UI.Views.Settings.SettingsView">
 
@@ -45,6 +46,70 @@
         </StackPanel>
         <TextBlock Text="{Binding StatusMessage}" Classes="muted"
                    IsVisible="{Binding StatusMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+      </StackPanel>
+    </Border>
+
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Inicio y notificaciones" Classes="h2" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Sección al arrancar" Classes="muted" VerticalAlignment="Center" />
+          <ComboBox Width="200" ItemsSource="{Binding StartupSectionOptions}" SelectedItem="{Binding StartupSection, Mode=TwoWay}" />
+        </StackPanel>
+        <CheckBox Content="Notificaciones activadas" IsChecked="{Binding NotificationsEnabled, Mode=TwoWay}" />
+        <CheckBox Content="Mostrar recordatorios pendientes al arrancar" IsChecked="{Binding RemindersOnStartup, Mode=TwoWay}" />
+        <CheckBox Content="Avisos de seguimientos que llevan tiempo esperando" IsChecked="{Binding FollowUpNudges, Mode=TwoWay}" />
+      </StackPanel>
+    </Border>
+
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Copias de seguridad" Classes="h2" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Programación" Classes="muted" VerticalAlignment="Center" />
+          <ComboBox Width="140" ItemsSource="{Binding BackupScheduleOptions}" SelectedItem="{Binding BackupSchedule, Mode=TwoWay}" />
+          <TextBlock Text="Conservar" Classes="muted" VerticalAlignment="Center" Margin="10,0,0,0" />
+          <NumericUpDown Width="110" Minimum="1" Maximum="999" Increment="1" Value="{Binding KeepVersions, Mode=TwoWay}" />
+        </StackPanel>
+        <CheckBox Content="Crear copia antes de aplicar migraciones" IsChecked="{Binding BackupBeforeMigration, Mode=TwoWay}" />
+        <CheckBox Content="Incluir los archivos adjuntos en las copias manuales" IsChecked="{Binding IncludeFilesInBackup, Mode=TwoWay}" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Button Content="Crear copia ahora" Classes="accent" Command="{Binding CreateBackupNowCommand}" />
+          <Button Content="Abrir carpeta de copias" Command="{Binding OpenBackupsFolderCommand}" />
+          <Button Content="Exportar workspace…" Click="OnExportWorkspaceClicked" />
+          <Button Content="Importar workspace…" Click="OnImportWorkspaceClicked" />
+        </StackPanel>
+
+        <Border Padding="10" CornerRadius="8" Background="{DynamicResource AppAccentWashBrush}"
+                IsVisible="{Binding RestartRequired}">
+          <TextBlock Text="Hay una restauración o importación preparada. Cierra y vuelve a abrir NexusWorkspace para aplicarla." TextWrapping="Wrap" />
+        </Border>
+
+        <TextBlock Text="{Binding BackupStatus}" Classes="muted" TextWrapping="Wrap"
+                   IsVisible="{Binding BackupStatus, Converter={x:Static conv:AppConverters.HasText}}" />
+
+        <ItemsControl ItemsSource="{Binding Backups}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="row" Margin="0,0,0,6">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                  <StackPanel Grid.Column="0" Spacing="1">
+                    <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" FontSize="12.5" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <TextBlock Classes="muted" Text="{Binding CreatedAtUtc, Converter={x:Static conv:AppConverters.RelativeDateTime}}" />
+                      <TextBlock Classes="muted" Text="{Binding Reason}" />
+                      <TextBlock Classes="muted" Text="con adjuntos" IsVisible="{Binding IncludesFiles}" />
+                    </StackPanel>
+                  </StackPanel>
+                  <Button Grid.Column="1" Classes="quick" Content="Restaurar" Margin="0,0,6,0"
+                          Command="{Binding $parent[ItemsControl].DataContext.RestoreBackupCommand}" CommandParameter="{Binding}" />
+                  <Button Grid.Column="2" Classes="quick" Content="Eliminar"
+                          Command="{Binding $parent[ItemsControl].DataContext.DeleteBackupCommand}" CommandParameter="{Binding}" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
       </StackPanel>
     </Border>
 

@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NexusWorkspace.Application.Abstractions;
+using NexusWorkspace.Application.Settings;
 using NexusWorkspace.Infrastructure.Search;
 
 namespace NexusWorkspace.Infrastructure.Persistence;
@@ -9,7 +11,12 @@ namespace NexusWorkspace.Infrastructure.Persistence;
 /// exist; falls back to <c>EnsureCreated</c> only while the project has no
 /// migrations yet (early development). Enables WAL and builds the search index.
 /// </summary>
-public sealed class DatabaseInitializer(NexusDbContext db, Fts5SearchService search, ILogger<DatabaseInitializer> logger)
+public sealed class DatabaseInitializer(
+    NexusDbContext db,
+    Fts5SearchService search,
+    IBackupService backup,
+    ISettingsStore settings,
+    ILogger<DatabaseInitializer> logger)
 {
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -32,7 +39,17 @@ public sealed class DatabaseInitializer(NexusDbContext db, Fts5SearchService sea
                     pending.Count,
                     string.Join(", ", pending));
 
-                // Fase 7: aquí se invocará IBackupService.BackupBeforeMigrationAsync().
+                if (settings.Current.Backup.BackupBeforeMigration)
+                {
+                    try
+                    {
+                        await backup.CreateAsync("premigration", includeFiles: false, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "No se pudo crear la copia previa a la migración; se continúa.");
+                    }
+                }
             }
 
             await db.Database.MigrateAsync(cancellationToken);

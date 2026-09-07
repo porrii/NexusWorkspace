@@ -29,10 +29,13 @@ Incremental. **La solución permanece compilable y ejecutable al terminar cada f
 
 - [x] **Fase 6** — **Estadísticas** (`StatsReadService`): KPIs + gráficos de barras nativos (tareas/proyectos por estado, prioridad, finalizadas por semana ×12, carga por persona, actividad por tipo 30 d, medias); export del resumen a CSV/JSON. **Plantillas** (`Template` + `TemplateKind`, con migración): «Guardar como plantilla» desde proyecto/tarea captura el árbol (tareas → subtareas → checklist + etiquetas) como JSON; página **Plantillas** para aplicarlas (nuevo proyecto / añadir tarea a un proyecto), con recuento de usos; las etiquetas se reutilizan por nombre. **Informes** (`IReportExporter` / `ReportExporter`): tabla de proyectos/tareas e informe de proyecto (cabecera + tareas + seguimientos + comunicaciones + cronología) a **CSV** y **JSON** en `exports/`. **Importación** (`ImportService`) en Configuración: **JSON** (array `projects` con tareas anidadas) y **notas indentadas** (línea = proyecto/tarea, sangría = subtareas, `- `/`- [ ]` = checklist, `!`/`!!`/`?` = prioridad) con **previsualización** antes de confirmar; todo lo importado deja historial `Imported`.
 
-> **Estado 2026-09-07**: Fases 0–6 compiladas en verde en este PC (`dotnet build` **0/0**,
-> migración `Update_202609071017_Templates` aplicada, **64/64 tests**). App arranca sin
-> avisos. Pendiente para una 6b: informes **PDF** (QuestPDF) y **Excel** (ClosedXML),
-> mapeo de columnas para importar **CSV**, y gráficos LiveCharts2.
+- [x] **Fase 7** — **Copias de seguridad** (`IBackupService` / `FileSystemBackupService`, sin migración): archivos `.zip` bajo `backups/` con la BD (checkpoint del WAL), `settings.json` y `manifest.json`, opcionalmente los adjuntos; crear ahora, listar, **podar** (conservar N), eliminar, **copia previa a cada migración** (`DatabaseInitializer`) y **copia diaria/semanal automática** al arrancar (`Program.cs`). **Restaurar** y **Importar workspace** (`.zip` completo) se **preparan a un marcador** y se aplican en el siguiente arranque, antes de que EF abra la BD (`ApplyStagedAsync`), con copia de seguridad `prerestore` automática. **Exportar workspace** a una ruta a elegir. **Papelera y archivos**: `TrashReadService` lista proyectos/tareas/personas/empresas archivados o en papelera; `TrashService` restaura y **purga** (borrado físico con cascada, doble confirmación + copia previa) o **vacía la papelera**. **Configuración completa**: inicio, notificaciones y backups persistidos. **Onboarding**: tarjeta en el Dashboard cuando el workspace está vacío (crear proyecto / cargar demo / importar). **Robustez**: captura global de excepciones no controladas (dominio + tareas) a Serilog.
+
+> **Estado 2026-09-07**: Fases 0–7 compiladas en verde en este PC (`dotnet build` **0/0**,
+> sin migración nueva en Fase 7, **72/72 tests**). App arranca sin avisos; copia diaria
+> automática creada al iniciar. Quedan como mejora continua: rendimiento con 100k tareas
+> (índices y paginación) y una pasada de accesibilidad. Pendiente 6b: PDF/Excel, mapeo CSV,
+> LiveCharts2.
 
 > Publicado en GitHub: `porrii/NexusWorkspace`, rama `dev`. `main` + release cuando la v1 esté lista.
 > CI: el flujo está en `docs/ci-build.yml`; moverlo a `.github/workflows/build.yml` desde la web de

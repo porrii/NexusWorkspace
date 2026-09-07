@@ -21,6 +21,7 @@ using NexusWorkspace.UI.ViewModels.Statistics;
 using NexusWorkspace.UI.ViewModels.Tags;
 using NexusWorkspace.UI.ViewModels.Tasks;
 using NexusWorkspace.UI.ViewModels.Templates;
+using NexusWorkspace.UI.ViewModels.Trash;
 
 namespace NexusWorkspace.UI;
 
@@ -60,6 +61,7 @@ public static class DependencyInjection
         services.AddTransient<FilesViewModel>();
         services.AddTransient<StatisticsViewModel>();
         services.AddTransient<TemplatesViewModel>();
+        services.AddTransient<TrashViewModel>();
         services.AddTransient<ActivityViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<PlaceholderViewModel>();

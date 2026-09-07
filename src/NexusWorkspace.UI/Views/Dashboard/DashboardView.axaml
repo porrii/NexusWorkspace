@@ -21,6 +21,19 @@
       </Button>
     </Grid>
 
+    <Border Classes="card" Background="{DynamicResource AppAccentWashBrush}" IsVisible="{Binding ShowOnboarding}">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Bienvenido a NexusWorkspace" Classes="h2" />
+        <TextBlock TextWrapping="Wrap" Classes="muted"
+                   Text="Tu espacio de trabajo está vacío. Empieza por crear un proyecto, cargar el espacio de demostración para verlo con contenido, o importar tus notas y datos antiguos." />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Button Content="Crear mi primer proyecto" Classes="accent" Command="{Binding StartFirstProjectCommand}" />
+          <Button Content="Cargar espacio de demostración" Command="{Binding LoadDemoWorkspaceCommand}" />
+          <Button Content="Importar datos" Command="{Binding OpenSettingsForImportCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
     <Border Classes="card" IsVisible="{Binding IsCustomizing}">
       <StackPanel Spacing="8">
         <TextBlock Text="Widgets visibles" Classes="h2" />

@@ -57,6 +57,9 @@ public partial class DashboardViewModel : ViewModelBase
     private bool _isCustomizing;
 
     [ObservableProperty]
+    private bool _showOnboarding;
+
+    [ObservableProperty]
     private string _captureText = string.Empty;
 
     [ObservableProperty]
@@ -177,6 +180,9 @@ public partial class DashboardViewModel : ViewModelBase
             AnyWaitingOn = WaitingOn.Count > 0;
             AnyReminders = UpcomingReminders.Count > 0;
 
+            ShowOnboarding = data.activeProjects.Count == 0 && openTasks.Count == 0
+                             && data.inboxCount == 0 && data.recentActivity.Count == 0;
+
             Greeting = BuildGreeting();
             SummaryLine = BuildSummary();
         }
@@ -209,6 +215,27 @@ public partial class DashboardViewModel : ViewModelBase
 
     [RelayCommand]
     private void OpenCalendar() => _navigation.NavigateTo(PageKey.Calendar);
+
+    [RelayCommand]
+    private void StartFirstProject()
+        => _navigation.NavigateTo<ProjectsViewModel>(vm => vm.IsCreatePanelOpen = true);
+
+    [RelayCommand]
+    private void OpenSettingsForImport() => _navigation.NavigateTo(PageKey.Settings);
+
+    [RelayCommand]
+    private async Task LoadDemoWorkspaceAsync()
+    {
+        try
+        {
+            await _unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<IDemoDataService>().SeedAsync(ct));
+            await RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"No se pudo cargar la demo: {ex.Message}";
+        }
+    }
 
     [RelayCommand]
     private void ToggleCustomize() => IsCustomizing = !IsCustomizing;

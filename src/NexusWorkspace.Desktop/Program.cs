@@ -42,12 +42,23 @@ internal static class Program
                 shared: true)
             .CreateLogger();
 
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            Log.Error(e.ExceptionObject as Exception, "Excepción no controlada en el dominio de la aplicación.");
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            Log.Error(e.Exception, "Excepción de tarea no observada.");
+            e.SetObserved();
+        };
+
         try
         {
             Log.Information(
                 "NexusWorkspace iniciando. Datos en {Root} (portable: {Portable}).",
                 paths.RootDirectory,
                 paths.IsPortable);
+
+            // A staged restore / import must run before EF opens the database file.
+            provider.GetRequiredService<IBackupService>().ApplyStagedAsync().GetAwaiter().GetResult();
 
             using (var scope = provider.CreateScope())
             {
@@ -57,6 +68,8 @@ internal static class Program
                     .GetAwaiter()
                     .GetResult();
             }
+
+            RunScheduledBackup(provider);
 
             App.Services = provider;
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
@@ -70,6 +83,44 @@ internal static class Program
         {
             Log.CloseAndFlush();
             provider.Dispose();
+        }
+    }
+
+    /// <summary>Daily automatic backup: at most one per ~20 h when the schedule is not "None".</summary>
+    private static void RunScheduledBackup(IServiceProvider provider)
+    {
+        try
+        {
+            var settings = provider.GetRequiredService<ISettingsStore>().Current.Backup;
+            if (string.Equals(settings.Schedule, "None", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var backup = provider.GetRequiredService<IBackupService>();
+            var existing = backup.ListAsync().GetAwaiter().GetResult();
+
+            var interval = string.Equals(settings.Schedule, "Weekly", StringComparison.OrdinalIgnoreCase)
+                ? TimeSpan.FromDays(7)
+                : TimeSpan.FromHours(20);
+
+            var last = existing
+                .Where(b => b.Reason is "daily" or "weekly" or "manual")
+                .Select(b => b.CreatedAtUtc)
+                .DefaultIfEmpty(DateTime.MinValue)
+                .Max();
+
+            if (DateTime.UtcNow - last >= interval)
+            {
+                var reason = string.Equals(settings.Schedule, "Weekly", StringComparison.OrdinalIgnoreCase) ? "weekly" : "daily";
+                backup.CreateAsync(reason).GetAwaiter().GetResult();
+            }
+
+            backup.PruneAsync(Math.Max(1, settings.KeepVersions)).GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "No se pudo ejecutar la copia de seguridad programada.");
         }
     }
 

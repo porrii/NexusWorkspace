@@ -258,6 +258,8 @@ public static class AppConverters
         FollowUpState f => DisplayNames.Of(f),
         ReminderStatus rs => DisplayNames.Of(rs),
         EntityKind e => DisplayNames.Of(e),
+        TemplateKind tk => DisplayNames.Of(tk),
+        Application.Trash.TrashScope ts => DisplayNames.Of(ts),
         null => null,
         _ => value.ToString(),
     };

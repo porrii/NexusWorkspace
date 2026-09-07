@@ -23,6 +23,7 @@ using NexusWorkspace.Application.Statistics;
 using NexusWorkspace.Application.Tags;
 using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Application.Templates;
+using NexusWorkspace.Application.Trash;
 
 namespace NexusWorkspace.Application;
 
@@ -56,6 +57,7 @@ public static class DependencyInjection
         services.AddScoped<TemplateService>();
         services.AddScoped<ImportService>();
         services.AddScoped<ReportDataService>();
+        services.AddScoped<TrashService>();
 
         services.AddScoped<NotificationService>();
         services.AddScoped<INotificationService>(sp => sp.GetRequiredService<NotificationService>());
@@ -78,6 +80,7 @@ public static class DependencyInjection
         services.AddScoped<AttachmentReadService>();
         services.AddScoped<StatsReadService>();
         services.AddScoped<TemplateReadService>();
+        services.AddScoped<TrashReadService>();
 
         services.AddScoped<IValidator<CreateProjectRequest>, CreateProjectRequestValidator>();
         services.AddScoped<IValidator<CreateWorkTaskRequest>, CreateWorkTaskRequestValidator>();

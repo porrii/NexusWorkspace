@@ -20,6 +20,7 @@ using NexusWorkspace.Application.Statistics;
 using NexusWorkspace.Application.Tags;
 using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Application.Templates;
+using NexusWorkspace.Application.Trash;
 using NexusWorkspace.Infrastructure.Persistence;
 using NexusWorkspace.Infrastructure.Persistence.Interceptors;
 using NexusWorkspace.Infrastructure.Search;
@@ -90,6 +91,8 @@ public sealed class TestHarness : IAsyncDisposable, IDisposable
         ReportData = new ReportDataService(ProjectReads, TaskReads,
             new FollowUpReadService(Db, Clock), CommunicationReads, Activity);
         Exporter = new NexusWorkspace.Infrastructure.Export.ReportExporter(Paths);
+        Trash = new TrashService(Db, activityLog);
+        TrashReads = new TrashReadService(Db);
     }
 
     public FixedClock Clock { get; }
@@ -163,6 +166,10 @@ public sealed class TestHarness : IAsyncDisposable, IDisposable
     public ReportDataService ReportData { get; }
 
     public NexusWorkspace.Infrastructure.Export.ReportExporter Exporter { get; }
+
+    public TrashService Trash { get; }
+
+    public TrashReadService TrashReads { get; }
 
     public async ValueTask DisposeAsync()
     {

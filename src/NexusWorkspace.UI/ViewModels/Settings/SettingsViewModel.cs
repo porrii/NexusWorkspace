@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,8 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IAppPaths _paths;
     private readonly IPlatformLauncher _launcher;
     private readonly IUnitOfWorkRunner _unitOfWork;
+    private readonly IBackupService _backup;
+    private bool _loadingSettings;
 
     [ObservableProperty]
     private ThemeMode _selectedTheme;
@@ -24,6 +27,36 @@ public partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
+
+    [ObservableProperty]
+    private string _backupSchedule = "Daily";
+
+    [ObservableProperty]
+    private int _keepVersions = 30;
+
+    [ObservableProperty]
+    private bool _backupBeforeMigration = true;
+
+    [ObservableProperty]
+    private bool _includeFilesInBackup;
+
+    [ObservableProperty]
+    private string _backupStatus = string.Empty;
+
+    [ObservableProperty]
+    private bool _restartRequired;
+
+    [ObservableProperty]
+    private bool _notificationsEnabled = true;
+
+    [ObservableProperty]
+    private bool _remindersOnStartup = true;
+
+    [ObservableProperty]
+    private bool _followUpNudges = true;
+
+    [ObservableProperty]
+    private string _startupSection = "Dashboard";
 
     [ObservableProperty]
     private ImportSource _importSource = ImportSource.Notes;
@@ -42,19 +75,29 @@ public partial class SettingsViewModel : ViewModelBase
         ISettingsStore settings,
         IAppPaths paths,
         IPlatformLauncher launcher,
-        IUnitOfWorkRunner unitOfWork)
+        IUnitOfWorkRunner unitOfWork,
+        IBackupService backup)
     {
         _theme = theme;
         _settings = settings;
         _paths = paths;
         _launcher = launcher;
         _unitOfWork = unitOfWork;
+        _backup = backup;
         _selectedTheme = settings.Current.Theme;
+        LoadFromSettings();
     }
 
     public IReadOnlyList<ThemeMode> ThemeOptions { get; } = Enum.GetValues<ThemeMode>();
 
     public IReadOnlyList<ImportSource> ImportSources { get; } = Enum.GetValues<ImportSource>();
+
+    public IReadOnlyList<string> BackupScheduleOptions { get; } = ["None", "Daily", "Weekly"];
+
+    public IReadOnlyList<string> StartupSectionOptions { get; } =
+        ["Dashboard", "Inbox", "Projects", "FollowUps", "Calendar", "Statistics"];
+
+    public ObservableCollection<BackupInfo> Backups { get; } = [];
 
     public bool HasPreview => ImportPreview is { ProjectCount: > 0 };
 
@@ -65,11 +108,149 @@ public partial class SettingsViewModel : ViewModelBase
     public override async Task OnActivatedAsync()
     {
         SelectedTheme = _settings.Current.Theme;
+        LoadFromSettings();
         DemoDataPresent = await _unitOfWork.RunAsync((sp, ct) =>
             sp.GetRequiredService<IDemoDataService>().IsPresentAsync(ct));
+        await RefreshBackupsAsync();
+    }
+
+    private void LoadFromSettings()
+    {
+        _loadingSettings = true;
+        var s = _settings.Current;
+        BackupSchedule = s.Backup.Schedule;
+        KeepVersions = s.Backup.KeepVersions;
+        BackupBeforeMigration = s.Backup.BackupBeforeMigration;
+        NotificationsEnabled = s.Notifications.Enabled;
+        RemindersOnStartup = s.Notifications.RemindersOnStartup;
+        FollowUpNudges = s.Notifications.FollowUpNudges;
+        StartupSection = s.StartupSection;
+        _loadingSettings = false;
+    }
+
+    private async Task RefreshBackupsAsync()
+    {
+        try
+        {
+            var list = await _backup.ListAsync();
+            Backups.Clear();
+            foreach (var b in list)
+            {
+                Backups.Add(b);
+            }
+        }
+        catch (Exception ex)
+        {
+            BackupStatus = $"No se pudo leer la lista de copias: {ex.Message}";
+        }
     }
 
     partial void OnSelectedThemeChanged(ThemeMode value) => _ = _theme.SetAndPersistAsync(value);
+
+    partial void OnBackupScheduleChanged(string value) => Persist(s => s.Backup.Schedule = value);
+
+    partial void OnKeepVersionsChanged(int value) => Persist(s => s.Backup.KeepVersions = Math.Clamp(value, 1, 999));
+
+    partial void OnBackupBeforeMigrationChanged(bool value) => Persist(s => s.Backup.BackupBeforeMigration = value);
+
+    partial void OnNotificationsEnabledChanged(bool value) => Persist(s => s.Notifications.Enabled = value);
+
+    partial void OnRemindersOnStartupChanged(bool value) => Persist(s => s.Notifications.RemindersOnStartup = value);
+
+    partial void OnFollowUpNudgesChanged(bool value) => Persist(s => s.Notifications.FollowUpNudges = value);
+
+    partial void OnStartupSectionChanged(string value) => Persist(s => s.StartupSection = value);
+
+    private void Persist(Action<AppSettings> mutate)
+    {
+        if (!_loadingSettings)
+        {
+            _ = _settings.UpdateAsync(mutate);
+        }
+    }
+
+    [RelayCommand]
+    private async Task CreateBackupNowAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var info = await _backup.CreateAsync("manual", IncludeFilesInBackup);
+            BackupStatus = $"Copia creada: {info.FileName} ({info.SizeBytes / 1024} KB).";
+            await RefreshBackupsAsync();
+        }
+        catch (Exception ex)
+        {
+            BackupStatus = $"No se pudo crear la copia: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task RestoreBackupAsync(BackupInfo? info)
+    {
+        if (info is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _backup.StageRestoreAsync(info.Id);
+            RestartRequired = true;
+            BackupStatus = "Restauración preparada. Cierra y vuelve a abrir la aplicación para aplicarla.";
+        }
+        catch (Exception ex)
+        {
+            BackupStatus = $"No se pudo preparar la restauración: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task DeleteBackupAsync(BackupInfo? info)
+    {
+        if (info is null)
+        {
+            return;
+        }
+
+        await _backup.DeleteAsync(info.Id);
+        await RefreshBackupsAsync();
+    }
+
+    [RelayCommand]
+    private void OpenBackupsFolder() => _launcher.OpenFolder(_paths.BackupsDirectory);
+
+    public async Task ExportWorkspaceAsync(string destinationPath)
+    {
+        try
+        {
+            var path = await _backup.ExportToAsync(destinationPath, includeFiles: true);
+            BackupStatus = $"Workspace exportado a {path}.";
+            _launcher.RevealInFolder(path);
+        }
+        catch (Exception ex)
+        {
+            BackupStatus = $"No se pudo exportar: {ex.Message}";
+        }
+    }
+
+    public async Task ImportWorkspaceAsync(string zipPath)
+    {
+        try
+        {
+            await _backup.StageImportAsync(zipPath);
+            RestartRequired = true;
+            BackupStatus = "Importación preparada. Cierra y vuelve a abrir la aplicación para aplicarla.";
+        }
+        catch (Exception ex)
+        {
+            BackupStatus = $"No se pudo importar: {ex.Message}";
+        }
+    }
 
     [RelayCommand]
     private void OpenDataFolder() => _launcher.OpenFolder(_paths.RootDirectory);

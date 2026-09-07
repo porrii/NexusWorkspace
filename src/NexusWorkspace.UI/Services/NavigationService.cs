@@ -13,6 +13,7 @@ using NexusWorkspace.UI.ViewModels.Settings;
 using NexusWorkspace.UI.ViewModels.Statistics;
 using NexusWorkspace.UI.ViewModels.Tags;
 using NexusWorkspace.UI.ViewModels.Templates;
+using NexusWorkspace.UI.ViewModels.Trash;
 
 namespace NexusWorkspace.UI.Services;
 
@@ -50,6 +51,7 @@ public sealed class NavigationService(IServiceProvider services) : INavigationSe
             PageKey.Files => services.GetRequiredService<FilesViewModel>(),
             PageKey.Statistics => services.GetRequiredService<StatisticsViewModel>(),
             PageKey.Templates => services.GetRequiredService<TemplatesViewModel>(),
+            PageKey.Archived => services.GetRequiredService<TrashViewModel>(),
             PageKey.Activity => services.GetRequiredService<ActivityViewModel>(),
             PageKey.Settings => services.GetRequiredService<SettingsViewModel>(),
             _ => services.GetRequiredService<PlaceholderViewModel>().For(key),

@@ -73,7 +73,7 @@ public partial class MainViewModel : ViewModelBase
             new(PageKey.Activity, "Actividad", "History"),
             new(PageKey.Statistics, "Estadísticas", "ChartBox"),
             new(PageKey.Templates, "Plantillas", "FileTreeOutline"),
-            new(PageKey.Archived, "Archivados", "Archive", IsImplemented: false),
+            new(PageKey.Archived, "Papelera y archivos", "DeleteRestore"),
             new(PageKey.Settings, "Configuración", "Cog"),
         ];
 
@@ -140,6 +140,7 @@ public partial class MainViewModel : ViewModelBase
         Files.FilesViewModel => PageKey.Files,
         Statistics.StatisticsViewModel => PageKey.Statistics,
         Templates.TemplatesViewModel => PageKey.Templates,
+        Trash.TrashViewModel => PageKey.Archived,
         Activity.ActivityViewModel => PageKey.Activity,
         Settings.SettingsViewModel => PageKey.Settings,
         PlaceholderViewModel placeholder => placeholder.Key,

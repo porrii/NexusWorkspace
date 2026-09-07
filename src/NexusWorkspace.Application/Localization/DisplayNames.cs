@@ -1,3 +1,4 @@
+using NexusWorkspace.Application.Trash;
 using NexusWorkspace.Domain.Enums;
 
 namespace NexusWorkspace.Application.Localization;
@@ -73,6 +74,14 @@ public static class DisplayNames
         CommunicationDirection.Inbound => "Recibido",
         CommunicationDirection.Internal => "Interno",
         _ => direction.ToString(),
+    };
+
+    public static string Of(TrashScope scope) => scope switch
+    {
+        TrashScope.Trashed => "Papelera",
+        TrashScope.Archived => "Archivados",
+        TrashScope.Both => "Papelera y archivados",
+        _ => scope.ToString(),
     };
 
     public static string Of(TemplateKind kind) => kind switch

@@ -20,6 +20,9 @@ Todas las entidades relevantes heredan de `AuditableEntity` e implementan
   `files/<xx>/<sha256><ext>` vía `IAttachmentStore`. Direccionado por contenido y
   deduplicado: dos subidas idénticas comparten un único blob físico, que solo se
   borra cuando ningún adjunto vivo lo referencia.
+- **Copias de seguridad fuera de la BD**: `.zip` bajo `backups/` (BD + `settings.json`
+  + `manifest.json`, opcionalmente `files/`). Restaurar / importar workspace se
+  escriben en el marcador `.nexus-restore` y se aplican al arrancar, antes de abrir EF.
 
 ## Búsqueda (FTS5)
 
