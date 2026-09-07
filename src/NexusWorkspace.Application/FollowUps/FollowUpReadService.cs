@@ -62,6 +62,7 @@ public sealed class FollowUpReadService(IApplicationDbContext db, IClock clock)
 
         var rows = await query
             .OrderBy(f => f.WaitingSinceUtc)
+            .Take(2000)
             .Select(f => new
             {
                 f.Id,

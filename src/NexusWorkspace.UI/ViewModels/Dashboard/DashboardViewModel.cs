@@ -148,26 +148,24 @@ public partial class DashboardViewModel : ViewModelBase
                 var reminderReads = sp.GetRequiredService<ReminderReadService>();
 
                 var activeProjects = await projectReads.GetListAsync(ProjectListScope.Active, null, ct);
-                var open = await taskReads.GetOpenAcrossWorkspaceAsync(ct);
+                var summary = await taskReads.GetOpenSummaryAsync(ct);
+                var upcoming = await taskReads.GetOpenAcrossWorkspaceAsync(ct);
                 var recentActivity = await activityReads.GetRecentAsync(12, ct);
                 var inboxCount = await inboxReads.CountPendingAsync(ct);
                 var waiting = await followUpReads.GetListAsync(FollowUpScope.Open, ct);
                 var reminders = await reminderReads.GetPendingAsync(ct);
-                return (activeProjects, open, recentActivity, inboxCount, waiting, reminders);
+                return (activeProjects, summary, upcoming, recentActivity, inboxCount, waiting, reminders);
             });
 
-            var today = DateTime.UtcNow.Date;
-            var openTasks = data.open;
-
-            OpenTaskCount = openTasks.Count;
-            CriticalTaskCount = openTasks.Count(t => t.Priority == Priority.Critical);
-            OverdueTaskCount = openTasks.Count(t => t.DueDateUtc is { } due && due.Date < today);
-            WaitingTaskCount = openTasks.Count(t => t.IsWaiting);
+            OpenTaskCount = data.summary.Open;
+            CriticalTaskCount = data.summary.Critical;
+            OverdueTaskCount = data.summary.Overdue;
+            WaitingTaskCount = data.summary.Waiting;
             InboxCount = data.inboxCount;
 
             ActiveProjects.Reset(data.activeProjects.Take(6));
             RecentActivity.Reset(data.recentActivity);
-            UpcomingTasks.Reset(openTasks
+            UpcomingTasks.Reset(data.upcoming
                 .Where(t => t.DueDateUtc is not null)
                 .OrderBy(t => t.DueDateUtc)
                 .Take(6));
@@ -180,7 +178,7 @@ public partial class DashboardViewModel : ViewModelBase
             AnyWaitingOn = WaitingOn.Count > 0;
             AnyReminders = UpcomingReminders.Count > 0;
 
-            ShowOnboarding = data.activeProjects.Count == 0 && openTasks.Count == 0
+            ShowOnboarding = data.activeProjects.Count == 0 && data.summary.Open == 0
                              && data.inboxCount == 0 && data.recentActivity.Count == 0;
 
             Greeting = BuildGreeting();

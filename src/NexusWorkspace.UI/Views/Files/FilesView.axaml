@@ -65,19 +65,19 @@
                   <TextBlock Text="{Binding ProjectName, StringFormat='{}📁 {0}'}" Classes="muted" />
                 </Button>
                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,2,0,0">
-                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Abrir"
+                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Abrir" AutomationProperties.Name="Abrir el archivo"
                           Command="{Binding $parent[ItemsControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
                     <mi:MaterialIcon Kind="OpenInNew" Width="13" Height="13" />
                   </Button>
-                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Mostrar en carpeta"
+                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Mostrar en carpeta" AutomationProperties.Name="Mostrar en la carpeta"
                           Command="{Binding $parent[ItemsControl].DataContext.RevealCommand}" CommandParameter="{Binding}">
                     <mi:MaterialIcon Kind="FolderSearchOutline" Width="13" Height="13" />
                   </Button>
-                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Ir al elemento"
+                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Ir al elemento" AutomationProperties.Name="Ir al elemento asociado"
                           Command="{Binding $parent[ItemsControl].DataContext.OpenOwnerCommand}" CommandParameter="{Binding}">
                     <mi:MaterialIcon Kind="ArrowTopRight" Width="13" Height="13" />
                   </Button>
-                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Quitar"
+                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Quitar" AutomationProperties.Name="Quitar el archivo"
                           Command="{Binding $parent[ItemsControl].DataContext.RemoveCommand}" CommandParameter="{Binding}">
                     <mi:MaterialIcon Kind="TrashCanOutline" Width="13" Height="13" />
                   </Button>

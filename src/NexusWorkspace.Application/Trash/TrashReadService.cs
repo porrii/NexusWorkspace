@@ -13,6 +13,8 @@ public sealed class TrashReadService(IApplicationDbContext db)
 
         entries.AddRange(await db.Projects.AsNoTracking().IgnoreQueryFilters()
             .Where(Predicate<Domain.Projects.Project>(scope))
+            .OrderByDescending(p => p.UpdatedAtUtc)
+            .Take(1000)
             .Select(p => new TrashEntry
             {
                 Kind = EntityKind.Project,
@@ -27,6 +29,8 @@ public sealed class TrashReadService(IApplicationDbContext db)
 
         entries.AddRange(await db.WorkTasks.AsNoTracking().IgnoreQueryFilters()
             .Where(Predicate<Domain.Tasks.WorkTask>(scope))
+            .OrderByDescending(t => t.UpdatedAtUtc)
+            .Take(1000)
             .Select(t => new TrashEntry
             {
                 Kind = EntityKind.WorkTask,
@@ -41,6 +45,8 @@ public sealed class TrashReadService(IApplicationDbContext db)
 
         entries.AddRange(await db.People.AsNoTracking().IgnoreQueryFilters()
             .Where(Predicate<Domain.People.Person>(scope))
+            .OrderByDescending(p => p.UpdatedAtUtc)
+            .Take(1000)
             .Select(p => new TrashEntry
             {
                 Kind = EntityKind.Person,
@@ -55,6 +61,8 @@ public sealed class TrashReadService(IApplicationDbContext db)
 
         entries.AddRange(await db.Companies.AsNoTracking().IgnoreQueryFilters()
             .Where(Predicate<Domain.Companies.Company>(scope))
+            .OrderByDescending(c => c.UpdatedAtUtc)
+            .Take(1000)
             .Select(c => new TrashEntry
             {
                 Kind = EntityKind.Company,

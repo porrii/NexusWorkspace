@@ -38,6 +38,7 @@ public sealed class PersonReadService(IApplicationDbContext db)
         return await query
             .OrderByDescending(p => p.IsFavorite)
             .ThenBy(p => p.Name)
+            .Take(2000)
             .Select(p => new PersonListItem
             {
                 Id = p.Id,

@@ -4,9 +4,15 @@ using NexusWorkspace.Domain.Enums;
 
 namespace NexusWorkspace.Application.Tasks;
 
-/// <summary>Read-side queries for tasks. Always projected and no-tracking.</summary>
+/// <summary>Aggregate counters for the dashboard — one cheap query per number, no row materialisation.</summary>
+public sealed record OpenTaskSummary(int Open, int Critical, int Overdue, int Waiting);
+
+/// <summary>Read-side queries for tasks. Always projected, no-tracking and bounded.</summary>
 public sealed class WorkTaskReadService(IApplicationDbContext db)
 {
+    /// <summary>Hard cap on rows any single list query materialises, so a huge workspace stays responsive.</summary>
+    public const int ListCap = 2000;
+
     public async Task<IReadOnlyList<WorkTaskListItem>> GetForProjectAsync(
         Guid projectId,
         TaskListScope scope = TaskListScope.Open,
@@ -26,10 +32,25 @@ public sealed class WorkTaskReadService(IApplicationDbContext db)
 
         return await query
             .OrderBy(t => t.SortKey)
+            .Take(ListCap)
             .Select(ToListItem())
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<OpenTaskSummary> GetOpenSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var today = DateTime.UtcNow.Date;
+        var open = db.WorkTasks.AsNoTracking()
+            .Where(t => !t.IsArchived && t.Status != WorkTaskStatus.Finished && t.Status != WorkTaskStatus.Cancelled);
+
+        return new OpenTaskSummary(
+            await open.CountAsync(cancellationToken),
+            await open.CountAsync(t => t.Priority == Priority.Critical, cancellationToken),
+            await open.CountAsync(t => t.DueDateUtc != null && t.DueDateUtc < today, cancellationToken),
+            await open.CountAsync(t => t.Status == WorkTaskStatus.WaitingClient || t.Status == WorkTaskStatus.WaitingProvider, cancellationToken));
+    }
+
+    /// <summary>The soonest open tasks across the workspace. Bounded — for widgets, not full listing.</summary>
     public async Task<IReadOnlyList<WorkTaskListItem>> GetOpenAcrossWorkspaceAsync(CancellationToken cancellationToken = default)
     {
         return await db.WorkTasks.AsNoTracking()
@@ -38,6 +59,7 @@ public sealed class WorkTaskReadService(IApplicationDbContext db)
                 && t.Status != WorkTaskStatus.Cancelled)
             .OrderBy(t => t.DueDateUtc ?? DateTime.MaxValue)
             .ThenBy(t => t.Priority)
+            .Take(200)
             .Select(ToListItem())
             .ToListAsync(cancellationToken);
     }
@@ -52,7 +74,7 @@ public sealed class WorkTaskReadService(IApplicationDbContext db)
         }
 
         return await query.OrderBy(t => t.DueDateUtc ?? DateTime.MaxValue).ThenBy(t => t.Priority)
-            .Select(ToListItem()).ToListAsync(cancellationToken);
+            .Take(ListCap).Select(ToListItem()).ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<WorkTaskListItem>> GetForCompanyAsync(Guid companyId, bool openOnly = true, CancellationToken cancellationToken = default)
@@ -65,7 +87,7 @@ public sealed class WorkTaskReadService(IApplicationDbContext db)
         }
 
         return await query.OrderBy(t => t.DueDateUtc ?? DateTime.MaxValue).ThenBy(t => t.Priority)
-            .Select(ToListItem()).ToListAsync(cancellationToken);
+            .Take(ListCap).Select(ToListItem()).ToListAsync(cancellationToken);
     }
 
     public async Task<WorkTaskDetail?> GetDetailAsync(Guid taskId, CancellationToken cancellationToken = default)

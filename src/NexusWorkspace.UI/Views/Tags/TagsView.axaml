@@ -80,6 +80,7 @@
                 </StackPanel>
               </StackPanel>
               <Button Grid.Column="2" Classes="quick" ToolTip.Tip="Fijar / desfijar" VerticalAlignment="Center"
+                      AutomationProperties.Name="Fijar o desfijar la etiqueta"
                       Command="{Binding $parent[ItemsControl].DataContext.TogglePinCommand}" CommandParameter="{Binding}">
                 <mi:MaterialIcon Kind="PinOutline" Width="14" Height="14" />
               </Button>

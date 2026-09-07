@@ -38,6 +38,7 @@ public sealed class CompanyReadService(IApplicationDbContext db)
         return await query
             .OrderByDescending(c => c.IsFavorite)
             .ThenBy(c => c.Name)
+            .Take(2000)
             .Select(c => new CompanyListItem
             {
                 Id = c.Id,

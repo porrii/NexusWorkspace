@@ -51,7 +51,7 @@ public sealed class AttachmentReadService(IApplicationDbContext db, IAttachmentS
         CancellationToken cancellationToken)
     {
         var rows = await (
-            from a in query
+            from a in query.OrderByDescending(x => x.CreatedAtUtc).Take(2000)
             join p in db.Projects on a.ProjectId equals p.Id into pj
             from p in pj.DefaultIfEmpty()
             orderby a.CreatedAtUtc descending

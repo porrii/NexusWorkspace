@@ -46,15 +46,15 @@
                            TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding FileName}" />
                 <TextBlock Text="{Binding HumanSize}" Classes="muted" />
                 <StackPanel Orientation="Horizontal" Spacing="4">
-                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Abrir"
+                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Abrir" AutomationProperties.Name="Abrir el archivo"
                           Command="{Binding $parent[ItemsControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
                     <mi:MaterialIcon Kind="OpenInNew" Width="13" Height="13" />
                   </Button>
-                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Mostrar en carpeta"
+                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Mostrar en carpeta" AutomationProperties.Name="Mostrar en la carpeta"
                           Command="{Binding $parent[ItemsControl].DataContext.RevealCommand}" CommandParameter="{Binding}">
                     <mi:MaterialIcon Kind="FolderSearchOutline" Width="13" Height="13" />
                   </Button>
-                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Quitar"
+                  <Button Classes="quick" Padding="6,3" ToolTip.Tip="Quitar" AutomationProperties.Name="Quitar el archivo"
                           Command="{Binding $parent[ItemsControl].DataContext.RemoveCommand}" CommandParameter="{Binding}">
                     <mi:MaterialIcon Kind="TrashCanOutline" Width="13" Height="13" />
                   </Button>

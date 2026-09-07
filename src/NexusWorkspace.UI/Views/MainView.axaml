@@ -19,7 +19,8 @@
 
           <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Margin="6,0,4,14">
             <Button Grid.Column="0" Command="{Binding ToggleSidebarCommand}"
-                    Classes="quick" Padding="7" ToolTip.Tip="Contraer / expandir (barra lateral)">
+                    Classes="quick" Padding="7" ToolTip.Tip="Contraer / expandir (barra lateral)"
+                    AutomationProperties.Name="Contraer o expandir la barra lateral">
               <mi:MaterialIcon Kind="Menu" Width="18" Height="18" />
             </Button>
             <TextBlock Grid.Column="1" Text="NexusWorkspace"
@@ -29,6 +30,7 @@
                        Opacity="{Binding IsSidebarExpanded, Converter={x:Static conv:AppConverters.ExpandedToOpacity}}" />
 
             <Button Grid.Column="2" Classes="quick" Padding="7" ToolTip.Tip="Notificaciones"
+                    AutomationProperties.Name="Abrir notificaciones"
                     Command="{Binding Notifications.ToggleCommand}">
               <Panel>
                 <mi:MaterialIcon Kind="BellOutline" Width="18" Height="18" />

@@ -4,9 +4,12 @@ using NexusWorkspace.Domain.Enums;
 
 namespace NexusWorkspace.Application.Projects;
 
-/// <summary>Read-side queries for projects. Always projected and no-tracking.</summary>
+/// <summary>Read-side queries for projects. Always projected, no-tracking and bounded.</summary>
 public sealed class ProjectReadService(IApplicationDbContext db)
 {
+    /// <summary>Hard cap on rows a list query materialises.</summary>
+    public const int ListCap = 2000;
+
     public async Task<IReadOnlyList<ProjectListItem>> GetListAsync(
         ProjectListScope scope = ProjectListScope.Active,
         string? search = null,
@@ -32,6 +35,7 @@ public sealed class ProjectReadService(IApplicationDbContext db)
             .OrderByDescending(p => p.IsFavorite)
             .ThenByDescending(p => p.LastOpenedAtUtc)
             .ThenByDescending(p => p.UpdatedAtUtc)
+            .Take(ListCap)
             .Select(p => new ProjectListItem
             {
                 Id = p.Id,
@@ -70,6 +74,7 @@ public sealed class ProjectReadService(IApplicationDbContext db)
         CancellationToken cancellationToken)
         => await query
             .OrderByDescending(p => p.UpdatedAtUtc)
+            .Take(ListCap)
             .Select(p => new ProjectListItem
             {
                 Id = p.Id,

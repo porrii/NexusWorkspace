@@ -102,6 +102,7 @@
                 </ItemsControl>
               </StackPanel>
               <Button Grid.Column="2" Classes="quick" VerticalAlignment="Center"
+                      ToolTip.Tip="Favorito" AutomationProperties.Name="Marcar o quitar de favoritos"
                       Command="{Binding $parent[ItemsControl].DataContext.ToggleFavoriteCommand}" CommandParameter="{Binding}">
                 <mi:MaterialIcon Kind="StarOutline" Width="15" Height="15" />
               </Button>
