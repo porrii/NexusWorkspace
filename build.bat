@@ -15,10 +15,12 @@ rem    build.bat notest     no ejecuta dotnet test
 rem    (se pueden combinar:  build.bat release run)
 rem
 rem  Que hace:
-rem   1. Comprueba si hay .NET 9 SDK. Si no, lo instala (sin admin) en
-rem      D:\Archivos de programa\dotnet   (xcopy, portable).
-rem   2. Comprueba/instala la herramienta dotnet-ef en
-rem      D:\Archivos de programa\dotnet-tools
+rem   1. Prepara un .NET 9 SDK compatible con global.json (scripts\dotnet-
+rem      bootstrap.bat): usa el que ya tengas o instala una copia privada en
+rem      <repo>\.dotnet sin admin.
+rem   2. Comprueba/instala la herramienta dotnet-ef en la carpeta de tools
+rem      que decida el bootstrap (D:\Programs\dotnet-tools en el PC de
+rem      desarrollo; <repo>\.dotnet-tools en cualquier otro).
 rem   3. dotnet restore
 rem   4. Crea la migracion EF 'Initial' SOLO si aun no existe ninguna.
 rem   5. dotnet build   6. dotnet test
@@ -27,22 +29,12 @@ rem      listo para enviar.
 rem ============================================================================
 
 rem ---- Configuracion (editable) ---------------------------------------------
-set "TOOLS_BASE=D:\Programs"
 set "DOTNET_CHANNEL=9.0"
 set "EF_VERSION=9.*"
 
-rem  Toolchain aislado en D:\Programs SOLO si ya existe (PC de desarrollo).
-rem  En cualquier otro PC se usa el .NET normal de la maquina y no se toca C:.
-if exist "%TOOLS_BASE%\dotnet\dotnet.exe" (
-  set "DOTNET_ROOT=%TOOLS_BASE%\dotnet"
-  set "DOTNET_TOOLS=%TOOLS_BASE%\dotnet-tools"
-  set "NUGET_PACKAGES=%TOOLS_BASE%\nuget-packages"
-  set "DOTNET_CLI_HOME=%TOOLS_BASE%\dotnet-home"
-  set "PATH=%TOOLS_BASE%\dotnet;%TOOLS_BASE%\dotnet-tools;%PATH%"
-) else (
-  set "DOTNET_TOOLS=%~dp0.tools"
-  set "PATH=%~dp0.tools;%PATH%"
-)
+rem  El SDK de .NET (localizarlo o instalar una copia privada compatible con
+rem  global.json) es responsabilidad de scripts\dotnet-bootstrap.bat, que se
+rem  llama mas abajo en el paso [1/5]. Aqui no se asume ninguna ruta concreta.
 set "DOTNET_CLI_TELEMETRY_OPTOUT=1"
 set "DOTNET_NOLOGO=1"
 set "DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1"
@@ -106,34 +98,28 @@ set "SDK_STATE=?"
 set "EF_STATE=?"
 
 rem =====================================================================
-rem  1) .NET SDK 9
+rem  1) .NET SDK  (usa el del equipo o instala una copia privada compatible)
 rem =====================================================================
-echo [1/5] Comprobando .NET %DOTNET_CHANNEL% SDK...
+echo [1/5] Preparando .NET %DOTNET_CHANNEL% SDK...
 
-if exist "%DOTNET_ROOT%\dotnet.exe" set "PATH=%DOTNET_ROOT%;%PATH%"
-
-call :haveSdk9
-if "!HAVE_SDK9!"=="1" (
-    echo        .NET %DOTNET_CHANNEL% ya disponible.
-    set "SDK_STATE=ya presente"
-) else (
-    set "DL_DIR=%DOTNET_ROOT%"
-    if "!DL_DIR!"=="" set "DL_DIR=%~dp0.dotnet"
-    echo        No hay .NET %DOTNET_CHANNEL%. Instalando en:
-    echo        "!DL_DIR!"
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1' -OutFile ($env:TEMP + '\dotnet-install.ps1'); & ($env:TEMP + '\dotnet-install.ps1') -Channel '%DOTNET_CHANNEL%' -InstallDir '!DL_DIR!' -NoPath" 1>"%INSTALLLOG%" 2>&1
-    set "PATH=!DL_DIR!;%PATH%"
-    call :haveSdk9
-    if not "!HAVE_SDK9!"=="1" (
-        echo        ERROR: la instalacion de .NET fallo. Revisa "%INSTALLLOG%".
-        set "STEP_ENV=FALLO (instalacion .NET)"
-        set "SDK_STATE=fallo de instalacion"
-        goto summary
-    )
-    echo        .NET instalado correctamente.
-    set "SDK_STATE=instalado ahora"
+if not exist "%REPO%\scripts\dotnet-bootstrap.bat" (
+    echo        ERROR: falta scripts\dotnet-bootstrap.bat. Haz 'git pull' y reintenta.
+    set "STEP_ENV=FALLO (falta dotnet-bootstrap.bat)"
+    set "SDK_STATE=script ausente"
+    goto summary
 )
-if exist "%DOTNET_ROOT%\dotnet.exe" set "DOTNET_ROOT=%DOTNET_ROOT%"
+rem  Sin redirigir: si tiene que descargar el SDK (varios minutos) el usuario
+rem  debe ver el progreso en vivo.
+call "%REPO%\scripts\dotnet-bootstrap.bat"
+set "BOOT_RC=!ERRORLEVEL!"
+if not "!BOOT_RC!"=="0" (
+    echo        ERROR: no hay .NET %DOTNET_CHANNEL% compatible y no se pudo instalar.
+    set "STEP_ENV=FALLO (sin .NET SDK)"
+    set "SDK_STATE=no disponible"
+    goto summary
+)
+echo        .NET listo: "%DOTNET_ROOT%"
+set "SDK_STATE=%DOTNET_ROOT%"
 set "STEP_ENV=OK"
 
 rem =====================================================================
@@ -144,7 +130,7 @@ if exist "%DOTNET_TOOLS%\dotnet-ef.exe" (
     set "EF_STATE=ya presente"
 ) else (
     echo        Instalando dotnet-ef en "%DOTNET_TOOLS%" ...
-    dotnet tool install dotnet-ef --version %EF_VERSION% --tool-path "%DOTNET_TOOLS%" 1>>"%INSTALLLOG%" 2>&1
+    "%DOTNET%" tool install dotnet-ef --version %EF_VERSION% --tool-path "%DOTNET_TOOLS%" 1>>"%INSTALLLOG%" 2>&1
     if exist "%DOTNET_TOOLS%\dotnet-ef.exe" (
         set "PATH=%DOTNET_TOOLS%;%PATH%"
         set "EF_STATE=instalado ahora"
@@ -154,10 +140,10 @@ if exist "%DOTNET_TOOLS%\dotnet-ef.exe" (
 )
 
 echo === dotnet --info === > "%ENVLOG%"
-dotnet --info >> "%ENVLOG%" 2>&1
+"%DOTNET%" --info >> "%ENVLOG%" 2>&1
 echo. >> "%ENVLOG%"
 echo === dotnet --list-sdks === >> "%ENVLOG%"
-dotnet --list-sdks >> "%ENVLOG%" 2>&1
+"%DOTNET%" --list-sdks >> "%ENVLOG%" 2>&1
 echo. >> "%ENVLOG%"
 echo === where === >> "%ENVLOG%"
 where dotnet >> "%ENVLOG%" 2>&1
@@ -173,7 +159,7 @@ rem  3) clean (opcional)
 rem =====================================================================
 if "%DO_CLEAN%"=="1" (
     echo [clean] Limpiando bin/obj ...
-    dotnet clean "%SLN%" -c %CONFIG% 1>"%LOGDIR%\clean.log" 2>&1
+    "%DOTNET%" clean "%SLN%" -c %CONFIG% 1>"%LOGDIR%\clean.log" 2>&1
     for /d /r %%d in (bin obj) do if exist "%%d" rd /s /q "%%d" 2>nul
 )
 
@@ -181,7 +167,7 @@ rem =====================================================================
 rem  4) restore
 rem =====================================================================
 echo [2/5] dotnet restore ...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "dotnet restore '%SLN%' 2>&1 | Tee-Object -FilePath '%RESTORELOG%'; exit $LASTEXITCODE"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%DOTNET%' restore '%SLN%' 2>&1 | Tee-Object -FilePath '%RESTORELOG%'; exit $LASTEXITCODE"
 if errorlevel 1 (
     set "STEP_RESTORE=FALLO"
     goto summary
@@ -215,7 +201,7 @@ if errorlevel 1 (
 )
 
 echo [3/5] Creando migracion EF '%MIG_NAME%' ...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "dotnet ef migrations add %MIG_NAME% --project '%INFRA%' --startup-project '%DESKTOP%' --output-dir Persistence/Migrations 2>&1 | Tee-Object -FilePath '%MIGLOG%'; exit $LASTEXITCODE"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%DOTNET%' ef migrations add %MIG_NAME% --project '%INFRA%' --startup-project '%DESKTOP%' --output-dir Persistence/Migrations 2>&1 | Tee-Object -FilePath '%MIGLOG%'; exit $LASTEXITCODE"
 if errorlevel 1 (
     set "STEP_MIG=FALLO"
 ) else (
@@ -228,7 +214,7 @@ rem =====================================================================
 rem  6) build
 rem =====================================================================
 echo [4/5] dotnet build -c %CONFIG% ...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "dotnet build '%SLN%' -c %CONFIG% --no-restore 2>&1 | Tee-Object -FilePath '%BUILDLOG%'; exit $LASTEXITCODE"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%DOTNET%' build '%SLN%' -c %CONFIG% --no-restore 2>&1 | Tee-Object -FilePath '%BUILDLOG%'; exit $LASTEXITCODE"
 if errorlevel 1 (
     set "STEP_BUILD=FALLO"
     goto summary
@@ -240,7 +226,7 @@ rem  7) test
 rem =====================================================================
 if "%DO_TEST%"=="1" (
     echo [5/5] dotnet test ...
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "dotnet test '%SLN%' -c %CONFIG% --no-build --logger 'trx;LogFileName=results.trx' 2>&1 | Tee-Object -FilePath '%TESTLOG%'; exit $LASTEXITCODE"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%DOTNET%' test '%SLN%' -c %CONFIG% --no-build --logger 'trx;LogFileName=results.trx' 2>&1 | Tee-Object -FilePath '%TESTLOG%'; exit $LASTEXITCODE"
     if errorlevel 1 (
         set "STEP_TEST=FALLO"
     ) else (
@@ -315,20 +301,11 @@ echo.
 
 if "%DO_RUN%"=="1" if "%STEP_BUILD%"=="OK" (
     echo Lanzando NexusWorkspace...
-    dotnet run --project "%DESKTOP%" -c %CONFIG% --no-build
+    "%DOTNET%" run --project "%DESKTOP%" -c %CONFIG% --no-build
 )
 
 endlocal
 exit /b 0
-
-rem =====================================================================
-:haveSdk9
-set "HAVE_SDK9=0"
-where dotnet >nul 2>nul || goto :eof
-for /f "usebackq tokens=1" %%s in (`dotnet --list-sdks 2^>nul`) do (
-    echo %%s | findstr /b /c:"%DOTNET_CHANNEL%." >nul && set "HAVE_SDK9=1"
-)
-goto :eof
 
 :usage
 echo.

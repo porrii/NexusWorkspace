@@ -5,17 +5,16 @@ title NexusWorkspace - empaquetado del instalador
 rem ============================================================================
 rem  Genera el instalable de Windows para NexusWorkspace.
 rem
-rem    pack.bat            -> instalador Velopack (Setup.exe + full/delta)
-rem    pack.bat nozip      -> zip portable self-contained (sin auto-update)
-rem    pack.bat [nozip] 1.2.3   -> version explicita (por defecto: Directory.Build.props)
+rem    pack.bat                  -> instalador Velopack (Setup.exe + full/delta)
+rem    pack.bat nozip            -> zip portable self-contained (sin auto-update)
+rem    pack.bat [nozip] 1.2.3    -> version explicita (por defecto: Directory.Build.props)
 rem
-rem  Si existe el toolchain aislado en D:\Programs (el PC de desarrollo) se usa;
-rem  si no, se usa el .NET normal de la maquina. La primera ejecucion descarga
-rem  el runtime win-x64 y, en modo Velopack, la herramienta 'vpk'.
+rem  El SDK de .NET lo resuelve  scripts\dotnet-bootstrap.bat : usa el que ya
+rem  tengas instalado (PATH, Archivos de programa, perfil de usuario, D:\Programs)
+rem  y, si no hay ninguno compatible, instala una copia privada en <repo>\.dotnet
+rem  sin permisos de administrador. La primera vez tambien descarga el runtime
+rem  win-x64 y, en modo Velopack, la herramienta 'vpk'.
 rem ============================================================================
-
-set "DOTNET_CLI_TELEMETRY_OPTOUT=1"
-set "DOTNET_NOLOGO=1"
 
 rem --- rutas (repo root = carpeta padre de este .bat) ------------------------
 pushd "%~dp0.."
@@ -29,17 +28,12 @@ set "OUTDIR=%REPO%\installer\releases"
 set "LOGDIR=%REPO%\installer\logs"
 if not exist "%LOGDIR%" mkdir "%LOGDIR%"
 
-rem --- toolchain ---------------------------------------------------------------
-if exist "D:\Programs\dotnet\dotnet.exe" (
-  set "DOTNET_ROOT=D:\Programs\dotnet"
-  set "NUGET_PACKAGES=D:\Programs\nuget-packages"
-  set "DOTNET_CLI_HOME=D:\Programs\dotnet-home"
-  set "DOTNET_TOOLS=D:\Programs\dotnet-tools"
-  set "PATH=D:\Programs\dotnet;D:\Programs\dotnet-tools;%PATH%"
-) else (
-  set "DOTNET_TOOLS=%REPO%\installer\.tools"
-  set "PATH=%REPO%\installer\.tools;%PATH%"
+rem --- .NET SDK (lo localiza o instala una copia privada) --------------------
+if not exist "%REPO%\scripts\dotnet-bootstrap.bat" (
+  echo [X] Falta scripts\dotnet-bootstrap.bat. Haz 'git pull' y reintenta.& exit /b 1
 )
+call "%REPO%\scripts\dotnet-bootstrap.bat"
+if errorlevel 1 exit /b 1
 
 rem --- argumentos ----------------------------------------------------------------
 set "MODE=vpk"
@@ -55,15 +49,10 @@ echo   Version:  %VERSION%   RID: %RID%
 echo   Salida:   %OUTDIR%
 echo =======================================================================
 
-where dotnet >nul 2>nul
-if errorlevel 1 echo [X] No se encuentra 'dotnet'. Instala el SDK de .NET 9 (winget install Microsoft.DotNet.SDK.9).& exit /b 1
-for /f "delims=" %%v in ('dotnet --version 2^>nul') do set "SDKVER=%%v"
-echo   .NET SDK: %SDKVER%
-
 rem --- 1) publish self-contained ---------------------------------------------
 echo [1/3] dotnet publish self-contained (%RID%) ...
 if exist "%PUBDIR%" rmdir /s /q "%PUBDIR%"
-dotnet publish "%PROJECT%" -c Release -r %RID% --self-contained true -p:Version=%VERSION% -o "%PUBDIR%" > "%LOGDIR%\publish.log" 2>&1
+"%DOTNET%" publish "%PROJECT%" -c Release -r %RID% --self-contained true -p:Version=%VERSION% -o "%PUBDIR%" > "%LOGDIR%\publish.log" 2>&1
 if errorlevel 1 echo [X] Fallo en publish. Revisa %LOGDIR%\publish.log& exit /b 1
 if not exist "%PUBDIR%\NexusWorkspace.Desktop.exe" echo [X] publish no genero NexusWorkspace.Desktop.exe. Revisa %LOGDIR%\publish.log& exit /b 1
 
@@ -75,7 +64,7 @@ if /i "%MODE%"=="nozip" goto :nozip
 echo [2/3] Comprobando la herramienta Velopack (vpk) ...
 if not exist "%DOTNET_TOOLS%\vpk.exe" (
   echo        Instalando vpk ... (la primera vez tarda)
-  dotnet tool install --tool-path "%DOTNET_TOOLS%" vpk > "%LOGDIR%\vpk-install.log" 2>&1
+  "%DOTNET%" tool install --tool-path "%DOTNET_TOOLS%" vpk > "%LOGDIR%\vpk-install.log" 2>&1
 )
 if not exist "%DOTNET_TOOLS%\vpk.exe" (
   echo [X] No se pudo instalar vpk. Revisa %LOGDIR%\vpk-install.log

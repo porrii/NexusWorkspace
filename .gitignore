@@ -63,7 +63,9 @@ installer/publish/
 installer/releases/
 installer/logs/
 
-# Toolchains locales de respaldo (build.bat / pack.bat cuando no hay D:\Programs)
-/.tools/
+# .NET SDK/herramientas locales que provisiona scripts\dotnet-bootstrap.bat
+# cuando el equipo no tiene un SDK compatible (no se sube al repo).
 /.dotnet/
+/.dotnet-tools/
+/.tools/
 installer/.tools/
