@@ -19,14 +19,20 @@ set "DOTNET_CLI_TELEMETRY_OPTOUT=1"
 set "DOTNET_NOLOGO=1"
 set "PATH=%DOTNET_ROOT%;%DOTNET_TOOLS%;%PATH%"
 
-set "REPO=%~dp0.."
+rem  %~dp0 already ends with "installer\", so the repo root is its parent.
+for %%i in ("%~dp0..") do set "REPO=%%~fi"
 set "PROJECT=%REPO%\src\NexusWorkspace.Desktop\NexusWorkspace.Desktop.csproj"
 set "RID=win-x64"
 set "PUBDIR=%REPO%\installer\publish"
 set "OUTDIR=%REPO%\installer\releases"
-set "LOGDIR=%REPO%\installer\logs\%DATE:/=-%_%TIME::=-%"
-set "LOGDIR=%LOGDIR: =0%"
+for /f "tokens=1-4 delims=/:., " %%a in ("%DATE% %TIME%") do set "STAMP=%%a%%b%%c-%%d"
+set "LOGDIR=%REPO%\installer\logs\%STAMP%"
 mkdir "%LOGDIR%" 2>nul
+
+rem  Optional: "pack.bat nozip [version]" skips Velopack and just publishes + zips
+rem  (framework-dependent-free, no auto-update, always verifiable).
+set "MODE=full"
+if /i "%~1"=="nozip" ( set "MODE=nozip" & shift )
 
 set "VERSION=%~1"
 if "%VERSION%"=="" (
@@ -44,25 +50,38 @@ echo ====================================================================
 
 where dotnet >nul 2>nul || (echo [X] No se encuentra dotnet en %DOTNET_ROOT%. Ejecuta build.bat primero. & exit /b 1)
 
-echo [1/4] Comprobando la herramienta Velopack (vpk)...
-vpk --help >nul 2>nul
-if errorlevel 1 (
-  echo        Instalando vpk en "%DOTNET_TOOLS%" ...
-  dotnet tool install --tool-path "%DOTNET_TOOLS%" vpk > "%LOGDIR%\vpk-install.log" 2>&1
-  if errorlevel 1 (echo [X] No se pudo instalar vpk. Revisa %LOGDIR%\vpk-install.log & exit /b 1)
-) else (
-  echo        vpk ya disponible.
-)
-
-echo [2/4] dotnet publish (self-contained, %RID%) ...
+echo [1/3] dotnet publish (self-contained, %RID%) ...
 if exist "%PUBDIR%" rmdir /s /q "%PUBDIR%"
 dotnet publish "%PROJECT%" -c Release -r %RID% --self-contained true ^
   -p:PublishSingleFile=false -p:Version=%VERSION% -o "%PUBDIR%" > "%LOGDIR%\publish.log" 2>&1
 if errorlevel 1 (echo [X] Fallo en publish. Revisa %LOGDIR%\publish.log & exit /b 1)
-
-echo [3/4] vpk pack ...
 mkdir "%OUTDIR%" 2>nul
-vpk pack ^
+
+if /i "%MODE%"=="nozip" (
+  echo [2/3] Comprimiendo la carpeta publicada ^(sin auto-update^) ...
+  set "ZIP=%OUTDIR%\NexusWorkspace-%VERSION%-win-x64.zip"
+  if exist "!ZIP!" del /q "!ZIP!"
+  powershell -NoProfile -Command "Compress-Archive -Path '%PUBDIR%\*' -DestinationPath '!ZIP!' -Force" > "%LOGDIR%\zip.log" 2>&1
+  if errorlevel 1 (echo [X] Fallo al comprimir. Revisa %LOGDIR%\zip.log & exit /b 1)
+  echo [3/3] Listo.  &  dir /b "%OUTDIR%"
+  echo Portable ^(descomprimir y ejecutar NexusWorkspace.Desktop.exe^). Requiere nada mas.
+  endlocal & exit /b 0
+)
+
+echo [2/3] Comprobando la herramienta Velopack (vpk)...
+"%DOTNET_TOOLS%\vpk.exe" --help >nul 2>nul
+if errorlevel 1 (
+  echo        Instalando vpk en "%DOTNET_TOOLS%" ^(la primera vez puede tardar varios minutos^) ...
+  dotnet tool install --tool-path "%DOTNET_TOOLS%" vpk > "%LOGDIR%\vpk-install.log" 2>&1
+  if errorlevel 1 (
+    echo [X] No se pudo instalar vpk. Revisa %LOGDIR%\vpk-install.log
+    echo     Alternativa sin auto-update:  pack.bat nozip %VERSION%
+    exit /b 1
+  )
+)
+
+echo [3/3] vpk pack ...
+"%DOTNET_TOOLS%\vpk.exe" pack ^
   --packId NexusWorkspace ^
   --packTitle "NexusWorkspace" ^
   --packAuthors "Ivan" ^
@@ -72,7 +91,7 @@ vpk pack ^
   --outputDir "%OUTDIR%" > "%LOGDIR%\vpk-pack.log" 2>&1
 if errorlevel 1 (echo [X] Fallo en vpk pack. Revisa %LOGDIR%\vpk-pack.log & exit /b 1)
 
-echo [4/4] Listo.
+echo Listo.
 echo.
 dir /b "%OUTDIR%"
 echo.
