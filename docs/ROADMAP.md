@@ -33,10 +33,12 @@ Incremental. **La solución permanece compilable y ejecutable al terminar cada f
 
 - [x] **Fase 6b** — Informes **PDF** (QuestPDF, licencia Community) y **Excel** (ClosedXML) además de CSV/JSON: `ExportFormat` gana `Pdf` y `Excel`; el `ReportExporter` genera tabla y el informe de proyecto (cabecera + tareas + secciones) en los cuatro formatos, con menú de exportación en el detalle de proyecto y en Estadísticas. **Importación CSV** con **mapeo de columnas** (CsvHelper): `ImportService.DetectCsvHeaders` + `Parse(Csv, map)`; la UI de Configuración detecta la cabecera y ofrece asignar Tarea/Proyecto/Prioridad/Descripción/Checklist, agrupa filas por proyecto y previsualiza. **Gráficos LiveCharts2** en Estadísticas: línea de finalizadas por semana y donut de reparto de tareas por estado, junto a las barras nativas.
 
-> **Estado 2026-09-07**: Fases 0–7 + 6b compiladas en verde en este PC (`dotnet build`
-> **0/0**, **77/77 tests**). App arranca sin avisos; copia diaria automática al iniciar;
-> PDF/Excel generados y verificados en pruebas. Mejora continua pendiente: rendimiento
-> con 100k tareas (índices y paginación) y una pasada de accesibilidad.
+- [x] **Pulido pre-v1** — Rendimiento: ninguna consulta de lista materializa ya todo el workspace (indicadores del Dashboard por `COUNT(*)`, `Take` en todas las listas grandes; los índices ya cubren filtros/orden). Accesibilidad: `AutomationProperties.Name` en los botones sólo-icono. `installer/pack.bat` (Velopack) genera el `Setup.exe` autónomo; `docs/RELEASE.md` con la lista de comprobación para pasar a `main` + release. **Android (Fase 8)** y los stubs (Sync, IA local, OCR, integraciones) quedan para **v2**.
+
+> **Estado 2026-09-07**: Fases 0–7 + 6b + pulido, en verde en este PC (`dotnet build`
+> **0/0**, **79/79 tests**). App arranca sin avisos; copia diaria automática al iniciar.
+> MVP de Windows listo para v1: pendiente generar el instalador, verificar y hacer
+> merge `dev` → `main` + release (ver `docs/RELEASE.md`).
 
 > Publicado en GitHub: `porrii/NexusWorkspace`, rama `dev`. `main` + release cuando la v1 esté lista.
 > CI: el flujo está en `docs/ci-build.yml`; moverlo a `.github/workflows/build.yml` desde la web de

@@ -57,3 +57,8 @@ Desktop.ini
 # ---- Local secrets / machine config ----
 *.local.json
 appsettings.Development.json
+
+# Installer build artifacts (scripts + docs are tracked; outputs are not)
+installer/publish/
+installer/releases/
+installer/logs/
