@@ -28,15 +28,21 @@ rem ============================================================================
 
 rem ---- Configuracion (editable) ---------------------------------------------
 set "TOOLS_BASE=D:\Programs"
-set "DOTNET_ROOT=%TOOLS_BASE%\dotnet"
-set "DOTNET_TOOLS=%TOOLS_BASE%\dotnet-tools"
 set "DOTNET_CHANNEL=9.0"
 set "EF_VERSION=9.*"
 
-rem ---- Interno -------------------------------------------------------------
-rem  Todo fuera de C:  (cache de NuGet y home de dotnet en D:)
-set "NUGET_PACKAGES=%TOOLS_BASE%\nuget-packages"
-set "DOTNET_CLI_HOME=%TOOLS_BASE%\dotnet-home"
+rem  Toolchain aislado en D:\Programs SOLO si ya existe (PC de desarrollo).
+rem  En cualquier otro PC se usa el .NET normal de la maquina y no se toca C:.
+if exist "%TOOLS_BASE%\dotnet\dotnet.exe" (
+  set "DOTNET_ROOT=%TOOLS_BASE%\dotnet"
+  set "DOTNET_TOOLS=%TOOLS_BASE%\dotnet-tools"
+  set "NUGET_PACKAGES=%TOOLS_BASE%\nuget-packages"
+  set "DOTNET_CLI_HOME=%TOOLS_BASE%\dotnet-home"
+  set "PATH=%TOOLS_BASE%\dotnet;%TOOLS_BASE%\dotnet-tools;%PATH%"
+) else (
+  set "DOTNET_TOOLS=%~dp0.tools"
+  set "PATH=%~dp0.tools;%PATH%"
+)
 set "DOTNET_CLI_TELEMETRY_OPTOUT=1"
 set "DOTNET_NOLOGO=1"
 set "DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1"
@@ -111,11 +117,12 @@ if "!HAVE_SDK9!"=="1" (
     echo        .NET %DOTNET_CHANNEL% ya disponible.
     set "SDK_STATE=ya presente"
 ) else (
+    set "DL_DIR=%DOTNET_ROOT%"
+    if "!DL_DIR!"=="" set "DL_DIR=%~dp0.dotnet"
     echo        No hay .NET %DOTNET_CHANNEL%. Instalando en:
-    echo        "%DOTNET_ROOT%"
-    if not exist "%TOOLS_BASE%" mkdir "%TOOLS_BASE%" 2>nul
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1' -OutFile ($env:TEMP + '\dotnet-install.ps1'); & ($env:TEMP + '\dotnet-install.ps1') -Channel '%DOTNET_CHANNEL%' -InstallDir '%DOTNET_ROOT%' -NoPath" 1>"%INSTALLLOG%" 2>&1
-    set "PATH=%DOTNET_ROOT%;%PATH%"
+    echo        "!DL_DIR!"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1' -OutFile ($env:TEMP + '\dotnet-install.ps1'); & ($env:TEMP + '\dotnet-install.ps1') -Channel '%DOTNET_CHANNEL%' -InstallDir '!DL_DIR!' -NoPath" 1>"%INSTALLLOG%" 2>&1
+    set "PATH=!DL_DIR!;%PATH%"
     call :haveSdk9
     if not "!HAVE_SDK9!"=="1" (
         echo        ERROR: la instalacion de .NET fallo. Revisa "%INSTALLLOG%".

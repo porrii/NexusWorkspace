@@ -62,3 +62,8 @@ appsettings.Development.json
 installer/publish/
 installer/releases/
 installer/logs/
+
+# Toolchains locales de respaldo (build.bat / pack.bat cuando no hay D:\Programs)
+/.tools/
+/.dotnet/
+installer/.tools/

@@ -9,19 +9,13 @@ rem    pack.bat            -> instalador Velopack (Setup.exe + full/delta)
 rem    pack.bat nozip      -> zip portable self-contained (sin auto-update)
 rem    pack.bat [nozip] 1.2.3   -> version explicita (por defecto: Directory.Build.props)
 rem
-rem  Todo el toolchain va a D:\Programs, nada en C:  (igual que build.bat).
-rem  La primera ejecucion descarga el runtime win-x64 y, en modo Velopack, la
-rem  herramienta 'vpk' -> puede tardar varios minutos.
+rem  Si existe el toolchain aislado en D:\Programs (el PC de desarrollo) se usa;
+rem  si no, se usa el .NET normal de la maquina. La primera ejecucion descarga
+rem  el runtime win-x64 y, en modo Velopack, la herramienta 'vpk'.
 rem ============================================================================
 
-set "TOOLS_BASE=D:\Programs"
-set "DOTNET_ROOT=%TOOLS_BASE%\dotnet"
-set "DOTNET_TOOLS=%TOOLS_BASE%\dotnet-tools"
-set "NUGET_PACKAGES=%TOOLS_BASE%\nuget-packages"
-set "DOTNET_CLI_HOME=%TOOLS_BASE%\dotnet-home"
 set "DOTNET_CLI_TELEMETRY_OPTOUT=1"
 set "DOTNET_NOLOGO=1"
-set "PATH=%DOTNET_ROOT%;%DOTNET_TOOLS%;%PATH%"
 
 rem --- rutas (repo root = carpeta padre de este .bat) ------------------------
 pushd "%~dp0.."
@@ -34,6 +28,18 @@ set "PUBDIR=%REPO%\installer\publish"
 set "OUTDIR=%REPO%\installer\releases"
 set "LOGDIR=%REPO%\installer\logs"
 if not exist "%LOGDIR%" mkdir "%LOGDIR%"
+
+rem --- toolchain ---------------------------------------------------------------
+if exist "D:\Programs\dotnet\dotnet.exe" (
+  set "DOTNET_ROOT=D:\Programs\dotnet"
+  set "NUGET_PACKAGES=D:\Programs\nuget-packages"
+  set "DOTNET_CLI_HOME=D:\Programs\dotnet-home"
+  set "DOTNET_TOOLS=D:\Programs\dotnet-tools"
+  set "PATH=D:\Programs\dotnet;D:\Programs\dotnet-tools;%PATH%"
+) else (
+  set "DOTNET_TOOLS=%REPO%\installer\.tools"
+  set "PATH=%REPO%\installer\.tools;%PATH%"
+)
 
 rem --- argumentos ----------------------------------------------------------------
 set "MODE=vpk"
@@ -50,7 +56,9 @@ echo   Salida:   %OUTDIR%
 echo =======================================================================
 
 where dotnet >nul 2>nul
-if errorlevel 1 echo [X] No se encuentra dotnet en %DOTNET_ROOT%. Ejecuta build.bat primero.& exit /b 1
+if errorlevel 1 echo [X] No se encuentra 'dotnet'. Instala el SDK de .NET 9 (winget install Microsoft.DotNet.SDK.9).& exit /b 1
+for /f "delims=" %%v in ('dotnet --version 2^>nul') do set "SDKVER=%%v"
+echo   .NET SDK: %SDKVER%
 
 rem --- 1) publish self-contained ---------------------------------------------
 echo [1/3] dotnet publish self-contained (%RID%) ...
