@@ -177,7 +177,7 @@ public sealed class ReportExporter(IAppPaths paths) : IReportExporter
     {
         using var workbook = new XLWorkbook();
         build(workbook);
-        if (!workbook.Worksheets.Any())
+        if (workbook.Worksheets.Count == 0)
         {
             workbook.Worksheets.Add("Datos");
         }
