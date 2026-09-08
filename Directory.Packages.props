@@ -64,6 +64,10 @@
     <PackageVersion Include="CsvHelper" Version="33.0.1" />
   </ItemGroup>
 
+  <ItemGroup Label="Packaging / auto-update">
+    <PackageVersion Include="Velopack" Version="1.2.0" />
+  </ItemGroup>
+
   <ItemGroup Label="Testing">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageVersion Include="xunit" Version="2.9.2" />

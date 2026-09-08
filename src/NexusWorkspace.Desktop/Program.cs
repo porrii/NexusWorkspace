@@ -8,6 +8,7 @@ using NexusWorkspace.Infrastructure;
 using NexusWorkspace.Infrastructure.Persistence;
 using NexusWorkspace.UI;
 using Serilog;
+using Velopack;
 
 namespace NexusWorkspace.Desktop;
 
@@ -16,6 +17,11 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // Must be the very first thing that runs: Velopack briefly re-launches the
+        // exe with hook arguments during install / update / uninstall and expects a
+        // fast exit. It is a no-op for a normal launch or a non-installed build.
+        VelopackApp.Build().Run();
+
         var services = new ServiceCollection();
         services.AddInfrastructure();
         services.AddApplication();
