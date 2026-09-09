@@ -20,6 +20,9 @@ public static class AppConverters
     public static readonly FuncValueConverter<DateTime, string> LocalDateTime =
         new(value => value.ToLocalTime().ToString("dd/MM/yyyy HH:mm"));
 
+    public static readonly FuncValueConverter<DateTime, string> LocalTime =
+        new(value => value.ToLocalTime().ToString("HH:mm"));
+
     public static readonly FuncValueConverter<DateTime?, string?> RelativeDate =
         new(value => value is null ? null : Relative(value.Value));
 
