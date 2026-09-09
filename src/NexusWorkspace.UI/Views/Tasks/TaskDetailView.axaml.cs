@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using NexusWorkspace.Application.Tags;
 using NexusWorkspace.Domain.Enums;
 using NexusWorkspace.UI.ViewModels.Tasks;
@@ -30,6 +31,44 @@ public partial class TaskDetailView : UserControl
             && viewModel.ChangePriorityCommand.CanExecute(priority))
         {
             viewModel.ChangePriorityCommand.Execute(priority);
+        }
+    }
+
+    private void OnChildTitleDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is Control { DataContext: TaskChildRow row }
+            && DataContext is TaskDetailViewModel viewModel)
+        {
+            viewModel.StartRenameChildCommand.Execute(row);
+        }
+    }
+
+    private void OnChildEditKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (sender is not Control { DataContext: TaskChildRow row }
+            || DataContext is not TaskDetailViewModel viewModel)
+        {
+            return;
+        }
+
+        if (e.Key == Key.Enter)
+        {
+            viewModel.CommitRenameChildCommand.Execute(row);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            viewModel.CancelRenameChildCommand.Execute(row);
+            e.Handled = true;
+        }
+    }
+
+    private void OnNewSubTaskKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && DataContext is TaskDetailViewModel viewModel)
+        {
+            viewModel.AddSubTaskCommand.Execute(null);
+            e.Handled = true;
         }
     }
 }

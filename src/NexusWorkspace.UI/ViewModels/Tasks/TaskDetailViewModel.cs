@@ -39,9 +39,6 @@ public partial class TaskDetailViewModel(
     private string _newSubTaskTitle = string.Empty;
 
     [ObservableProperty]
-    private string _newChecklistText = string.Empty;
-
-    [ObservableProperty]
     private string _newCommentBody = string.Empty;
 
     [ObservableProperty]
@@ -105,9 +102,8 @@ public partial class TaskDetailViewModel(
 
     public ObservableCollection<ReminderView> Reminders { get; } = [];
 
-    public ObservableCollection<SubTaskNode> SubTasks { get; } = [];
-
-    public ObservableCollection<ChecklistItemView> Checklist { get; } = [];
+    /// <summary>Subtasks and legacy checklist items merged into one editable list.</summary>
+    public ObservableCollection<TaskChildRow> Children { get; } = [];
 
     public ObservableCollection<TaskCommentView> Comments { get; } = [];
 
@@ -127,13 +123,9 @@ public partial class TaskDetailViewModel(
 
     public IReadOnlyList<QuickActionDescriptor> QuickActions => QuickActionCatalog.All;
 
-    public int SubTaskProgress => SubTasks.Count == 0
+    public int ChildProgress => Children.Count == 0
         ? 0
-        : (int)Math.Round(100.0 * SubTasks.Count(s => s.IsDone) / SubTasks.Count);
-
-    public int ChecklistProgress => Checklist.Count == 0
-        ? 0
-        : (int)Math.Round(100.0 * Checklist.Count(c => c.IsChecked) / Checklist.Count);
+        : (int)Math.Round(100.0 * Children.Count(c => c.IsDone) / Children.Count);
 
     public void Load(Guid taskId)
     {
@@ -195,8 +187,7 @@ public partial class TaskDetailViewModel(
             SelectedStatus = detail.Status;
             _suppressStatusChange = false;
 
-            SubTasks.Reset(detail.SubTasks);
-            Checklist.Reset(detail.Checklist);
+            Children.Reset(BuildChildren(detail));
             Comments.Reset(detail.Comments);
             History.Reset(data.h);
             FollowUps.Reset(data.f);
@@ -208,8 +199,7 @@ public partial class TaskDetailViewModel(
             Attachments.Bind(EntityKind.WorkTask, _taskId, detail.ProjectId, RefreshAsync);
             await Attachments.LoadAsync();
 
-            OnPropertyChanged(nameof(SubTaskProgress));
-            OnPropertyChanged(nameof(ChecklistProgress));
+            OnPropertyChanged(nameof(ChildProgress));
         }
         catch (Exception ex)
         {
@@ -359,6 +349,35 @@ public partial class TaskDetailViewModel(
     [RelayCommand]
     private void ClearEditCompany() => EditCompany = null;
 
+    private static IEnumerable<TaskChildRow> BuildChildren(WorkTaskDetail detail)
+    {
+        // Subtasks first, ordered as a tree (parent then its children) with a depth
+        // for indentation; then the legacy checklist items as a flat tail.
+        var byParent = detail.SubTasks.ToLookup(s => s.ParentSubTaskId);
+
+        IEnumerable<TaskChildRow> Walk(Guid? parent, int depth)
+        {
+            foreach (var s in byParent[parent].OrderBy(s => s.SortKey))
+            {
+                yield return new TaskChildRow { Id = s.Id, IsChecklist = false, Title = s.Title, IsDone = s.IsDone, Depth = depth };
+                foreach (var child in Walk(s.Id, depth + 1))
+                {
+                    yield return child;
+                }
+            }
+        }
+
+        foreach (var row in Walk(null, 0))
+        {
+            yield return row;
+        }
+
+        foreach (var c in detail.Checklist.OrderBy(c => c.SortKey))
+        {
+            yield return new TaskChildRow { Id = c.Id, IsChecklist = true, Title = c.Text, IsDone = c.IsChecked, Depth = 0 };
+        }
+    }
+
     [RelayCommand]
     private async Task AddSubTaskAsync()
     {
@@ -374,32 +393,90 @@ public partial class TaskDetailViewModel(
     }
 
     [RelayCommand]
-    private Task ToggleSubTaskAsync(SubTaskNode? node)
-        => node is null
+    private Task ToggleChildAsync(TaskChildRow? row)
+        => row is null
             ? Task.CompletedTask
             : RunAndRefreshAsync((sp, ct) =>
-                sp.GetRequiredService<WorkTaskService>().SetSubTaskDoneAsync(node.Id, !node.IsDone, ct));
+            {
+                var svc = sp.GetRequiredService<WorkTaskService>();
+                return row.IsChecklist
+                    ? svc.SetChecklistItemCheckedAsync(row.Id, !row.IsDone, ct)
+                    : svc.SetSubTaskDoneAsync(row.Id, !row.IsDone, ct);
+            });
 
     [RelayCommand]
-    private async Task AddChecklistItemAsync()
+    private void StartRenameChild(TaskChildRow? row)
     {
-        var text = NewChecklistText?.Trim();
-        if (string.IsNullOrWhiteSpace(text))
+        if (row is null)
         {
             return;
         }
 
-        NewChecklistText = string.Empty;
-        await RunAndRefreshAsync((sp, ct) =>
-            sp.GetRequiredService<WorkTaskService>().AddChecklistItemAsync(_taskId, text, ct));
+        row.EditText = row.Title;
+        row.IsEditing = true;
     }
 
     [RelayCommand]
-    private Task ToggleChecklistItemAsync(ChecklistItemView? item)
-        => item is null
+    private void CancelRenameChild(TaskChildRow? row)
+    {
+        if (row is not null)
+        {
+            row.IsEditing = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task CommitRenameChildAsync(TaskChildRow? row)
+    {
+        if (row is null)
+        {
+            return;
+        }
+
+        var text = row.EditText?.Trim();
+        row.IsEditing = false;
+        if (string.IsNullOrWhiteSpace(text) || text == row.Title)
+        {
+            return;
+        }
+
+        await RunAndRefreshAsync((sp, ct) =>
+        {
+            var svc = sp.GetRequiredService<WorkTaskService>();
+            return row.IsChecklist
+                ? svc.RenameChecklistItemAsync(row.Id, text, ct)
+                : svc.RenameSubTaskAsync(row.Id, text, ct);
+        });
+    }
+
+    [RelayCommand]
+    private Task DeleteChildAsync(TaskChildRow? row)
+        => row is null
             ? Task.CompletedTask
             : RunAndRefreshAsync((sp, ct) =>
-                sp.GetRequiredService<WorkTaskService>().SetChecklistItemCheckedAsync(item.Id, !item.IsChecked, ct));
+            {
+                var svc = sp.GetRequiredService<WorkTaskService>();
+                return row.IsChecklist
+                    ? svc.DeleteChecklistItemAsync(row.Id, ct)
+                    : svc.DeleteSubTaskAsync(row.Id, ct);
+            });
+
+    [RelayCommand]
+    private Task MoveChildUpAsync(TaskChildRow? row) => MoveChildAsync(row, up: true);
+
+    [RelayCommand]
+    private Task MoveChildDownAsync(TaskChildRow? row) => MoveChildAsync(row, up: false);
+
+    private Task MoveChildAsync(TaskChildRow? row, bool up)
+        => row is null
+            ? Task.CompletedTask
+            : RunAndRefreshAsync((sp, ct) =>
+            {
+                var svc = sp.GetRequiredService<WorkTaskService>();
+                return row.IsChecklist
+                    ? svc.MoveChecklistItemAsync(row.Id, up, ct)
+                    : svc.MoveSubTaskAsync(row.Id, up, ct);
+            });
 
     [RelayCommand]
     private async Task AddCommentAsync()

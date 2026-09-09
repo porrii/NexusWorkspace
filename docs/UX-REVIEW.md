@@ -133,8 +133,9 @@ abrir detalle, crear rápida. Quitar el placeholder del nav.
 
 | Bloque | Contenido | Tamaño |
 |---|---|---|
-| **A. Edición básica** | Panel de edición Tarea + Proyecto (incl. descripción, fechas con hora). Hora/min en recordatorios. Editor de etiquetas en las 4 pantallas + arreglar Empresa. | M |
-| **B. Subtareas** | Fusionar checklist→subtareas: renombrar/borrar/reordenar/anidar, migración EF. | M |
+| **A. Edición básica** ✅ | Panel de edición Tarea + Proyecto (incl. descripción, fechas con hora). Hora/min en recordatorios. Editor de etiquetas en Tarea/Proyecto. | M |
+| **B1. Subtareas — lista unificada** ✅ | Subtareas y checklist se muestran y editan en UNA lista ("Subtareas"): marcar, renombrar en línea, borrar, subir/bajar. El "+ añadir" crea siempre una subtarea. Sin tocar BD. | M |
+| **B2. Subtareas — fusión real** ⏳ | Migración EF `ChecklistItem`→`SubTask` + eliminar plumbing de checklist en Import/Plantillas/Seeder/DTOs. **Con el usuario delante** (toca datos reales). | M |
 | **C. Vínculos** | Métodos de servicio + pickers: proyecto↔persona/empresa, tarea↔persona/empresa, persona→empresa. | M |
 | **D. Seguimientos** | Acoplar a estado de tarea (abrir/cerrar auto), incrustar en tarea, picker de "esperando a". | M |
 | **E. Acciones rápidas** | Colapsar en Comunicación/estado; dejar "Registrar evento" con tipos propios. | S |

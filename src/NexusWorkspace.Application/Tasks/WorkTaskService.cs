@@ -247,6 +247,149 @@ public sealed class WorkTaskService(IApplicationDbContext db, IClock clock, IAct
         return Result.Success();
     }
 
+    public async Task<Result> RenameSubTaskAsync(Guid subTaskId, string title, CancellationToken cancellationToken = default)
+    {
+        title = title?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return Result.Failure("subtask.title_required", "El título de la subtarea es obligatorio.");
+        }
+
+        var subTask = await db.SubTasks.FirstOrDefaultAsync(s => s.Id == subTaskId, cancellationToken);
+        if (subTask is null)
+        {
+            return Result.Failure("subtask.not_found", "Subtarea no encontrada.");
+        }
+
+        subTask.Title = title;
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> DeleteSubTaskAsync(Guid subTaskId, CancellationToken cancellationToken = default)
+    {
+        var subTask = await db.SubTasks.Include(s => s.WorkTask)
+            .FirstOrDefaultAsync(s => s.Id == subTaskId, cancellationToken);
+        if (subTask is null)
+        {
+            return Result.Success();
+        }
+
+        // Soft-delete the node and every descendant.
+        var all = await db.SubTasks.Where(s => s.WorkTaskId == subTask.WorkTaskId && !s.IsDeleted)
+            .ToListAsync(cancellationToken);
+        var doomed = new HashSet<Guid> { subTaskId };
+        bool grew;
+        do
+        {
+            grew = false;
+            foreach (var s in all)
+            {
+                if (!doomed.Contains(s.Id) && s.ParentSubTaskId is { } p && doomed.Contains(p))
+                {
+                    doomed.Add(s.Id);
+                    grew = true;
+                }
+            }
+        }
+        while (grew);
+
+        foreach (var s in all.Where(s => doomed.Contains(s.Id)))
+        {
+            s.IsDeleted = true;
+            s.DeletedAtUtc = clock.UtcNow;
+        }
+
+        activity.Record(EntityKind.WorkTask, subTask.WorkTaskId, ActivityType.Updated,
+            $"Subtarea eliminada: «{subTask.Title}».", subTask.WorkTask.ProjectId);
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> MoveSubTaskAsync(Guid subTaskId, bool up, CancellationToken cancellationToken = default)
+    {
+        var subTask = await db.SubTasks.FirstOrDefaultAsync(s => s.Id == subTaskId, cancellationToken);
+        if (subTask is null)
+        {
+            return Result.Failure("subtask.not_found", "Subtarea no encontrada.");
+        }
+
+        var siblings = await db.SubTasks
+            .Where(s => s.WorkTaskId == subTask.WorkTaskId && s.ParentSubTaskId == subTask.ParentSubTaskId && !s.IsDeleted)
+            .OrderBy(s => s.SortKey)
+            .ToListAsync(cancellationToken);
+
+        var index = siblings.FindIndex(s => s.Id == subTaskId);
+        var target = up ? index - 1 : index + 1;
+        if (index < 0 || target < 0 || target >= siblings.Count)
+        {
+            return Result.Success();
+        }
+
+        (siblings[index].SortKey, siblings[target].SortKey) = (siblings[target].SortKey, siblings[index].SortKey);
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> RenameChecklistItemAsync(Guid itemId, string text, CancellationToken cancellationToken = default)
+    {
+        text = text?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return Result.Failure("checklist.text_required", "El texto del ítem es obligatorio.");
+        }
+
+        var item = await db.ChecklistItems.FirstOrDefaultAsync(c => c.Id == itemId, cancellationToken);
+        if (item is null)
+        {
+            return Result.Failure("checklist.not_found", "Ítem no encontrado.");
+        }
+
+        item.Text = text;
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> DeleteChecklistItemAsync(Guid itemId, CancellationToken cancellationToken = default)
+    {
+        var item = await db.ChecklistItems.FirstOrDefaultAsync(c => c.Id == itemId, cancellationToken);
+        if (item is null)
+        {
+            return Result.Success();
+        }
+
+        item.IsDeleted = true;
+        item.DeletedAtUtc = clock.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> MoveChecklistItemAsync(Guid itemId, bool up, CancellationToken cancellationToken = default)
+    {
+        var item = await db.ChecklistItems.FirstOrDefaultAsync(c => c.Id == itemId, cancellationToken);
+        if (item is null)
+        {
+            return Result.Failure("checklist.not_found", "Ítem no encontrado.");
+        }
+
+        var siblings = await db.ChecklistItems
+            .Where(c => c.WorkTaskId == item.WorkTaskId && !c.IsDeleted)
+            .OrderBy(c => c.SortKey)
+            .ToListAsync(cancellationToken);
+
+        var index = siblings.FindIndex(c => c.Id == itemId);
+        var target = up ? index - 1 : index + 1;
+        if (index < 0 || target < 0 || target >= siblings.Count)
+        {
+            return Result.Success();
+        }
+
+        (siblings[index].SortKey, siblings[target].SortKey) = (siblings[target].SortKey, siblings[index].SortKey);
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
     public async Task<Result<Guid>> AddCommentAsync(Guid taskId, string body, CancellationToken cancellationToken = default)
     {
         body = body?.Trim() ?? string.Empty;

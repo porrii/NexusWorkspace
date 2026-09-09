@@ -161,59 +161,62 @@
       </StackPanel>
     </Border>
 
-    <Grid ColumnDefinitions="*,*">
-
-      <!-- Subtasks -->
-      <Border Classes="card" Grid.Column="0" Margin="0,0,9,0">
-        <StackPanel Spacing="10">
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <TextBlock Text="Subtareas" Classes="h2" />
-            <TextBlock Classes="muted" VerticalAlignment="Center"
-                       Text="{Binding SubTaskProgress, StringFormat='{}{0}%'}" />
-          </StackPanel>
-          <ProgressBar Minimum="0" Maximum="100" Value="{Binding SubTaskProgress}" Height="6" />
-          <ItemsControl ItemsSource="{Binding SubTasks}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <CheckBox Content="{Binding Title}" IsChecked="{Binding IsDone, Mode=OneWay}"
-                          Command="{Binding $parent[ItemsControl].DataContext.ToggleSubTaskCommand}"
-                          CommandParameter="{Binding}" />
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBox Width="220" Watermark="Nueva subtarea" Text="{Binding NewSubTaskTitle, Mode=TwoWay}" />
-            <Button Content="Añadir" Command="{Binding AddSubTaskCommand}" />
-          </StackPanel>
+    <!-- Subtareas (subtareas + checklist unificados) -->
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Subtareas" Classes="h2" />
+          <TextBlock Classes="muted" VerticalAlignment="Center"
+                     Text="{Binding ChildProgress, StringFormat='{}{0}%'}" />
         </StackPanel>
-      </Border>
+        <ProgressBar Minimum="0" Maximum="100" Value="{Binding ChildProgress}" Height="6" />
 
-      <!-- Checklist -->
-      <Border Classes="card" Grid.Column="1" Margin="9,0,0,0">
-        <StackPanel Spacing="10">
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <TextBlock Text="Checklist" Classes="h2" />
-            <TextBlock Classes="muted" VerticalAlignment="Center"
-                       Text="{Binding ChecklistProgress, StringFormat='{}{0}%'}" />
-          </StackPanel>
-          <ProgressBar Minimum="0" Maximum="100" Value="{Binding ChecklistProgress}" Height="6" />
-          <ItemsControl ItemsSource="{Binding Checklist}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <CheckBox Content="{Binding Text}" IsChecked="{Binding IsChecked, Mode=OneWay}"
-                          Command="{Binding $parent[ItemsControl].DataContext.ToggleChecklistItemCommand}"
+        <ItemsControl ItemsSource="{Binding Children}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,1">
+                <CheckBox Grid.Column="0" IsChecked="{Binding IsDone, Mode=OneWay}"
+                          Command="{Binding $parent[ItemsControl].DataContext.ToggleChildCommand}"
                           CommandParameter="{Binding}" />
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBox Width="220" Watermark="Nuevo ítem" Text="{Binding NewChecklistText, Mode=TwoWay}" />
-            <Button Content="Añadir" Command="{Binding AddChecklistItemCommand}" />
-          </StackPanel>
-        </StackPanel>
-      </Border>
 
-    </Grid>
+                <!-- read mode -->
+                <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center"
+                           TextWrapping="Wrap" IsVisible="{Binding !IsEditing}"
+                           DoubleTapped="OnChildTitleDoubleTapped" />
+                <!-- edit mode -->
+                <TextBox Grid.Column="1" Text="{Binding EditText, Mode=TwoWay}" IsVisible="{Binding IsEditing}"
+                         KeyDown="OnChildEditKeyDown" />
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                  <Button Classes="quick" Padding="4,2" ToolTip.Tip="Subir"
+                          Command="{Binding $parent[ItemsControl].DataContext.MoveChildUpCommand}" CommandParameter="{Binding}">
+                    <mi:MaterialIcon Kind="ChevronUp" Width="14" Height="14" />
+                  </Button>
+                  <Button Classes="quick" Padding="4,2" ToolTip.Tip="Bajar"
+                          Command="{Binding $parent[ItemsControl].DataContext.MoveChildDownCommand}" CommandParameter="{Binding}">
+                    <mi:MaterialIcon Kind="ChevronDown" Width="14" Height="14" />
+                  </Button>
+                  <Button Classes="quick" Padding="4,2" ToolTip.Tip="Renombrar"
+                          Command="{Binding $parent[ItemsControl].DataContext.StartRenameChildCommand}" CommandParameter="{Binding}">
+                    <mi:MaterialIcon Kind="Pencil" Width="14" Height="14" />
+                  </Button>
+                  <Button Classes="quick" Padding="4,2" ToolTip.Tip="Eliminar"
+                          Command="{Binding $parent[ItemsControl].DataContext.DeleteChildCommand}" CommandParameter="{Binding}">
+                    <mi:MaterialIcon Kind="Close" Width="14" Height="14" />
+                  </Button>
+                </StackPanel>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBox Width="280" Watermark="Nueva subtarea" Text="{Binding NewSubTaskTitle, Mode=TwoWay}"
+                   KeyDown="OnNewSubTaskKeyDown" />
+          <Button Content="Añadir" Command="{Binding AddSubTaskCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
 
     <!-- Comments -->
     <Border Classes="card">
