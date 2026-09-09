@@ -35,6 +35,14 @@ public sealed class AppSettings
     public List<string> DashboardWidgetOrder { get; set; } = [];
 
     public List<string> RecentProjectIds { get; set; } = [];
+
+    /// <summary>One-tap "task event" labels shown on the task detail. The user can add more.</summary>
+    public List<string> TaskEventLabels { get; set; } =
+    [
+        "Incidencia detectada", "Incidencia resuelta",
+        "Desplegado a DEV", "Desplegado a PRE", "Desplegado a PRO",
+        "Prueba realizada", "Cambio solicitado", "Recordatorio enviado",
+    ];
 }
 
 public sealed class WindowPlacement

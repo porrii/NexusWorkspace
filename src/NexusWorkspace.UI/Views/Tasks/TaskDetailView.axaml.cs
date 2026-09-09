@@ -83,4 +83,13 @@ public partial class TaskDetailView : UserControl
             e.Handled = true;
         }
     }
+
+    private void OnNewEventKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && DataContext is TaskDetailViewModel viewModel)
+        {
+            viewModel.LogEventCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
 }

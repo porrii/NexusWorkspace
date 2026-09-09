@@ -532,6 +532,28 @@ public sealed class WorkTaskService(IApplicationDbContext db, IClock clock, IAct
         return Result.Success();
     }
 
+    /// <summary>One-tap "task event": appends a free-text entry to the history. No status change.</summary>
+    public async Task<Result> LogEventAsync(Guid taskId, string label, string? note = null, CancellationToken cancellationToken = default)
+    {
+        label = label?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(label))
+        {
+            return Result.Failure("event.label_required", "Indica qué ha pasado.");
+        }
+
+        var task = await db.WorkTasks.FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);
+        if (task is null)
+        {
+            return NotFound();
+        }
+
+        activity.Record(EntityKind.WorkTask, task.Id, ActivityType.QuickAction, label, task.ProjectId,
+            note: string.IsNullOrWhiteSpace(note) ? null : note.Trim());
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
     public async Task<Result> AddTagAsync(Guid taskId, Guid tagId, CancellationToken cancellationToken = default)
     {
         var task = await db.WorkTasks.FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);

@@ -166,25 +166,59 @@
       </StackPanel>
     </Border>
 
-    <!-- Quick actions -->
+    <!-- Registrar evento -->
     <Border Classes="card">
       <StackPanel Spacing="10">
-        <TextBlock Text="Acciones rápidas" Classes="h2" />
-        <TextBox Watermark="Descripción opcional para la próxima acción…"
-                 Text="{Binding QuickActionNote, Mode=TwoWay}" />
-        <ItemsControl ItemsSource="{Binding QuickActions}">
+        <TextBlock Text="Registrar evento" Classes="h2" />
+        <TextBox Watermark="Nota opcional para el evento…" Text="{Binding EventNote, Mode=TwoWay}" />
+        <ItemsControl ItemsSource="{Binding EventLabels}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Button Classes="quick" Margin="0,0,8,8"
-                      Content="{Binding Label}"
-                      Command="{Binding $parent[ItemsControl].DataContext.ExecuteQuickActionCommand}"
+              <Button Classes="quick" Margin="0,0,8,8" Content="{Binding}"
+                      Command="{Binding $parent[ItemsControl].DataContext.LogEventCommand}"
                       CommandParameter="{Binding}" />
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBox Width="240" Watermark="Evento nuevo…" Text="{Binding NewEventLabel, Mode=TwoWay}"
+                   KeyDown="OnNewEventKeyDown" />
+          <Button Content="Registrar" Command="{Binding LogEventCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Registrar comunicación -->
+    <Border Classes="card">
+      <StackPanel Spacing="10">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Grid.Column="0" Text="Comunicaciones" Classes="h2" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Classes="quick" Content="Registrar comunicación"
+                  Command="{Binding ToggleCommComposerCommand}" />
+        </Grid>
+        <Border Classes="tile" IsVisible="{Binding CommComposer.IsOpen}">
+          <StackPanel Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <ComboBox Width="150" ItemsSource="{Binding CommComposer.Channels}"
+                        SelectedItem="{Binding CommComposer.Channel, Mode=TwoWay}">
+                <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate></ComboBox.ItemTemplate>
+              </ComboBox>
+              <ComboBox Width="150" ItemsSource="{Binding CommComposer.Directions}"
+                        SelectedItem="{Binding CommComposer.Direction, Mode=TwoWay}">
+                <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate></ComboBox.ItemTemplate>
+              </ComboBox>
+              <DatePicker SelectedDate="{Binding CommComposer.When, Mode=TwoWay}" />
+            </StackPanel>
+            <TextBox Watermark="Asunto" Text="{Binding CommComposer.Subject, Mode=TwoWay}" />
+            <TextBox Watermark="Detalle (opcional)" AcceptsReturn="True" MinHeight="60" TextWrapping="Wrap"
+                     Text="{Binding CommComposer.Body, Mode=TwoWay}" />
+            <Button Content="Guardar comunicación" Classes="accent" HorizontalAlignment="Right"
+                    Command="{Binding LogCommunicationCommand}" />
+          </StackPanel>
+        </Border>
       </StackPanel>
     </Border>
 

@@ -4,10 +4,10 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
+using NexusWorkspace.Application.Communications;
 using NexusWorkspace.Application.Companies;
 using NexusWorkspace.Application.FollowUps;
 using NexusWorkspace.Application.People;
-using NexusWorkspace.Application.QuickActions;
 using NexusWorkspace.Application.Reminders;
 using NexusWorkspace.Application.Tags;
 using NexusWorkspace.Application.Tasks;
@@ -21,7 +21,8 @@ namespace NexusWorkspace.UI.ViewModels.Tasks;
 public partial class TaskDetailViewModel(
     IUnitOfWorkRunner unitOfWork,
     INavigationService navigation,
-    IPlatformLauncher launcher) : ViewModelBase
+    IPlatformLauncher launcher,
+    ISettingsStore settings) : ViewModelBase
 {
     private Guid _taskId;
 
@@ -42,7 +43,10 @@ public partial class TaskDetailViewModel(
     private string _newCommentBody = string.Empty;
 
     [ObservableProperty]
-    private string _quickActionNote = string.Empty;
+    private string _newEventLabel = string.Empty;
+
+    [ObservableProperty]
+    private string _eventNote = string.Empty;
 
     [ObservableProperty]
     private bool _isFollowUpPanelOpen;
@@ -129,7 +133,10 @@ public partial class TaskDetailViewModel(
 
     public IReadOnlyList<Priority> Priorities { get; } = Enum.GetValues<Priority>();
 
-    public IReadOnlyList<QuickActionDescriptor> QuickActions => QuickActionCatalog.All;
+    /// <summary>One-tap "task event" labels; grows as the user registers new ones.</summary>
+    public ObservableCollection<string> EventLabels { get; } = [];
+
+    public CommunicationComposerViewModel CommComposer { get; } = new();
 
     public int ChildProgress => Children.Count == 0
         ? 0
@@ -203,6 +210,7 @@ public partial class TaskDetailViewModel(
             AllPeople.Reset(data.people);
             AllCompanies.Reset(data.companies);
             AllTags.Reset(data.tags);
+            EventLabels.Reset(settings.Current.TaskEventLabels);
             var linkedPeople = detail.Collaborators.Select(p => p.Id)
                 .Append(detail.AssigneePersonId ?? Guid.Empty).ToHashSet();
             CollaboratorCandidates.Reset(data.people.Where(p => !linkedPeople.Contains(p.Id)).OrderBy(p => p.Name));
@@ -541,17 +549,70 @@ public partial class TaskDetailViewModel(
     }
 
     [RelayCommand]
-    private async Task ExecuteQuickActionAsync(QuickActionDescriptor? descriptor)
+    private async Task LogEventAsync(string? label)
     {
-        if (descriptor is null)
+        var raw = (string.IsNullOrWhiteSpace(label) ? NewEventLabel : label)?.Trim();
+        if (string.IsNullOrWhiteSpace(raw))
         {
             return;
         }
 
-        var note = string.IsNullOrWhiteSpace(QuickActionNote) ? null : QuickActionNote.Trim();
-        QuickActionNote = string.Empty;
+        string text = raw;
+        var note = EventNote;
+        var isNew = !EventLabels.Contains(text, StringComparer.OrdinalIgnoreCase);
+        NewEventLabel = string.Empty;
+        EventNote = string.Empty;
+
         await RunAndRefreshAsync((sp, ct) =>
-            sp.GetRequiredService<WorkTaskService>().ExecuteQuickActionAsync(_taskId, descriptor.Kind, note, ct));
+            sp.GetRequiredService<WorkTaskService>().LogEventAsync(_taskId, text, note, ct));
+
+        if (isNew)
+        {
+            await settings.UpdateAsync(s =>
+            {
+                if (!s.TaskEventLabels.Contains(text, StringComparer.OrdinalIgnoreCase))
+                {
+                    s.TaskEventLabels.Add(text);
+                }
+            });
+            EventLabels.Add(text);
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleCommComposer() => CommComposer.IsOpen = !CommComposer.IsOpen;
+
+    [RelayCommand]
+    private async Task LogCommunicationAsync()
+    {
+        if (string.IsNullOrWhiteSpace(CommComposer.Subject))
+        {
+            ErrorMessage = "Indica el asunto de la comunicación.";
+            return;
+        }
+
+        var result = await unitOfWork.RunAsync((sp, ct) =>
+            sp.GetRequiredService<CommunicationService>().LogAsync(new LogCommunicationRequest
+            {
+                Channel = CommComposer.Channel,
+                Direction = CommComposer.Direction,
+                Subject = CommComposer.Subject.Trim(),
+                Body = CommComposer.Body,
+                OccurredAtUtc = CommComposer.When?.UtcDateTime,
+                WorkTaskId = _taskId,
+                ProjectId = Detail?.ProjectId,
+                PersonId = Detail?.AssigneePersonId,
+                CompanyId = Detail?.RelatedCompanyId,
+            }, ct));
+
+        if (result.IsFailure)
+        {
+            ErrorMessage = result.Error.Message;
+            return;
+        }
+
+        CommComposer.Reset();
+        await RefreshAsync();
     }
 
     [RelayCommand]
