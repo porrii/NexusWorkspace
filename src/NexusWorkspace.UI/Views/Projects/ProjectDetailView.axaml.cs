@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.VisualTree;
+using NexusWorkspace.Application.Tags;
 using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Domain.Enums;
 using NexusWorkspace.UI.ViewModels.Projects;
@@ -20,6 +21,17 @@ public partial class ProjectDetailView : UserControl
         InitializeComponent();
         AddHandler(DragDrop.DragOverEvent, OnColumnDragOver);
         AddHandler(DragDrop.DropEvent, OnColumnDrop);
+    }
+
+    private void OnAddTagSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox combo
+            && combo.SelectedItem is TagListItem tag
+            && DataContext is ProjectDetailViewModel viewModel)
+        {
+            viewModel.AddTagCommand.Execute(tag);
+            combo.SelectedItem = null;
+        }
     }
 
     private void OnTaskClicked(object? sender, PointerReleasedEventArgs e)

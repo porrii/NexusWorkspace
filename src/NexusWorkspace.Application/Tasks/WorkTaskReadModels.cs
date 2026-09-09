@@ -1,3 +1,4 @@
+using NexusWorkspace.Application.People;
 using NexusWorkspace.Domain.Enums;
 
 namespace NexusWorkspace.Application.Tasks;
@@ -116,7 +117,7 @@ public sealed record WorkTaskDetail
 
     public IReadOnlyList<DependencyView> DependsOn { get; init; } = [];
 
-    public IReadOnlyList<string> Tags { get; init; } = [];
+    public IReadOnlyList<TagChip> Tags { get; init; } = [];
 }
 
 public enum TaskListScope

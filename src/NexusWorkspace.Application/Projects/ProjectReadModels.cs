@@ -1,3 +1,4 @@
+using NexusWorkspace.Application.People;
 using NexusWorkspace.Domain.Enums;
 
 namespace NexusWorkspace.Application.Projects;
@@ -78,6 +79,8 @@ public sealed record ProjectDetail
     public int OpenTaskCount { get; init; }
 
     public int FinishedTaskCount { get; init; }
+
+    public IReadOnlyList<TagChip> Tags { get; init; } = [];
 
     public int ProgressPercent => TotalTaskCount == 0
         ? 0

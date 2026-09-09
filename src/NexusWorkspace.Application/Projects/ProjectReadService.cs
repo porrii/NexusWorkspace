@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using NexusWorkspace.Application.Abstractions;
+using NexusWorkspace.Application.People;
 using NexusWorkspace.Domain.Enums;
 
 namespace NexusWorkspace.Application.Projects;
@@ -122,6 +123,7 @@ public sealed class ProjectReadService(IApplicationDbContext db)
                     && t.Status != WorkTaskStatus.Finished
                     && t.Status != WorkTaskStatus.Cancelled),
                 FinishedTaskCount = p.Tasks.Count(t => !t.IsDeleted && t.Status == WorkTaskStatus.Finished),
+                Tags = p.Tags.Select(x => new TagChip { Id = x.Tag.Id, Name = x.Tag.Name, Color = x.Tag.Color }).ToList(),
             })
             .FirstOrDefaultAsync(cancellationToken);
     }

@@ -4,9 +4,12 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
+using NexusWorkspace.Application.Companies;
 using NexusWorkspace.Application.FollowUps;
+using NexusWorkspace.Application.People;
 using NexusWorkspace.Application.QuickActions;
 using NexusWorkspace.Application.Reminders;
+using NexusWorkspace.Application.Tags;
 using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Domain.Enums;
 using NexusWorkspace.Domain.Tasks;
@@ -63,6 +66,33 @@ public partial class TaskDetailViewModel(
     private DateTimeOffset? _newReminderDate = DateTimeOffset.Now.Date.AddDays(1);
 
     [ObservableProperty]
+    private TimeSpan? _newReminderTime = new(9, 0, 0);
+
+    [ObservableProperty]
+    private bool _isEditPanelOpen;
+
+    [ObservableProperty]
+    private string _editTitle = string.Empty;
+
+    [ObservableProperty]
+    private string _editDescription = string.Empty;
+
+    [ObservableProperty]
+    private Priority _editPriority = Priority.Medium;
+
+    [ObservableProperty]
+    private DateTimeOffset? _editDueDate;
+
+    [ObservableProperty]
+    private TimeSpan? _editDueTime;
+
+    [ObservableProperty]
+    private PersonListItem? _editAssignee;
+
+    [ObservableProperty]
+    private CompanyListItem? _editCompany;
+
+    [ObservableProperty]
     private bool _isTemplatePanelOpen;
 
     [ObservableProperty]
@@ -84,6 +114,12 @@ public partial class TaskDetailViewModel(
     public ObservableCollection<ActivityEntry> History { get; } = [];
 
     public ObservableCollection<WorkTaskStatus> AvailableStatuses { get; } = [];
+
+    public ObservableCollection<PersonListItem> AllPeople { get; } = [];
+
+    public ObservableCollection<CompanyListItem> AllCompanies { get; } = [];
+
+    public ObservableCollection<TagListItem> AllTags { get; } = [];
 
     public AttachmentsSectionViewModel Attachments { get; } = new(unitOfWork, launcher);
 
@@ -131,7 +167,10 @@ public partial class TaskDetailViewModel(
                 var h = await activityReads.GetForEntityAsync(EntityKind.WorkTask, _taskId, 200, ct);
                 var f = await followUpReads.GetForEntityAsync(EntityKind.WorkTask, _taskId, ct);
                 var r = await reminderReads.GetForEntityAsync(EntityKind.WorkTask, _taskId, ct);
-                return (d, h, f, r);
+                var people = await sp.GetRequiredService<PersonReadService>().GetListAsync(PersonScope.All, null, null, ct);
+                var companies = await sp.GetRequiredService<CompanyReadService>().GetListAsync(CompanyScope.All, null, null, ct);
+                var tags = await sp.GetRequiredService<TagReadService>().GetAllAsync(false, ct);
+                return (d, h, f, r, people, companies, tags);
             });
 
             var detail = data.d;
@@ -162,6 +201,9 @@ public partial class TaskDetailViewModel(
             History.Reset(data.h);
             FollowUps.Reset(data.f);
             Reminders.Reset(data.r);
+            AllPeople.Reset(data.people);
+            AllCompanies.Reset(data.companies);
+            AllTags.Reset(data.tags);
 
             Attachments.Bind(EntityKind.WorkTask, _taskId, detail.ProjectId, RefreshAsync);
             await Attachments.LoadAsync();
@@ -207,6 +249,115 @@ public partial class TaskDetailViewModel(
                     Id = _taskId,
                     Priority = priority,
                 }, ct));
+
+    [RelayCommand]
+    private void ToggleEditPanel()
+    {
+        IsEditPanelOpen = !IsEditPanelOpen;
+        if (!IsEditPanelOpen || Detail is null)
+        {
+            return;
+        }
+
+        EditTitle = Detail.Title;
+        EditDescription = Detail.Description ?? string.Empty;
+        EditPriority = Detail.Priority;
+
+        if (Detail.DueDateUtc is { } due)
+        {
+            var local = due.ToLocalTime();
+            EditDueDate = new DateTimeOffset(DateTime.SpecifyKind(local.Date, DateTimeKind.Unspecified), DateTimeOffset.Now.Offset);
+            EditDueTime = local.TimeOfDay;
+        }
+        else
+        {
+            EditDueDate = null;
+            EditDueTime = null;
+        }
+
+        EditAssignee = Detail.AssigneePersonId is { } aid
+            ? AllPeople.FirstOrDefault(p => p.Id == aid)
+            : null;
+        EditCompany = Detail.RelatedCompanyId is { } cid
+            ? AllCompanies.FirstOrDefault(c => c.Id == cid)
+            : null;
+    }
+
+    [RelayCommand]
+    private async Task SaveDetailsAsync()
+    {
+        if (Detail is null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(EditTitle))
+        {
+            ErrorMessage = "El título no puede quedar vacío.";
+            return;
+        }
+
+        DateTime? dueUtc = null;
+        var clearDue = EditDueDate is null;
+        if (EditDueDate is { } d)
+        {
+            var local = d.Date + (EditDueTime ?? TimeSpan.Zero);
+            dueUtc = DateTime.SpecifyKind(local, DateTimeKind.Local).ToUniversalTime();
+        }
+
+        var request = new UpdateWorkTaskDetailsRequest
+        {
+            Id = _taskId,
+            Title = EditTitle.Trim(),
+            Description = EditDescription ?? string.Empty,
+            Priority = EditPriority,
+            ClearDueDate = clearDue,
+            DueDateUtc = dueUtc,
+            ChangeAssignee = true,
+            AssigneePersonId = EditAssignee?.Id,
+            ChangeRelatedCompany = true,
+            RelatedCompanyId = EditCompany?.Id,
+        };
+
+        var result = await unitOfWork.RunAsync((sp, ct) =>
+            sp.GetRequiredService<WorkTaskService>().UpdateDetailsAsync(request, ct));
+
+        if (result.IsFailure)
+        {
+            ErrorMessage = result.Error.Message;
+            return;
+        }
+
+        IsEditPanelOpen = false;
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private Task AddTagAsync(TagListItem? tag)
+        => tag is null || Detail is null || Detail.Tags.Any(x => x.Id == tag.Id)
+            ? Task.CompletedTask
+            : RunAndRefreshAsync((sp, ct) =>
+                sp.GetRequiredService<WorkTaskService>().AddTagAsync(_taskId, tag.Id, ct));
+
+    [RelayCommand]
+    private Task RemoveTagAsync(TagChip? tag)
+        => tag is null
+            ? Task.CompletedTask
+            : RunAndRefreshAsync((sp, ct) =>
+                sp.GetRequiredService<WorkTaskService>().RemoveTagAsync(_taskId, tag.Id, ct));
+
+    [RelayCommand]
+    private void ClearEditDueDate()
+    {
+        EditDueDate = null;
+        EditDueTime = null;
+    }
+
+    [RelayCommand]
+    private void ClearEditAssignee() => EditAssignee = null;
+
+    [RelayCommand]
+    private void ClearEditCompany() => EditCompany = null;
 
     [RelayCommand]
     private async Task AddSubTaskAsync()
@@ -362,11 +513,13 @@ public partial class TaskDetailViewModel(
             return;
         }
 
+        var localWhen = NewReminderDate.Value.Date + (NewReminderTime ?? new TimeSpan(9, 0, 0));
+
         var result = await unitOfWork.RunAsync((sp, ct) =>
             sp.GetRequiredService<ReminderService>().CreateAsync(new CreateReminderRequest
             {
                 Text = text,
-                RemindAtUtc = NewReminderDate.Value.UtcDateTime,
+                RemindAtUtc = DateTime.SpecifyKind(localWhen, DateTimeKind.Local).ToUniversalTime(),
                 TargetKind = EntityKind.WorkTask,
                 TargetId = _taskId,
             }, ct));

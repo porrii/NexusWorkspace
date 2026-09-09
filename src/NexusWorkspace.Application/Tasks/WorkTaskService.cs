@@ -367,6 +367,50 @@ public sealed class WorkTaskService(IApplicationDbContext db, IClock clock, IAct
         return Result.Success();
     }
 
+    public async Task<Result> AddTagAsync(Guid taskId, Guid tagId, CancellationToken cancellationToken = default)
+    {
+        var task = await db.WorkTasks.FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);
+        if (task is null)
+        {
+            return NotFound();
+        }
+
+        var tag = await db.Tags.FirstOrDefaultAsync(t => t.Id == tagId, cancellationToken);
+        if (tag is null)
+        {
+            return Result.Failure("tag.not_found", "Etiqueta no encontrada.");
+        }
+
+        var exists = await db.WorkTaskTags.AnyAsync(x => x.WorkTaskId == taskId && x.TagId == tagId, cancellationToken);
+        if (exists)
+        {
+            return Result.Success();
+        }
+
+        db.WorkTaskTags.Add(new WorkTaskTag { WorkTaskId = taskId, TagId = tagId });
+        activity.Record(EntityKind.WorkTask, taskId, ActivityType.TagAdded,
+            $"Etiqueta «{tag.Name}» añadida.", task.ProjectId);
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> RemoveTagAsync(Guid taskId, Guid tagId, CancellationToken cancellationToken = default)
+    {
+        var link = await db.WorkTaskTags.FirstOrDefaultAsync(x => x.WorkTaskId == taskId && x.TagId == tagId, cancellationToken);
+        if (link is null)
+        {
+            return Result.Success();
+        }
+
+        var projectId = await db.WorkTasks.Where(t => t.Id == taskId).Select(t => t.ProjectId).FirstOrDefaultAsync(cancellationToken);
+        db.WorkTaskTags.Remove(link);
+        activity.Record(EntityKind.WorkTask, taskId, ActivityType.TagRemoved, "Etiqueta retirada.", projectId);
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
     public Task<Result> ArchiveAsync(Guid taskId, CancellationToken cancellationToken = default)
         => SetArchivedAsync(taskId, archived: true, cancellationToken);
 

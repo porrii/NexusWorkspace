@@ -6,8 +6,10 @@ using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
 using NexusWorkspace.Application.FollowUps;
 using NexusWorkspace.Application.Localization;
+using NexusWorkspace.Application.People;
 using NexusWorkspace.Application.Projects;
 using NexusWorkspace.Application.Reminders;
+using NexusWorkspace.Application.Tags;
 using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Application.Templates;
 using NexusWorkspace.Domain.Enums;
@@ -76,6 +78,30 @@ public partial class ProjectDetailViewModel(
     private DateTimeOffset? _newReminderDate = DateTimeOffset.Now.Date.AddDays(1);
 
     [ObservableProperty]
+    private TimeSpan? _newReminderTime = new(9, 0, 0);
+
+    [ObservableProperty]
+    private bool _isEditPanelOpen;
+
+    [ObservableProperty]
+    private string _editName = string.Empty;
+
+    [ObservableProperty]
+    private string _editDescription = string.Empty;
+
+    [ObservableProperty]
+    private Priority _editPriority = Priority.Medium;
+
+    [ObservableProperty]
+    private DateTimeOffset? _editStartDate;
+
+    [ObservableProperty]
+    private DateTimeOffset? _editDueDate;
+
+    [ObservableProperty]
+    private PersonListItem? _editOwner;
+
+    [ObservableProperty]
     private bool _isTemplatePanelOpen;
 
     [ObservableProperty]
@@ -97,6 +123,10 @@ public partial class ProjectDetailViewModel(
     public ObservableCollection<KanbanColumn> Board { get; } = [];
 
     public ObservableCollection<TimelineDay> TimelineDays { get; } = [];
+
+    public ObservableCollection<PersonListItem> AllPeople { get; } = [];
+
+    public ObservableCollection<TagListItem> AllTags { get; } = [];
 
     public AttachmentsSectionViewModel Attachments { get; } = new(unitOfWork, launcher);
 
@@ -140,7 +170,9 @@ public partial class ProjectDetailViewModel(
                 var events = await activityReads.GetForProjectAsync(_projectId, 200, ct);
                 var followUps = await followUpReads.GetForEntityAsync(EntityKind.Project, _projectId, ct);
                 var reminders = await reminderReads.GetForEntityAsync(EntityKind.Project, _projectId, ct);
-                return (header, taskList, boardTasks, events, followUps, reminders);
+                var people = await sp.GetRequiredService<PersonReadService>().GetListAsync(PersonScope.All, null, null, ct);
+                var tags = await sp.GetRequiredService<TagReadService>().GetAllAsync(false, ct);
+                return (header, taskList, boardTasks, events, followUps, reminders, people, tags);
             });
 
             var detail = data.header;
@@ -166,6 +198,8 @@ public partial class ProjectDetailViewModel(
             Timeline.Reset(data.events);
             FollowUps.Reset(data.followUps);
             Reminders.Reset(data.reminders);
+            AllPeople.Reset(data.people);
+            AllTags.Reset(data.tags);
 
             BuildBoard(data.boardTasks);
             BuildTimeline(data.events);
@@ -376,6 +410,107 @@ public partial class ProjectDetailViewModel(
     }
 
     [RelayCommand]
+    private void ToggleEditPanel()
+    {
+        IsEditPanelOpen = !IsEditPanelOpen;
+        if (!IsEditPanelOpen || Header is null)
+        {
+            return;
+        }
+
+        EditName = Header.Name;
+        EditDescription = Header.Description ?? string.Empty;
+        EditPriority = Header.Priority;
+        static DateTimeOffset? LocalDay(DateTime? utc) => utc is { } v
+            ? new DateTimeOffset(DateTime.SpecifyKind(v.ToLocalTime().Date, DateTimeKind.Unspecified), DateTimeOffset.Now.Offset)
+            : null;
+
+        EditStartDate = LocalDay(Header.StartDateUtc);
+        EditDueDate = LocalDay(Header.DueDateUtc);
+        EditOwner = Header.OwnerPersonId is { } oid
+            ? AllPeople.FirstOrDefault(p => p.Id == oid)
+            : null;
+    }
+
+    [RelayCommand]
+    private async Task SaveDetailsAsync()
+    {
+        if (Header is null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(EditName))
+        {
+            ErrorMessage = "El nombre no puede quedar vacío.";
+            return;
+        }
+
+        static DateTime? ToUtc(DateTimeOffset? date) => date is { } d
+            ? DateTime.SpecifyKind(d.Date, DateTimeKind.Local).ToUniversalTime()
+            : null;
+
+        var request = new UpdateProjectDetailsRequest
+        {
+            Id = _projectId,
+            Name = EditName.Trim(),
+            Description = EditDescription ?? string.Empty,
+            Priority = EditPriority,
+            ClearStartDate = EditStartDate is null,
+            StartDateUtc = ToUtc(EditStartDate),
+            ClearDueDate = EditDueDate is null,
+            DueDateUtc = ToUtc(EditDueDate),
+            ChangeOwner = true,
+            OwnerPersonId = EditOwner?.Id,
+        };
+
+        var result = await unitOfWork.RunAsync((sp, ct) =>
+            sp.GetRequiredService<ProjectService>().UpdateDetailsAsync(request, ct));
+
+        if (result.IsFailure)
+        {
+            ErrorMessage = result.Error.Message;
+            return;
+        }
+
+        IsEditPanelOpen = false;
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task AddTagAsync(TagListItem? tag)
+    {
+        if (tag is null || Header is null || Header.Tags.Any(x => x.Id == tag.Id))
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ProjectService>().AddTagAsync(_projectId, tag.Id, ct));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task RemoveTagAsync(TagChip? tag)
+    {
+        if (tag is null)
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ProjectService>().RemoveTagAsync(_projectId, tag.Id, ct));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private void ClearEditStartDate() => EditStartDate = null;
+
+    [RelayCommand]
+    private void ClearEditDueDate() => EditDueDate = null;
+
+    [RelayCommand]
+    private void ClearEditOwner() => EditOwner = null;
+
+    [RelayCommand]
     private void ToggleFollowUpPanel()
     {
         IsFollowUpPanelOpen = !IsFollowUpPanelOpen;
@@ -461,11 +596,13 @@ public partial class ProjectDetailViewModel(
             return;
         }
 
+        var localWhen = NewReminderDate.Value.Date + (NewReminderTime ?? new TimeSpan(9, 0, 0));
+
         var result = await unitOfWork.RunAsync((sp, ct) =>
             sp.GetRequiredService<ReminderService>().CreateAsync(new CreateReminderRequest
             {
                 Text = text,
-                RemindAtUtc = NewReminderDate.Value.UtcDateTime,
+                RemindAtUtc = DateTime.SpecifyKind(localWhen, DateTimeKind.Local).ToUniversalTime(),
                 TargetKind = EntityKind.Project,
                 TargetId = _projectId,
             }, ct));

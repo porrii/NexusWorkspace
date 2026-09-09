@@ -43,7 +43,36 @@
       </StackPanel>
     </Border>
 
-    <!-- Status / priority / archive -->
+    <!-- Tags -->
+    <StackPanel Spacing="6" IsVisible="{Binding Detail, Converter={x:Static conv:AppConverters.IsNotNull}}">
+      <ItemsControl ItemsSource="{Binding Detail.Tags}">
+        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Classes="pill" Margin="0,0,6,4"
+                    BorderBrush="{Binding DisplayColor, Converter={x:Static conv:AppConverters.HexBrush}}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="{Binding Name}"
+                           Foreground="{Binding DisplayColor, Converter={x:Static conv:AppConverters.HexBrush}}" />
+                <Button Padding="0" Background="Transparent" BorderThickness="0"
+                        Command="{Binding $parent[ItemsControl].DataContext.RemoveTagCommand}" CommandParameter="{Binding}">
+                  <mi:MaterialIcon Kind="Close" Width="11" Height="11" />
+                </Button>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <TextBlock Text="Añadir etiqueta" Classes="muted" VerticalAlignment="Center" />
+        <ComboBox Width="200" PlaceholderText="Elegir…" ItemsSource="{Binding AllTags}"
+                  SelectionChanged="OnAddTagSelected">
+          <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+      </StackPanel>
+    </StackPanel>
+
+    <!-- Status / priority / edit / archive -->
     <StackPanel Orientation="Horizontal" Spacing="10">
       <ComboBox ItemsSource="{Binding AvailableStatuses}" Width="190"
                 SelectedItem="{Binding SelectedStatus, Mode=TwoWay}">
@@ -58,8 +87,57 @@
           <DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate>
         </ComboBox.ItemTemplate>
       </ComboBox>
+      <Button Content="Editar tarea" Classes="accent" Command="{Binding ToggleEditPanelCommand}" />
       <Button Content="Archivar / Restaurar" Command="{Binding ArchiveCommand}" />
     </StackPanel>
+
+    <!-- Edit panel -->
+    <Border Classes="card" IsVisible="{Binding IsEditPanelOpen}">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Editar tarea" Classes="h2" />
+        <TextBlock Text="Título" Classes="muted" />
+        <TextBox Text="{Binding EditTitle, Mode=TwoWay}" />
+        <TextBlock Text="Descripción" Classes="muted" />
+        <TextBox Text="{Binding EditDescription, Mode=TwoWay}" AcceptsReturn="True"
+                 TextWrapping="Wrap" MinHeight="90" />
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" >
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Prioridad" Classes="muted" VerticalAlignment="Center" Margin="0,0,12,8" />
+          <ComboBox Grid.Row="0" Grid.Column="1" Width="180" HorizontalAlignment="Left" Margin="0,0,0,8"
+                    ItemsSource="{Binding Priorities}" SelectedItem="{Binding EditPriority, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="Fecha límite" Classes="muted" VerticalAlignment="Center" Margin="0,0,12,8" />
+          <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+            <DatePicker SelectedDate="{Binding EditDueDate, Mode=TwoWay}" />
+            <TimePicker SelectedTime="{Binding EditDueTime, Mode=TwoWay}" ClockIdentifier="24HourClock" />
+            <Button Content="Sin fecha" Classes="quick" Command="{Binding ClearEditDueDateCommand}" />
+          </StackPanel>
+
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Responsable" Classes="muted" VerticalAlignment="Center" Margin="0,0,12,8" />
+          <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+            <ComboBox Width="260" ItemsSource="{Binding AllPeople}" SelectedItem="{Binding EditAssignee, Mode=TwoWay}">
+              <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Content="Quitar" Classes="quick" Command="{Binding ClearEditAssigneeCommand}" />
+          </StackPanel>
+
+          <TextBlock Grid.Row="3" Grid.Column="0" Text="Empresa" Classes="muted" VerticalAlignment="Center" Margin="0,0,12,0" />
+          <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+            <ComboBox Width="260" ItemsSource="{Binding AllCompanies}" SelectedItem="{Binding EditCompany, Mode=TwoWay}">
+              <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Content="Quitar" Classes="quick" Command="{Binding ClearEditCompanyCommand}" />
+          </StackPanel>
+        </Grid>
+        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+          <Button Content="Cancelar" Command="{Binding ToggleEditPanelCommand}" />
+          <Button Content="Guardar" Classes="accent" Command="{Binding SaveDetailsCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
 
     <!-- Quick actions -->
     <Border Classes="card">
@@ -223,6 +301,7 @@
             <TextBox Watermark="Recordarme…" Text="{Binding NewReminderText, Mode=TwoWay}" />
             <StackPanel Orientation="Horizontal" Spacing="8">
               <DatePicker SelectedDate="{Binding NewReminderDate, Mode=TwoWay}" />
+              <TimePicker SelectedTime="{Binding NewReminderTime, Mode=TwoWay}" ClockIdentifier="24HourClock" />
               <Button Content="Crear recordatorio" Classes="accent" Command="{Binding AddReminderCommand}" />
             </StackPanel>
           </StackPanel>

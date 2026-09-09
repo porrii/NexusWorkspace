@@ -35,9 +35,16 @@ public sealed record UpdateProjectDetailsRequest
 
     public Priority? Priority { get; init; }
 
+    public bool ClearStartDate { get; init; }
+
     public DateTime? StartDateUtc { get; init; }
 
+    public bool ClearDueDate { get; init; }
+
     public DateTime? DueDateUtc { get; init; }
+
+    /// <summary>When true, <see cref="OwnerPersonId"/> is applied even if null (unassign).</summary>
+    public bool ChangeOwner { get; init; }
 
     public Guid? OwnerPersonId { get; init; }
 }

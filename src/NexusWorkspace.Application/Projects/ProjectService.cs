@@ -79,20 +79,75 @@ public sealed class ProjectService(IApplicationDbContext db, IClock clock, IActi
                 project.Id, old.ToString(), priority.ToString());
         }
 
-        if (request.StartDateUtc.HasValue)
+        if (request.ClearStartDate)
+        {
+            project.StartDateUtc = null;
+        }
+        else if (request.StartDateUtc.HasValue)
         {
             project.StartDateUtc = request.StartDateUtc;
         }
 
-        if (request.DueDateUtc.HasValue)
+        if (request.ClearDueDate)
+        {
+            project.DueDateUtc = null;
+        }
+        else if (request.DueDateUtc.HasValue)
         {
             project.DueDateUtc = request.DueDateUtc;
         }
 
-        if (request.OwnerPersonId.HasValue)
+        if (request.ChangeOwner)
         {
             project.OwnerPersonId = request.OwnerPersonId;
         }
+        else if (request.OwnerPersonId.HasValue)
+        {
+            project.OwnerPersonId = request.OwnerPersonId;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> AddTagAsync(Guid projectId, Guid tagId, CancellationToken cancellationToken = default)
+    {
+        var project = await db.Projects.FirstOrDefaultAsync(p => p.Id == projectId, cancellationToken);
+        if (project is null)
+        {
+            return NotFound();
+        }
+
+        var tag = await db.Tags.FirstOrDefaultAsync(t => t.Id == tagId, cancellationToken);
+        if (tag is null)
+        {
+            return Result.Failure("tag.not_found", "Etiqueta no encontrada.");
+        }
+
+        var exists = await db.ProjectTags.AnyAsync(x => x.ProjectId == projectId && x.TagId == tagId, cancellationToken);
+        if (exists)
+        {
+            return Result.Success();
+        }
+
+        db.ProjectTags.Add(new ProjectTag { ProjectId = projectId, TagId = tagId });
+        activity.Record(EntityKind.Project, projectId, ActivityType.TagAdded,
+            $"Etiqueta «{tag.Name}» añadida.", projectId);
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> RemoveTagAsync(Guid projectId, Guid tagId, CancellationToken cancellationToken = default)
+    {
+        var link = await db.ProjectTags.FirstOrDefaultAsync(x => x.ProjectId == projectId && x.TagId == tagId, cancellationToken);
+        if (link is null)
+        {
+            return Result.Success();
+        }
+
+        db.ProjectTags.Remove(link);
+        activity.Record(EntityKind.Project, projectId, ActivityType.TagRemoved, "Etiqueta retirada.", projectId);
 
         await db.SaveChangesAsync(cancellationToken);
         return Result.Success();

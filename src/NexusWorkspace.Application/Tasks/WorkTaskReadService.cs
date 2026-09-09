@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using NexusWorkspace.Application.Abstractions;
+using NexusWorkspace.Application.People;
 using NexusWorkspace.Domain.Enums;
 
 namespace NexusWorkspace.Application.Tasks;
@@ -114,7 +115,7 @@ public sealed class WorkTaskReadService(IApplicationDbContext db)
                 AssigneeName = t.Assignee != null ? t.Assignee.Name : null,
                 t.RelatedCompanyId,
                 RelatedCompanyName = t.RelatedCompany != null ? t.RelatedCompany.Name : null,
-                Tags = t.Tags.Select(x => x.Tag.Name).ToList(),
+                Tags = t.Tags.Select(x => new TagChip { Id = x.Tag.Id, Name = x.Tag.Name, Color = x.Tag.Color }).ToList(),
             })
             .FirstOrDefaultAsync(cancellationToken);
 
