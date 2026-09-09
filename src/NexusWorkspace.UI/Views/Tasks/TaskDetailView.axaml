@@ -320,7 +320,18 @@
         <Border Classes="tile" IsVisible="{Binding IsFollowUpPanelOpen}">
           <StackPanel Spacing="8">
             <TextBox Watermark="¿Qué estás esperando?" Text="{Binding FollowUpSubject, Mode=TwoWay}" />
-            <TextBox Watermark="¿De quién? (persona, empresa, «Sistemas»…)" Text="{Binding FollowUpWaitingOn, Mode=TwoWay}" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="Esperas a" Classes="muted" VerticalAlignment="Center" />
+              <ComboBox Width="200" PlaceholderText="Persona…" ItemsSource="{Binding AllPeople}"
+                        SelectedItem="{Binding FollowUpWaitingPerson, Mode=TwoWay}">
+                <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+              </ComboBox>
+              <ComboBox Width="200" PlaceholderText="Empresa…" ItemsSource="{Binding AllCompanies}"
+                        SelectedItem="{Binding FollowUpWaitingCompany, Mode=TwoWay}">
+                <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+              </ComboBox>
+            </StackPanel>
+            <TextBox Watermark="…o escríbelo (p. ej. «Sistemas», «Cliente»)" Text="{Binding FollowUpWaitingOn, Mode=TwoWay}" />
             <Button Content="Empezar a esperar" Classes="accent" HorizontalAlignment="Right"
                     Command="{Binding StartFollowUpCommand}" />
           </StackPanel>

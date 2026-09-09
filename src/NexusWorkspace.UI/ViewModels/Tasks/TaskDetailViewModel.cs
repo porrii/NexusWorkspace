@@ -54,6 +54,12 @@ public partial class TaskDetailViewModel(
     private string _followUpWaitingOn = string.Empty;
 
     [ObservableProperty]
+    private PersonListItem? _followUpWaitingPerson;
+
+    [ObservableProperty]
+    private CompanyListItem? _followUpWaitingCompany;
+
+    [ObservableProperty]
     private bool _isReminderPanelOpen;
 
     [ObservableProperty]
@@ -227,12 +233,35 @@ public partial class TaskDetailViewModel(
         ChangeStatusCommand.Execute(value.Value);
     }
 
+    private static bool IsWaitingStatus(WorkTaskStatus s)
+        => s is WorkTaskStatus.WaitingClient or WorkTaskStatus.WaitingProvider or WorkTaskStatus.Blocked;
+
     [RelayCommand]
-    private Task ChangeStatusAsync(WorkTaskStatus status)
-        => Detail is null || Detail.Status == status
-            ? Task.CompletedTask
-            : RunAndRefreshAsync((sp, ct) =>
-                sp.GetRequiredService<WorkTaskService>().ChangeStatusAsync(_taskId, status, ct));
+    private async Task ChangeStatusAsync(WorkTaskStatus status)
+    {
+        if (Detail is null || Detail.Status == status)
+        {
+            return;
+        }
+
+        var wentToWaiting = IsWaitingStatus(status);
+        await RunAndRefreshAsync((sp, ct) =>
+            sp.GetRequiredService<WorkTaskService>().ChangeStatusAsync(_taskId, status, ct));
+
+        // Coupling: entering a waiting state offers to open a follow-up bound to
+        // this task, pre-filled from its related company / assignee.
+        if (wentToWaiting && Detail is { } d && IsWaitingStatus(d.Status)
+            && !FollowUps.Any(f => f.IsOpen) && !IsFollowUpPanelOpen)
+        {
+            FollowUpSubject = d.Title;
+            FollowUpWaitingOn = string.Empty;
+            FollowUpWaitingCompany = d.RelatedCompanyId is { } cid ? AllCompanies.FirstOrDefault(c => c.Id == cid) : null;
+            FollowUpWaitingPerson = FollowUpWaitingCompany is null && d.AssigneePersonId is { } aid
+                ? AllPeople.FirstOrDefault(p => p.Id == aid)
+                : null;
+            IsFollowUpPanelOpen = true;
+        }
+    }
 
     [RelayCommand]
     private Task ChangePriorityAsync(Priority priority)
@@ -543,9 +572,16 @@ public partial class TaskDetailViewModel(
         IsFollowUpPanelOpen = !IsFollowUpPanelOpen;
         if (!IsFollowUpPanelOpen)
         {
-            FollowUpSubject = string.Empty;
-            FollowUpWaitingOn = string.Empty;
+            ResetFollowUpDraft();
         }
+    }
+
+    private void ResetFollowUpDraft()
+    {
+        FollowUpSubject = string.Empty;
+        FollowUpWaitingOn = string.Empty;
+        FollowUpWaitingPerson = null;
+        FollowUpWaitingCompany = null;
     }
 
     [RelayCommand]
@@ -564,6 +600,8 @@ public partial class TaskDetailViewModel(
                 TargetKind = EntityKind.WorkTask,
                 TargetId = _taskId,
                 Subject = subject,
+                WaitingOnPersonId = FollowUpWaitingPerson?.Id,
+                WaitingOnCompanyId = FollowUpWaitingCompany?.Id,
                 WaitingOnLabel = string.IsNullOrWhiteSpace(FollowUpWaitingOn) ? null : FollowUpWaitingOn.Trim(),
             }, ct));
 
@@ -573,8 +611,7 @@ public partial class TaskDetailViewModel(
             return;
         }
 
-        FollowUpSubject = string.Empty;
-        FollowUpWaitingOn = string.Empty;
+        ResetFollowUpDraft();
         IsFollowUpPanelOpen = false;
         await RefreshAsync();
     }

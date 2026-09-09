@@ -137,7 +137,7 @@ abrir detalle, crear rápida. Quitar el placeholder del nav.
 | **B1. Subtareas — lista unificada** ✅ | Subtareas y checklist se muestran y editan en UNA lista ("Subtareas"): marcar, renombrar en línea, borrar, subir/bajar. El "+ añadir" crea siempre una subtarea. Sin tocar BD. | M |
 | **B2. Subtareas — fusión real** ⏳ | Migración EF `ChecklistItem`→`SubTask` + eliminar plumbing de checklist en Import/Plantillas/Seeder/DTOs. **Con el usuario delante** (toca datos reales). | M |
 | **C. Vínculos** ✅ | `ProjectService` Link/Unlink Person/Company (`ProjectPerson`/`ProjectCompany`), `WorkTaskService` Link/Unlink Person (`WorkTaskPerson` = colaboradores). Read: `ProjectDetail.Team`/`.Companies`, `WorkTaskDetail.Collaborators`. UI: Empresa (añadir persona, vincular proyecto), Persona (empresa/empleador en el panel de edición, vincular proyecto), Proyecto (sección Equipo + Empresas), Tarea (sección Colaboradores). | M |
-| **D. Seguimientos** | Acoplar a estado de tarea (abrir/cerrar auto), incrustar en tarea, picker de "esperando a". | M |
+| **D. Seguimientos** ✅ | `WorkTaskService.ChangeStatusAsync`: al salir de un estado de espera se cierra solo el seguimiento abierto de la tarea (Answered + resolución). En el detalle de tarea, al entrar en un estado de espera sin seguimiento abierto se abre el panel precargado (asunto = título, "esperas a" = empresa relacionada / responsable). Panel con pickers de persona y empresa además del texto libre. | M |
 | **E. Acciones rápidas** | Colapsar en Comunicación/estado; dejar "Registrar evento" con tipos propios. | S |
 | **F. Actividad** | Filtros + agrupar por día; cronología en la tarea. | S |
 | **G. Página Tareas** | Lista global con filtros. | M |
