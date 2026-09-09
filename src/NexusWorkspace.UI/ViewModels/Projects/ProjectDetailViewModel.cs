@@ -26,6 +26,10 @@ public partial class ProjectDetailViewModel(
 {
     private Guid _projectId;
 
+    // See TaskDetailViewModel: guards the status ComboBox while RefreshAsync
+    // rebuilds AvailableStatuses and re-selects the current status.
+    private bool _suppressStatusChange;
+
     private static readonly WorkTaskStatus[] BoardOrder =
     [
         WorkTaskStatus.Pending, WorkTaskStatus.InProgress, WorkTaskStatus.WaitingClient,
@@ -34,6 +38,9 @@ public partial class ProjectDetailViewModel(
 
     [ObservableProperty]
     private ProjectDetail? _header;
+
+    [ObservableProperty]
+    private ProjectStatus? _selectedStatus;
 
     [ObservableProperty]
     private int _selectedTabIndex;
@@ -143,16 +150,22 @@ public partial class ProjectDetailViewModel(
                 return;
             }
 
-            Header = detail;
-            Tasks.Reset(data.taskList);
-            Timeline.Reset(data.events);
-            FollowUps.Reset(data.followUps);
-            Reminders.Reset(data.reminders);
-
+            // Rebuild + re-select before assigning Header, selection cleared during
+            // the swap (see TaskDetailViewModel for the why).
+            _suppressStatusChange = true;
+            SelectedStatus = null;
             AvailableStatuses.Reset(
                 new[] { detail.Status }
                     .Concat(ProjectStateMachine.NextStates(detail.Status))
                     .Distinct());
+            Header = detail;
+            SelectedStatus = detail.Status;
+            _suppressStatusChange = false;
+
+            Tasks.Reset(data.taskList);
+            Timeline.Reset(data.events);
+            FollowUps.Reset(data.followUps);
+            Reminders.Reset(data.reminders);
 
             BuildBoard(data.boardTasks);
             BuildTimeline(data.events);
@@ -166,11 +179,22 @@ public partial class ProjectDetailViewModel(
         }
         finally
         {
+            _suppressStatusChange = false;
             IsBusy = false;
         }
     }
 
     partial void OnShowFinishedTasksChanged(bool value) => _ = RefreshAsync();
+
+    partial void OnSelectedStatusChanged(ProjectStatus? value)
+    {
+        if (_suppressStatusChange || value is null || Header is null || Header.Status == value.Value)
+        {
+            return;
+        }
+
+        ChangeStatusCommand.Execute(value.Value);
+    }
 
     private void BuildBoard(IReadOnlyList<WorkTaskListItem> tasks)
     {

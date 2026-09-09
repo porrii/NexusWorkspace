@@ -32,19 +32,6 @@ public partial class ProjectDetailView : UserControl
         }
     }
 
-    private void OnStatusSelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        if (e.AddedItems.Count == 1
-            && e.AddedItems[0] is ProjectStatus status
-            && DataContext is ProjectDetailViewModel viewModel
-            && viewModel.Header is { } header
-            && header.Status != status
-            && viewModel.ChangeStatusCommand.CanExecute(status))
-        {
-            viewModel.ChangeStatusCommand.Execute(status);
-        }
-    }
-
     private async void OnCardPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed

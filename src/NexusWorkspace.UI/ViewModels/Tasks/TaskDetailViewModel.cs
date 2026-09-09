@@ -22,8 +22,15 @@ public partial class TaskDetailViewModel(
 {
     private Guid _taskId;
 
+    // While RefreshAsync rebuilds AvailableStatuses and re-selects the current
+    // status, OnSelectedStatusChanged must not treat that as a user change.
+    private bool _suppressStatusChange;
+
     [ObservableProperty]
     private WorkTaskDetail? _detail;
+
+    [ObservableProperty]
+    private WorkTaskStatus? _selectedStatus;
 
     [ObservableProperty]
     private string _newSubTaskTitle = string.Empty;
@@ -134,18 +141,27 @@ public partial class TaskDetailViewModel(
                 return;
             }
 
+            // Rebuild the status list and re-select it BEFORE assigning Detail,
+            // with the selection cleared during the swap: binding the ComboBox to
+            // an empty list first left the field blank, and mutating a bound
+            // collection while an item is selected throws inside Avalonia's
+            // selection model (ArgumentOutOfRangeException, "index").
+            _suppressStatusChange = true;
+            SelectedStatus = null;
+            AvailableStatuses.Reset(
+                new[] { detail.Status }
+                    .Concat(WorkTaskStateMachine.NextStates(detail.Status))
+                    .Distinct());
             Detail = detail;
+            SelectedStatus = detail.Status;
+            _suppressStatusChange = false;
+
             SubTasks.Reset(detail.SubTasks);
             Checklist.Reset(detail.Checklist);
             Comments.Reset(detail.Comments);
             History.Reset(data.h);
             FollowUps.Reset(data.f);
             Reminders.Reset(data.r);
-
-            AvailableStatuses.Reset(
-                new[] { detail.Status }
-                    .Concat(WorkTaskStateMachine.NextStates(detail.Status))
-                    .Distinct());
 
             Attachments.Bind(EntityKind.WorkTask, _taskId, detail.ProjectId, RefreshAsync);
             await Attachments.LoadAsync();
@@ -159,8 +175,19 @@ public partial class TaskDetailViewModel(
         }
         finally
         {
+            _suppressStatusChange = false;
             IsBusy = false;
         }
+    }
+
+    partial void OnSelectedStatusChanged(WorkTaskStatus? value)
+    {
+        if (_suppressStatusChange || value is null || Detail is null || Detail.Status == value.Value)
+        {
+            return;
+        }
+
+        ChangeStatusCommand.Execute(value.Value);
     }
 
     [RelayCommand]
