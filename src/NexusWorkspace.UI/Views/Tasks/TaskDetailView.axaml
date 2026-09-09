@@ -139,6 +139,33 @@
       </StackPanel>
     </Border>
 
+    <!-- Colaboradores -->
+    <Border Classes="card" IsVisible="{Binding Detail, Converter={x:Static conv:AppConverters.IsNotNull}}">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Colaboradores" Classes="h2" />
+        <ComboBox Width="280" PlaceholderText="Añadir colaborador…" ItemsSource="{Binding CollaboratorCandidates}"
+                  SelectionChanged="OnAddCollaboratorSelected">
+          <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+        <ItemsControl ItemsSource="{Binding Detail.Collaborators}">
+          <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="pill" Margin="0,0,6,4">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <TextBlock Text="{Binding Name}" />
+                  <Button Padding="0" Background="Transparent" BorderThickness="0"
+                          Command="{Binding $parent[ItemsControl].DataContext.RemoveCollaboratorCommand}" CommandParameter="{Binding}">
+                    <mi:MaterialIcon Kind="Close" Width="11" Height="11" />
+                  </Button>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+
     <!-- Quick actions -->
     <Border Classes="card">
       <StackPanel Spacing="10">

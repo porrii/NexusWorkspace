@@ -554,6 +554,49 @@ public sealed class WorkTaskService(IApplicationDbContext db, IClock clock, IAct
         return Result.Success();
     }
 
+    public async Task<Result> LinkPersonAsync(Guid taskId, Guid personId, CancellationToken cancellationToken = default)
+    {
+        var task = await db.WorkTasks.FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);
+        if (task is null)
+        {
+            return NotFound();
+        }
+
+        var person = await db.People.FirstOrDefaultAsync(p => p.Id == personId, cancellationToken);
+        if (person is null)
+        {
+            return Result.Failure("person.not_found", "Persona no encontrada.");
+        }
+
+        if (await db.WorkTaskPeople.AnyAsync(x => x.WorkTaskId == taskId && x.PersonId == personId, cancellationToken))
+        {
+            return Result.Success();
+        }
+
+        db.WorkTaskPeople.Add(new WorkTaskPerson { WorkTaskId = taskId, PersonId = personId, LinkedAtUtc = clock.UtcNow });
+        activity.Record(EntityKind.WorkTask, taskId, ActivityType.LinkedPerson,
+            $"Colaborador añadido: «{person.Name}».", task.ProjectId);
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> UnlinkPersonAsync(Guid taskId, Guid personId, CancellationToken cancellationToken = default)
+    {
+        var link = await db.WorkTaskPeople.FirstOrDefaultAsync(x => x.WorkTaskId == taskId && x.PersonId == personId, cancellationToken);
+        if (link is null)
+        {
+            return Result.Success();
+        }
+
+        var projectId = await db.WorkTasks.Where(t => t.Id == taskId).Select(t => t.ProjectId).FirstOrDefaultAsync(cancellationToken);
+        db.WorkTaskPeople.Remove(link);
+        activity.Record(EntityKind.WorkTask, taskId, ActivityType.UnlinkedPerson, "Colaborador quitado.", projectId);
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
     public Task<Result> ArchiveAsync(Guid taskId, CancellationToken cancellationToken = default)
         => SetArchivedAsync(taskId, archived: true, cancellationToken);
 

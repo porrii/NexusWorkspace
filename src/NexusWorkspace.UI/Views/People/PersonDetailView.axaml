@@ -94,6 +94,14 @@
         <TextBox Watermark="Email" Text="{Binding EditEmail, Mode=TwoWay}" />
         <TextBox Watermark="Teléfono" Text="{Binding EditPhone, Mode=TwoWay}" />
         <TextBox Watermark="Notas" AcceptsReturn="True" MinHeight="70" TextWrapping="Wrap" Text="{Binding EditNotes, Mode=TwoWay}" />
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Empresa" Classes="muted" VerticalAlignment="Center" />
+          <ComboBox Width="260" PlaceholderText="Sin empresa" ItemsSource="{Binding AllCompanies}"
+                    SelectedItem="{Binding EditCompany, Mode=TwoWay}">
+            <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Content="Quitar" Classes="quick" Command="{Binding ClearEditCompanyCommand}" />
+        </StackPanel>
         <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
           <Button Content="Cancelar" Command="{Binding ToggleEditPanelCommand}" />
           <Button Content="Guardar" Classes="accent" Command="{Binding SaveDetailsCommand}" />
@@ -150,22 +158,37 @@
       </TabItem>
 
       <TabItem Header="Proyectos">
-        <ItemsControl ItemsSource="{Binding Projects}" Margin="0,12,0,0">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Button Classes="tile" Margin="0,0,0,8" HorizontalAlignment="Stretch"
-                      Command="{Binding $parent[ItemsControl].DataContext.OpenProjectCommand}" CommandParameter="{Binding}">
-                <StackPanel Spacing="3">
-                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                  <StackPanel Orientation="Horizontal" Spacing="12">
-                    <TextBlock Classes="muted" Text="{Binding Status, Converter={x:Static conv:AppConverters.EnumLabel}}" />
-                    <TextBlock Classes="muted" Text="{Binding OpenTaskCount, StringFormat='{}{0} tareas abiertas'}" />
-                  </StackPanel>
-                </StackPanel>
-              </Button>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <StackPanel Spacing="10" Margin="0,12,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Vincular a un proyecto" Classes="muted" VerticalAlignment="Center" />
+            <ComboBox Width="240" PlaceholderText="Elegir…" ItemsSource="{Binding UnlinkedProjects}"
+                      SelectionChanged="OnLinkProjectSelected">
+              <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <ItemsControl ItemsSource="{Binding Projects}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+                  <Button Grid.Column="0" Classes="tile" HorizontalAlignment="Stretch"
+                          Command="{Binding $parent[ItemsControl].DataContext.OpenProjectCommand}" CommandParameter="{Binding}">
+                    <StackPanel Spacing="3">
+                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                      <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Classes="muted" Text="{Binding Status, Converter={x:Static conv:AppConverters.EnumLabel}}" />
+                        <TextBlock Classes="muted" Text="{Binding OpenTaskCount, StringFormat='{}{0} tareas abiertas'}" />
+                      </StackPanel>
+                    </StackPanel>
+                  </Button>
+                  <Button Grid.Column="1" Classes="quick" VerticalAlignment="Center" Margin="8,0,0,0" ToolTip.Tip="Desvincular"
+                          Command="{Binding $parent[ItemsControl].DataContext.UnlinkProjectCommand}" CommandParameter="{Binding}">
+                    <mi:MaterialIcon Kind="Close" Width="14" Height="14" />
+                  </Button>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
       </TabItem>
 
       <TabItem Header="Tareas">

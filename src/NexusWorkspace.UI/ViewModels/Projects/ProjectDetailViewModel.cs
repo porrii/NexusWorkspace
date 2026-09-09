@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
+using NexusWorkspace.Application.Companies;
 using NexusWorkspace.Application.FollowUps;
 using NexusWorkspace.Application.Localization;
 using NexusWorkspace.Application.People;
@@ -126,6 +127,10 @@ public partial class ProjectDetailViewModel(
 
     public ObservableCollection<PersonListItem> AllPeople { get; } = [];
 
+    public ObservableCollection<PersonListItem> UnlinkedPeople { get; } = [];
+
+    public ObservableCollection<CompanyListItem> UnlinkedCompanies { get; } = [];
+
     public ObservableCollection<TagListItem> AllTags { get; } = [];
 
     public AttachmentsSectionViewModel Attachments { get; } = new(unitOfWork, launcher);
@@ -171,8 +176,9 @@ public partial class ProjectDetailViewModel(
                 var followUps = await followUpReads.GetForEntityAsync(EntityKind.Project, _projectId, ct);
                 var reminders = await reminderReads.GetForEntityAsync(EntityKind.Project, _projectId, ct);
                 var people = await sp.GetRequiredService<PersonReadService>().GetListAsync(PersonScope.All, null, null, ct);
+                var companies = await sp.GetRequiredService<CompanyReadService>().GetListAsync(CompanyScope.All, null, null, ct);
                 var tags = await sp.GetRequiredService<TagReadService>().GetAllAsync(false, ct);
-                return (header, taskList, boardTasks, events, followUps, reminders, people, tags);
+                return (header, taskList, boardTasks, events, followUps, reminders, people, companies, tags);
             });
 
             var detail = data.header;
@@ -200,6 +206,11 @@ public partial class ProjectDetailViewModel(
             Reminders.Reset(data.reminders);
             AllPeople.Reset(data.people);
             AllTags.Reset(data.tags);
+
+            var teamIds = detail.Team.Select(p => p.Id).ToHashSet();
+            UnlinkedPeople.Reset(data.people.Where(p => !teamIds.Contains(p.Id)).OrderBy(p => p.Name));
+            var companyIds = detail.Companies.Select(c => c.Id).ToHashSet();
+            UnlinkedCompanies.Reset(data.companies.Where(c => !companyIds.Contains(c.Id)).OrderBy(c => c.Name));
 
             BuildBoard(data.boardTasks);
             BuildTimeline(data.events);
@@ -498,6 +509,54 @@ public partial class ProjectDetailViewModel(
         }
 
         await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ProjectService>().RemoveTagAsync(_projectId, tag.Id, ct));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task LinkPersonAsync(PersonListItem? person)
+    {
+        if (person is null)
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ProjectService>().LinkPersonAsync(_projectId, person.Id, null, ct));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task UnlinkPersonAsync(PersonListItem? person)
+    {
+        if (person is null)
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ProjectService>().UnlinkPersonAsync(_projectId, person.Id, ct));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task LinkCompanyAsync(CompanyListItem? company)
+    {
+        if (company is null)
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ProjectService>().LinkCompanyAsync(_projectId, company.Id, ct));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task UnlinkCompanyAsync(CompanyListItem? company)
+    {
+        if (company is null)
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ProjectService>().UnlinkCompanyAsync(_projectId, company.Id, ct));
         await RefreshAsync();
     }
 

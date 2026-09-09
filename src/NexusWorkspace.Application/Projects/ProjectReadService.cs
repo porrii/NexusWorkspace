@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using NexusWorkspace.Application.Abstractions;
+using NexusWorkspace.Application.Companies;
 using NexusWorkspace.Application.People;
 using NexusWorkspace.Domain.Enums;
 
@@ -124,6 +125,14 @@ public sealed class ProjectReadService(IApplicationDbContext db)
                     && t.Status != WorkTaskStatus.Cancelled),
                 FinishedTaskCount = p.Tasks.Count(t => !t.IsDeleted && t.Status == WorkTaskStatus.Finished),
                 Tags = p.Tags.Select(x => new TagChip { Id = x.Tag.Id, Name = x.Tag.Name, Color = x.Tag.Color }).ToList(),
+                Team = p.People
+                    .OrderBy(x => x.Person.Name)
+                    .Select(x => new PersonListItem { Id = x.Person.Id, Name = x.Person.Name, Role = x.Role ?? x.Person.Role })
+                    .ToList(),
+                Companies = p.Companies
+                    .OrderBy(x => x.Company.Name)
+                    .Select(x => new CompanyListItem { Id = x.Company.Id, Name = x.Company.Name, Kind = x.Company.Kind })
+                    .ToList(),
             })
             .FirstOrDefaultAsync(cancellationToken);
     }

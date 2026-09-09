@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
 using NexusWorkspace.Application.Communications;
+using NexusWorkspace.Application.Companies;
 using NexusWorkspace.Application.FollowUps;
 using NexusWorkspace.Application.Meetings;
 using NexusWorkspace.Application.People;
@@ -49,6 +50,9 @@ public partial class PersonDetailViewModel(IUnitOfWorkRunner unitOfWork, INaviga
     [ObservableProperty]
     private string _editNotes = string.Empty;
 
+    [ObservableProperty]
+    private CompanyListItem? _editCompany;
+
     public CommunicationComposerViewModel Composer { get; } = new();
 
     public MeetingComposerViewModel MeetingComposer { get; } = new();
@@ -56,6 +60,10 @@ public partial class PersonDetailViewModel(IUnitOfWorkRunner unitOfWork, INaviga
     public RelationComposerViewModel RelationComposer { get; } = new();
 
     public ObservableCollection<ProjectListItem> Projects { get; } = [];
+
+    public ObservableCollection<ProjectListItem> UnlinkedProjects { get; } = [];
+
+    public ObservableCollection<CompanyListItem> AllCompanies { get; } = [];
 
     public ObservableCollection<WorkTaskListItem> Tasks { get; } = [];
 
@@ -97,6 +105,8 @@ public partial class PersonDetailViewModel(IUnitOfWorkRunner unitOfWork, INaviga
             {
                 var header = await sp.GetRequiredService<PersonReadService>().GetDetailAsync(_personId, ct);
                 var projects = await sp.GetRequiredService<ProjectReadService>().GetForPersonAsync(_personId, ct);
+                var allProjects = await sp.GetRequiredService<ProjectReadService>().GetListAsync(ProjectListScope.All, null, ct);
+                var allCompanies = await sp.GetRequiredService<CompanyReadService>().GetListAsync(CompanyScope.All, null, null, ct);
                 var tasks = await sp.GetRequiredService<WorkTaskReadService>().GetForPersonAsync(_personId, false, ct);
                 var followUps = await sp.GetRequiredService<FollowUpReadService>().GetWaitingOnPersonAsync(_personId, ct);
                 var comms = await sp.GetRequiredService<CommunicationReadService>().GetForPersonAsync(_personId, 200, ct);
@@ -104,7 +114,7 @@ public partial class PersonDetailViewModel(IUnitOfWorkRunner unitOfWork, INaviga
                 var relations = await sp.GetRequiredService<RelationReadService>().GetForEntityAsync(EntityKind.Person, _personId, ct);
                 var timeline = await sp.GetRequiredService<ActivityReadService>().GetForEntityAsync(EntityKind.Person, _personId, 200, ct);
                 var tags = await sp.GetRequiredService<TagReadService>().GetAllAsync(false, ct);
-                return (header, projects, tasks, followUps, comms, meetings, relations, timeline, tags);
+                return (header, projects, allProjects, allCompanies, tasks, followUps, comms, meetings, relations, timeline, tags);
             });
 
             if (data.header is null)
@@ -115,6 +125,9 @@ public partial class PersonDetailViewModel(IUnitOfWorkRunner unitOfWork, INaviga
 
             Header = data.header;
             Projects.Reset(data.projects);
+            var linkedIds = data.projects.Select(p => p.Id).ToHashSet();
+            UnlinkedProjects.Reset(data.allProjects.Where(p => !linkedIds.Contains(p.Id)).OrderBy(p => p.Name));
+            AllCompanies.Reset(data.allCompanies);
             Tasks.Reset(data.tasks);
             FollowUps.Reset(data.followUps);
             Communications.Reset(data.comms);
@@ -144,6 +157,7 @@ public partial class PersonDetailViewModel(IUnitOfWorkRunner unitOfWork, INaviga
             EditEmail = Header.Email ?? string.Empty;
             EditPhone = Header.Phone ?? string.Empty;
             EditNotes = Header.Notes ?? string.Empty;
+            EditCompany = Header.CompanyId is { } cid ? AllCompanies.FirstOrDefault(c => c.Id == cid) : null;
         }
     }
 
@@ -165,6 +179,7 @@ public partial class PersonDetailViewModel(IUnitOfWorkRunner unitOfWork, INaviga
                 Email = EditEmail,
                 Phone = EditPhone,
                 Notes = EditNotes,
+                CompanyId = EditCompany?.Id ?? Guid.Empty,
             }, ct));
 
         if (result.IsFailure)
@@ -174,6 +189,33 @@ public partial class PersonDetailViewModel(IUnitOfWorkRunner unitOfWork, INaviga
         }
 
         IsEditPanelOpen = false;
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private void ClearEditCompany() => EditCompany = null;
+
+    [RelayCommand]
+    private async Task LinkProjectAsync(ProjectListItem? project)
+    {
+        if (project is null)
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ProjectService>().LinkPersonAsync(project.Id, _personId, null, ct));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task UnlinkProjectAsync(ProjectListItem? project)
+    {
+        if (project is null)
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ProjectService>().UnlinkPersonAsync(project.Id, _personId, ct));
         await RefreshAsync();
     }
 

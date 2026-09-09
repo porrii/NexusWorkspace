@@ -54,7 +54,11 @@ public partial class CompanyDetailViewModel(IUnitOfWorkRunner unitOfWork, INavig
 
     public ObservableCollection<PersonListItem> People { get; } = [];
 
+    public ObservableCollection<PersonListItem> UnlinkedPeople { get; } = [];
+
     public ObservableCollection<ProjectListItem> Projects { get; } = [];
+
+    public ObservableCollection<ProjectListItem> UnlinkedProjects { get; } = [];
 
     public ObservableCollection<WorkTaskListItem> Tasks { get; } = [];
 
@@ -95,13 +99,14 @@ public partial class CompanyDetailViewModel(IUnitOfWorkRunner unitOfWork, INavig
                 var header = await sp.GetRequiredService<CompanyReadService>().GetDetailAsync(_companyId, ct);
                 var people = await sp.GetRequiredService<PersonReadService>().GetListAsync(PersonScope.All, null, null, ct);
                 var projects = await sp.GetRequiredService<ProjectReadService>().GetForCompanyAsync(_companyId, ct);
+                var allProjects = await sp.GetRequiredService<ProjectReadService>().GetListAsync(ProjectListScope.All, null, ct);
                 var tasks = await sp.GetRequiredService<WorkTaskReadService>().GetForCompanyAsync(_companyId, false, ct);
                 var followUps = await sp.GetRequiredService<FollowUpReadService>().GetWaitingOnCompanyAsync(_companyId, ct);
                 var comms = await sp.GetRequiredService<CommunicationReadService>().GetForCompanyAsync(_companyId, 200, ct);
                 var relations = await sp.GetRequiredService<RelationReadService>().GetForEntityAsync(EntityKind.Company, _companyId, ct);
                 var timeline = await sp.GetRequiredService<ActivityReadService>().GetForEntityAsync(EntityKind.Company, _companyId, 200, ct);
                 var tags = await sp.GetRequiredService<TagReadService>().GetAllAsync(false, ct);
-                return (header, people, projects, tasks, followUps, comms, relations, timeline, tags);
+                return (header, people, projects, allProjects, tasks, followUps, comms, relations, timeline, tags);
             });
 
             if (data.header is null)
@@ -112,7 +117,10 @@ public partial class CompanyDetailViewModel(IUnitOfWorkRunner unitOfWork, INavig
 
             Header = data.header;
             People.Reset(data.people.Where(p => p.CompanyId == _companyId));
+            UnlinkedPeople.Reset(data.people.Where(p => p.CompanyId != _companyId).OrderBy(p => p.Name));
             Projects.Reset(data.projects);
+            var linkedIds = data.projects.Select(p => p.Id).ToHashSet();
+            UnlinkedProjects.Reset(data.allProjects.Where(p => !linkedIds.Contains(p.Id)).OrderBy(p => p.Name));
             Tasks.Reset(data.tasks);
             FollowUps.Reset(data.followUps);
             Communications.Reset(data.comms);
@@ -221,6 +229,56 @@ public partial class CompanyDetailViewModel(IUnitOfWorkRunner unitOfWork, INavig
         }
 
         await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<CompanyService>().RemoveTagAsync(_companyId, tag.Id, ct));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task AddPersonAsync(PersonListItem? person)
+    {
+        if (person is null)
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<PersonService>().UpdateDetailsAsync(
+            new UpdatePersonRequest { Id = person.Id, CompanyId = _companyId }, ct));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task RemovePersonAsync(PersonListItem? person)
+    {
+        if (person is null)
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<PersonService>().UpdateDetailsAsync(
+            new UpdatePersonRequest { Id = person.Id, CompanyId = Guid.Empty }, ct));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task LinkProjectAsync(ProjectListItem? project)
+    {
+        if (project is null)
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ProjectService>().LinkCompanyAsync(project.Id, _companyId, ct));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task UnlinkProjectAsync(ProjectListItem? project)
+    {
+        if (project is null)
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) => sp.GetRequiredService<ProjectService>().UnlinkCompanyAsync(project.Id, _companyId, ct));
         await RefreshAsync();
     }
 

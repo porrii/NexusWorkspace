@@ -136,7 +136,7 @@ abrir detalle, crear rápida. Quitar el placeholder del nav.
 | **A. Edición básica** ✅ | Panel de edición Tarea + Proyecto (incl. descripción, fechas con hora). Hora/min en recordatorios. Editor de etiquetas en Tarea/Proyecto. | M |
 | **B1. Subtareas — lista unificada** ✅ | Subtareas y checklist se muestran y editan en UNA lista ("Subtareas"): marcar, renombrar en línea, borrar, subir/bajar. El "+ añadir" crea siempre una subtarea. Sin tocar BD. | M |
 | **B2. Subtareas — fusión real** ⏳ | Migración EF `ChecklistItem`→`SubTask` + eliminar plumbing de checklist en Import/Plantillas/Seeder/DTOs. **Con el usuario delante** (toca datos reales). | M |
-| **C. Vínculos** | Métodos de servicio + pickers: proyecto↔persona/empresa, tarea↔persona/empresa, persona→empresa. | M |
+| **C. Vínculos** ✅ | `ProjectService` Link/Unlink Person/Company (`ProjectPerson`/`ProjectCompany`), `WorkTaskService` Link/Unlink Person (`WorkTaskPerson` = colaboradores). Read: `ProjectDetail.Team`/`.Companies`, `WorkTaskDetail.Collaborators`. UI: Empresa (añadir persona, vincular proyecto), Persona (empresa/empleador en el panel de edición, vincular proyecto), Proyecto (sección Equipo + Empresas), Tarea (sección Colaboradores). | M |
 | **D. Seguimientos** | Acoplar a estado de tarea (abrir/cerrar auto), incrustar en tarea, picker de "esperando a". | M |
 | **E. Acciones rápidas** | Colapsar en Comunicación/estado; dejar "Registrar evento" con tipos propios. | S |
 | **F. Actividad** | Filtros + agrupar por día; cronología en la tarea. | S |

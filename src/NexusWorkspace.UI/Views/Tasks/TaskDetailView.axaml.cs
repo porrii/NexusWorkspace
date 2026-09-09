@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using NexusWorkspace.Application.People;
 using NexusWorkspace.Application.Tags;
 using NexusWorkspace.Domain.Enums;
 using NexusWorkspace.UI.ViewModels.Tasks;
@@ -17,6 +18,17 @@ public partial class TaskDetailView : UserControl
             && DataContext is TaskDetailViewModel viewModel)
         {
             viewModel.AddTagCommand.Execute(tag);
+            combo.SelectedItem = null;
+        }
+    }
+
+    private void OnAddCollaboratorSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox combo
+            && combo.SelectedItem is PersonListItem person
+            && DataContext is TaskDetailViewModel viewModel)
+        {
+            viewModel.AddCollaboratorCommand.Execute(person);
             combo.SelectedItem = null;
         }
     }

@@ -153,6 +153,99 @@ public sealed class ProjectService(IApplicationDbContext db, IClock clock, IActi
         return Result.Success();
     }
 
+    public async Task<Result> LinkPersonAsync(Guid projectId, Guid personId, string? role = null, CancellationToken cancellationToken = default)
+    {
+        if (!await db.Projects.AnyAsync(p => p.Id == projectId, cancellationToken))
+        {
+            return NotFound();
+        }
+
+        var person = await db.People.FirstOrDefaultAsync(p => p.Id == personId, cancellationToken);
+        if (person is null)
+        {
+            return Result.Failure("person.not_found", "Persona no encontrada.");
+        }
+
+        if (await db.ProjectPeople.AnyAsync(x => x.ProjectId == projectId && x.PersonId == personId, cancellationToken))
+        {
+            return Result.Success();
+        }
+
+        db.ProjectPeople.Add(new ProjectPerson
+        {
+            ProjectId = projectId,
+            PersonId = personId,
+            Role = string.IsNullOrWhiteSpace(role) ? null : role.Trim(),
+            LinkedAtUtc = clock.UtcNow,
+        });
+        activity.Record(EntityKind.Project, projectId, ActivityType.LinkedPerson,
+            $"Persona vinculada: «{person.Name}».", projectId);
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> UnlinkPersonAsync(Guid projectId, Guid personId, CancellationToken cancellationToken = default)
+    {
+        var link = await db.ProjectPeople.FirstOrDefaultAsync(x => x.ProjectId == projectId && x.PersonId == personId, cancellationToken);
+        if (link is null)
+        {
+            return Result.Success();
+        }
+
+        db.ProjectPeople.Remove(link);
+        activity.Record(EntityKind.Project, projectId, ActivityType.UnlinkedPerson, "Persona desvinculada.", projectId);
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> LinkCompanyAsync(Guid projectId, Guid companyId, CancellationToken cancellationToken = default)
+    {
+        if (!await db.Projects.AnyAsync(p => p.Id == projectId, cancellationToken))
+        {
+            return NotFound();
+        }
+
+        var company = await db.Companies.FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
+        if (company is null)
+        {
+            return Result.Failure("company.not_found", "Empresa no encontrada.");
+        }
+
+        if (await db.ProjectCompanies.AnyAsync(x => x.ProjectId == projectId && x.CompanyId == companyId, cancellationToken))
+        {
+            return Result.Success();
+        }
+
+        db.ProjectCompanies.Add(new ProjectCompany
+        {
+            ProjectId = projectId,
+            CompanyId = companyId,
+            LinkedAtUtc = clock.UtcNow,
+        });
+        activity.Record(EntityKind.Project, projectId, ActivityType.LinkedCompany,
+            $"Empresa vinculada: «{company.Name}».", projectId);
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> UnlinkCompanyAsync(Guid projectId, Guid companyId, CancellationToken cancellationToken = default)
+    {
+        var link = await db.ProjectCompanies.FirstOrDefaultAsync(x => x.ProjectId == projectId && x.CompanyId == companyId, cancellationToken);
+        if (link is null)
+        {
+            return Result.Success();
+        }
+
+        db.ProjectCompanies.Remove(link);
+        activity.Record(EntityKind.Project, projectId, ActivityType.UnlinkedCompany, "Empresa desvinculada.", projectId);
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
     public async Task<Result> ChangeStatusAsync(Guid projectId, ProjectStatus target, CancellationToken cancellationToken = default)
     {
         var project = await db.Projects.FirstOrDefaultAsync(p => p.Id == projectId, cancellationToken);

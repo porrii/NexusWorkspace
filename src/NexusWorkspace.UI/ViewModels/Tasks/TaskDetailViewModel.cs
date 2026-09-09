@@ -113,6 +113,8 @@ public partial class TaskDetailViewModel(
 
     public ObservableCollection<PersonListItem> AllPeople { get; } = [];
 
+    public ObservableCollection<PersonListItem> CollaboratorCandidates { get; } = [];
+
     public ObservableCollection<CompanyListItem> AllCompanies { get; } = [];
 
     public ObservableCollection<TagListItem> AllTags { get; } = [];
@@ -195,6 +197,9 @@ public partial class TaskDetailViewModel(
             AllPeople.Reset(data.people);
             AllCompanies.Reset(data.companies);
             AllTags.Reset(data.tags);
+            var linkedPeople = detail.Collaborators.Select(p => p.Id)
+                .Append(detail.AssigneePersonId ?? Guid.Empty).ToHashSet();
+            CollaboratorCandidates.Reset(data.people.Where(p => !linkedPeople.Contains(p.Id)).OrderBy(p => p.Name));
 
             Attachments.Bind(EntityKind.WorkTask, _taskId, detail.ProjectId, RefreshAsync);
             await Attachments.LoadAsync();
@@ -342,6 +347,20 @@ public partial class TaskDetailViewModel(
         EditDueDate = null;
         EditDueTime = null;
     }
+
+    [RelayCommand]
+    private Task AddCollaboratorAsync(PersonListItem? person)
+        => person is null
+            ? Task.CompletedTask
+            : RunAndRefreshAsync((sp, ct) =>
+                sp.GetRequiredService<WorkTaskService>().LinkPersonAsync(_taskId, person.Id, ct));
+
+    [RelayCommand]
+    private Task RemoveCollaboratorAsync(PersonListItem? person)
+        => person is null
+            ? Task.CompletedTask
+            : RunAndRefreshAsync((sp, ct) =>
+                sp.GetRequiredService<WorkTaskService>().UnlinkPersonAsync(_taskId, person.Id, ct));
 
     [RelayCommand]
     private void ClearEditAssignee() => EditAssignee = null;

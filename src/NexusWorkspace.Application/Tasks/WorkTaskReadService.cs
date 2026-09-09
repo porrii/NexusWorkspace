@@ -116,6 +116,10 @@ public sealed class WorkTaskReadService(IApplicationDbContext db)
                 t.RelatedCompanyId,
                 RelatedCompanyName = t.RelatedCompany != null ? t.RelatedCompany.Name : null,
                 Tags = t.Tags.Select(x => new TagChip { Id = x.Tag.Id, Name = x.Tag.Name, Color = x.Tag.Color }).ToList(),
+                Collaborators = t.People
+                    .OrderBy(x => x.Person.Name)
+                    .Select(x => new PersonListItem { Id = x.Person.Id, Name = x.Person.Name, Role = x.Person.Role })
+                    .ToList(),
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -184,6 +188,7 @@ public sealed class WorkTaskReadService(IApplicationDbContext db)
             Comments = comments,
             DependsOn = dependsOn,
             Tags = task.Tags,
+            Collaborators = task.Collaborators,
         };
     }
 

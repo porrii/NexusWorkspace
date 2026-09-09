@@ -1,3 +1,4 @@
+using NexusWorkspace.Application.Companies;
 using NexusWorkspace.Application.People;
 using NexusWorkspace.Domain.Enums;
 
@@ -81,6 +82,10 @@ public sealed record ProjectDetail
     public int FinishedTaskCount { get; init; }
 
     public IReadOnlyList<TagChip> Tags { get; init; } = [];
+
+    public IReadOnlyList<PersonListItem> Team { get; init; } = [];
+
+    public IReadOnlyList<CompanyListItem> Companies { get; init; } = [];
 
     public int ProgressPercent => TotalTaskCount == 0
         ? 0

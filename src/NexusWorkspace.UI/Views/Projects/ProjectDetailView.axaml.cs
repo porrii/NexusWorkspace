@@ -2,6 +2,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.VisualTree;
+using NexusWorkspace.Application.Companies;
+using NexusWorkspace.Application.People;
 using NexusWorkspace.Application.Tags;
 using NexusWorkspace.Application.Tasks;
 using NexusWorkspace.Domain.Enums;
@@ -30,6 +32,28 @@ public partial class ProjectDetailView : UserControl
             && DataContext is ProjectDetailViewModel viewModel)
         {
             viewModel.AddTagCommand.Execute(tag);
+            combo.SelectedItem = null;
+        }
+    }
+
+    private void OnLinkPersonSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox combo
+            && combo.SelectedItem is PersonListItem person
+            && DataContext is ProjectDetailViewModel viewModel)
+        {
+            viewModel.LinkPersonCommand.Execute(person);
+            combo.SelectedItem = null;
+        }
+    }
+
+    private void OnLinkCompanySelected(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox combo
+            && combo.SelectedItem is CompanyListItem company
+            && DataContext is ProjectDetailViewModel viewModel)
+        {
+            viewModel.LinkCompanyCommand.Execute(company);
             combo.SelectedItem = null;
         }
     }

@@ -118,6 +118,8 @@ public sealed record WorkTaskDetail
     public IReadOnlyList<DependencyView> DependsOn { get; init; } = [];
 
     public IReadOnlyList<TagChip> Tags { get; init; } = [];
+
+    public IReadOnlyList<PersonListItem> Collaborators { get; init; } = [];
 }
 
 public enum TaskListScope

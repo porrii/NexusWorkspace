@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.VisualTree;
+using NexusWorkspace.Application.Projects;
 using NexusWorkspace.Application.Relations;
 using NexusWorkspace.Application.Tags;
 using NexusWorkspace.UI.ViewModels.People;
@@ -18,6 +19,17 @@ public partial class PersonDetailView : UserControl
             && DataContext is PersonDetailViewModel viewModel)
         {
             viewModel.AddTagCommand.Execute(tag);
+            combo.SelectedItem = null;
+        }
+    }
+
+    private void OnLinkProjectSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox combo
+            && combo.SelectedItem is ProjectListItem project
+            && DataContext is PersonDetailViewModel viewModel)
+        {
+            viewModel.LinkProjectCommand.Execute(project);
             combo.SelectedItem = null;
         }
     }
