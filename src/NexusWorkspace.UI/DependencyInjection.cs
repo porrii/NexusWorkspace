@@ -50,6 +50,7 @@ public static class DependencyInjection
         services.AddTransient<InboxViewModel>();
         services.AddTransient<ProjectsViewModel>();
         services.AddTransient<ProjectDetailViewModel>();
+        services.AddTransient<TasksViewModel>();
         services.AddTransient<TaskDetailViewModel>();
         services.AddTransient<FollowUpsViewModel>();
         services.AddTransient<CalendarViewModel>();

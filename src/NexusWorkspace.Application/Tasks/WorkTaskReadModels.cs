@@ -128,3 +128,21 @@ public enum TaskListScope
     All = 1,
     Archived = 2,
 }
+
+/// <summary>Filter for the global Tareas page. Null members are ignored.</summary>
+public sealed record WorkTaskFilter
+{
+    public Guid? ProjectId { get; init; }
+
+    public WorkTaskStatus? Status { get; init; }
+
+    public Priority? Priority { get; init; }
+
+    public Guid? AssigneePersonId { get; init; }
+
+    public bool OpenOnly { get; init; } = true;
+
+    public bool OverdueOnly { get; init; }
+
+    public string? Text { get; init; }
+}

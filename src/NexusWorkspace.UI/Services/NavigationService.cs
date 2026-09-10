@@ -10,6 +10,7 @@ using NexusWorkspace.UI.ViewModels.Inbox;
 using NexusWorkspace.UI.ViewModels.People;
 using NexusWorkspace.UI.ViewModels.Projects;
 using NexusWorkspace.UI.ViewModels.Settings;
+using NexusWorkspace.UI.ViewModels.Tasks;
 using NexusWorkspace.UI.ViewModels.Statistics;
 using NexusWorkspace.UI.ViewModels.Tags;
 using NexusWorkspace.UI.ViewModels.Templates;
@@ -43,6 +44,7 @@ public sealed class NavigationService(IServiceProvider services) : INavigationSe
             PageKey.Dashboard => services.GetRequiredService<DashboardViewModel>(),
             PageKey.Inbox => services.GetRequiredService<InboxViewModel>(),
             PageKey.Projects => services.GetRequiredService<ProjectsViewModel>(),
+            PageKey.Tasks => services.GetRequiredService<TasksViewModel>(),
             PageKey.FollowUps => services.GetRequiredService<FollowUpsViewModel>(),
             PageKey.Calendar => services.GetRequiredService<CalendarViewModel>(),
             PageKey.People => services.GetRequiredService<PeopleViewModel>(),

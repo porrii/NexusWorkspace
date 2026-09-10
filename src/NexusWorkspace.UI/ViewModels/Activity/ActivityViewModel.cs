@@ -7,15 +7,9 @@ using NexusWorkspace.Application.Activity;
 using NexusWorkspace.Application.Localization;
 using NexusWorkspace.Application.Projects;
 using NexusWorkspace.Domain.Enums;
+using NexusWorkspace.UI.ViewModels.Shared;
 
 namespace NexusWorkspace.UI.ViewModels.Activity;
-
-/// <summary>A dropdown option that carries a nullable value plus a display label.</summary>
-public sealed record FilterOption<T>(string Label, T? Value)
-    where T : struct;
-
-/// <summary>Project filter option (reference type, so its own record).</summary>
-public sealed record ProjectOption(string Label, Guid? Id);
 
 /// <summary>Activity entries that happened on one day.</summary>
 public sealed class ActivityDayGroup

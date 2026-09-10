@@ -52,6 +52,56 @@ public sealed class WorkTaskReadService(IApplicationDbContext db)
     }
 
     /// <summary>The soonest open tasks across the workspace. Bounded — for widgets, not full listing.</summary>
+    public async Task<IReadOnlyList<WorkTaskListItem>> GetFilteredAsync(WorkTaskFilter filter, int limit = 500, CancellationToken cancellationToken = default)
+    {
+        var query = db.WorkTasks.AsNoTracking().Where(t => !t.IsArchived);
+
+        if (filter.OpenOnly)
+        {
+            query = query.Where(t => t.Status != WorkTaskStatus.Finished && t.Status != WorkTaskStatus.Cancelled);
+        }
+
+        if (filter.ProjectId is { } projectId)
+        {
+            query = query.Where(t => t.ProjectId == projectId);
+        }
+
+        if (filter.Status is { } status)
+        {
+            query = query.Where(t => t.Status == status);
+        }
+
+        if (filter.Priority is { } priority)
+        {
+            query = query.Where(t => t.Priority == priority);
+        }
+
+        if (filter.AssigneePersonId is { } assigneeId)
+        {
+            query = query.Where(t => t.AssigneePersonId == assigneeId || t.People.Any(x => x.PersonId == assigneeId));
+        }
+
+        if (filter.OverdueOnly)
+        {
+            var today = DateTime.UtcNow.Date;
+            query = query.Where(t => t.DueDateUtc != null && t.DueDateUtc < today
+                                     && t.Status != WorkTaskStatus.Finished && t.Status != WorkTaskStatus.Cancelled);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Text))
+        {
+            var like = $"%{filter.Text.Trim()}%";
+            query = query.Where(t => EF.Functions.Like(t.Title, like));
+        }
+
+        return await query
+            .OrderBy(t => t.DueDateUtc ?? DateTime.MaxValue)
+            .ThenBy(t => t.Priority)
+            .Take(Math.Clamp(limit, 1, 2000))
+            .Select(ToListItem())
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<WorkTaskListItem>> GetOpenAcrossWorkspaceAsync(CancellationToken cancellationToken = default)
     {
         return await db.WorkTasks.AsNoTracking()

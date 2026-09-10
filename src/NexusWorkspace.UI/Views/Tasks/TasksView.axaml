@@ -1,0 +1,92 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Class="NexusWorkspace.UI.Views.Tasks.TasksView">
+
+  <StackPanel Spacing="16" MaxWidth="1040">
+
+    <TextBlock Text="Tareas" Classes="h1" />
+
+    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
+               IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
+
+    <!-- Filtros -->
+    <Border Classes="card">
+      <WrapPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,14,6">
+          <TextBlock Text="Proyecto" Classes="muted" VerticalAlignment="Center" />
+          <ComboBox Width="190" ItemsSource="{Binding ProjectOptions}" SelectedItem="{Binding SelectedProject, Mode=TwoWay}">
+            <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,14,6">
+          <TextBlock Text="Responsable" Classes="muted" VerticalAlignment="Center" />
+          <ComboBox Width="170" ItemsSource="{Binding AssigneeOptions}" SelectedItem="{Binding SelectedAssignee, Mode=TwoWay}">
+            <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,14,6">
+          <TextBlock Text="Estado" Classes="muted" VerticalAlignment="Center" />
+          <ComboBox Width="160" ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding SelectedStatus, Mode=TwoWay}">
+            <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,14,6">
+          <TextBlock Text="Prioridad" Classes="muted" VerticalAlignment="Center" />
+          <ComboBox Width="150" ItemsSource="{Binding PriorityOptions}" SelectedItem="{Binding SelectedPriority, Mode=TwoWay}">
+            <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,14,6" VerticalAlignment="Center">
+          <CheckBox Content="Solo abiertas" IsChecked="{Binding OpenOnly, Mode=TwoWay}" />
+          <CheckBox Content="Solo vencidas" IsChecked="{Binding OverdueOnly, Mode=TwoWay}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
+          <TextBox Width="190" Watermark="Buscar por título…" Text="{Binding SearchText, Mode=TwoWay}" />
+          <Button Content="Buscar" Command="{Binding ApplySearchCommand}" />
+          <Button Content="Limpiar" Classes="quick" Command="{Binding ClearFiltersCommand}" />
+        </StackPanel>
+      </WrapPanel>
+    </Border>
+
+    <TextBlock Text="{Binding Tasks.Count, StringFormat='{}{0} tarea(s)'}" Classes="muted" />
+
+    <ItemsControl ItemsSource="{Binding Tasks}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Button Classes="tile" Margin="0,0,0,8" HorizontalAlignment="Stretch"
+                  Command="{Binding $parent[ItemsControl].DataContext.OpenTaskCommand}" CommandParameter="{Binding}">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" Spacing="3">
+                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <TextBlock Classes="muted" Text="{Binding ProjectName}" />
+                  <TextBlock Classes="muted" Text="{Binding AssigneeName, StringFormat='{}· {0}'}"
+                             IsVisible="{Binding AssigneeName, Converter={x:Static conv:AppConverters.HasText}}" />
+                  <TextBlock Classes="muted"
+                             Text="{Binding DueDateUtc, Converter={x:Static conv:AppConverters.LocalDate}, StringFormat='{}· vence {0}'}"
+                             IsVisible="{Binding DueDateUtc, Converter={x:Static conv:AppConverters.IsNotNull}}" />
+                </StackPanel>
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Border Classes="pill" BorderBrush="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}">
+                  <TextBlock Text="{Binding Priority, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                             Foreground="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}" />
+                </Border>
+                <Border Classes="pill" BorderBrush="{Binding Status, Converter={x:Static conv:AppConverters.TaskStatusBrush}}">
+                  <TextBlock Text="{Binding Status, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                             Foreground="{Binding Status, Converter={x:Static conv:AppConverters.TaskStatusBrush}}" />
+                </Border>
+              </StackPanel>
+            </Grid>
+          </Button>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <TextBlock Text="No hay tareas que coincidan con los filtros." Classes="muted"
+               IsVisible="{Binding IsEmpty}" />
+
+  </StackPanel>
+
+</UserControl>
