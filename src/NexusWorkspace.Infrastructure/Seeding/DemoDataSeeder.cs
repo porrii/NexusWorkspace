@@ -63,11 +63,11 @@ public sealed class DemoDataSeeder(IApplicationDbContext db, IClock clock) : IDe
             NewSubTask(integrationTask.Id, "Probar PRO", false, 5),
             NewSubTask(integrationTask.Id, "Documentar", false, 6));
 
-        db.ChecklistItems.AddRange(
-            NewCheck(integrationTask.Id, "DESA probado", true, 1),
-            NewCheck(integrationTask.Id, "PRE probado", true, 2),
-            NewCheck(integrationTask.Id, "PRO probado", false, 3),
-            NewCheck(integrationTask.Id, "Documentación", false, 4));
+        db.SubTasks.AddRange(
+            NewSubTask(integrationTask.Id, "DESA probado", true, 1001),
+            NewSubTask(integrationTask.Id, "PRE probado", true, 1002),
+            NewSubTask(integrationTask.Id, "PRO probado", false, 1003),
+            NewSubTask(integrationTask.Id, "Documentación", false, 1004));
 
         db.Comments.Add(new Comment
         {
@@ -245,13 +245,6 @@ public sealed class DemoDataSeeder(IApplicationDbContext db, IClock clock) : IDe
         SortKey = sortKey,
     };
 
-    private static ChecklistItem NewCheck(Guid taskId, string text, bool isChecked, double sortKey) => new()
-    {
-        WorkTaskId = taskId,
-        Text = text,
-        IsChecked = isChecked,
-        SortKey = sortKey,
-    };
 
     private void AddPersonEvent(Guid targetId, EntityKind kind, ActivityType type, string summary, DateTime occurredAtUtc, Guid? projectId = null)
     {

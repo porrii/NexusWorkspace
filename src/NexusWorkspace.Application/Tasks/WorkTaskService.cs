@@ -532,6 +532,45 @@ public sealed class WorkTaskService(IApplicationDbContext db, IClock clock, IAct
         return Result.Success();
     }
 
+    /// <summary>
+    /// Transitional: subtasks and checklist items are being merged. On demand, move any
+    /// remaining checklist items of a task into subtasks (kept flat, after the existing
+    /// ones). A later migration will drop the now-empty ChecklistItems table.
+    /// </summary>
+    public async Task<Result> EnsureChecklistConvertedAsync(Guid taskId, CancellationToken cancellationToken = default)
+    {
+        var items = await db.ChecklistItems
+            .Where(c => c.WorkTaskId == taskId)
+            .OrderBy(c => c.SortKey)
+            .ToListAsync(cancellationToken);
+
+        if (items.Count == 0)
+        {
+            return Result.Success();
+        }
+
+        var maxSortKey = await db.SubTasks
+            .Where(s => s.WorkTaskId == taskId && s.ParentSubTaskId == null)
+            .Select(s => (double?)s.SortKey)
+            .MaxAsync(cancellationToken) ?? 0d;
+
+        foreach (var c in items)
+        {
+            db.SubTasks.Add(new SubTask
+            {
+                WorkTaskId = taskId,
+                Title = c.Text,
+                IsDone = c.IsChecked,
+                CompletedAtUtc = c.CheckedAtUtc,
+                SortKey = ++maxSortKey,
+            });
+            db.ChecklistItems.Remove(c);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
     /// <summary>One-tap "task event": appends a free-text entry to the history. No status change.</summary>
     public async Task<Result> LogEventAsync(Guid taskId, string label, string? note = null, CancellationToken cancellationToken = default)
     {

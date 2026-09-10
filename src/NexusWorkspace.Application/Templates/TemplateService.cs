@@ -191,10 +191,10 @@ public sealed class TemplateService(IApplicationDbContext db, IClock clock, IAct
 
             AddSubTasks(task.Id, node.SubTasks, null);
 
-            var checkKey = 1d;
+            var checkKey = 1000d;
             foreach (var text in node.Checklist.Where(t => !string.IsNullOrWhiteSpace(t)))
             {
-                db.ChecklistItems.Add(new ChecklistItem { WorkTaskId = task.Id, Text = text.Trim(), SortKey = checkKey++ });
+                db.SubTasks.Add(new SubTask { WorkTaskId = task.Id, Title = text.Trim(), SortKey = checkKey++ });
             }
 
             foreach (var tagName in node.Tags)
@@ -266,10 +266,10 @@ public sealed class TemplateService(IApplicationDbContext db, IClock clock, IAct
             db.WorkTaskTags.Add(new WorkTaskTag { WorkTaskId = task.Id, TagId = EnsureTag(tagName, tagCache) });
         }
 
-        var checkKey = 1d;
+        var checkKey = 1000d;
         foreach (var text in definition.Checklist.Where(t => !string.IsNullOrWhiteSpace(t)))
         {
-            db.ChecklistItems.Add(new ChecklistItem { WorkTaskId = task.Id, Text = text.Trim(), SortKey = checkKey++ });
+            db.SubTasks.Add(new SubTask { WorkTaskId = task.Id, Title = text.Trim(), SortKey = checkKey++ });
         }
 
         AddSubTasks(definition.SubTasks, null);

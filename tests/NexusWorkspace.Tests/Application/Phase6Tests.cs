@@ -65,10 +65,10 @@ public class Phase6Tests
         newTasks[0].Priority.Should().Be(Priority.High);
 
         var newSubs = await h.Db.SubTasks.Where(s => s.WorkTaskId == newTasks[0].Id).ToListAsync();
-        newSubs.Should().HaveCount(2);
+        // Checklist items are merged into subtasks: 2 real + "DESA" (ex-checklist).
+        newSubs.Should().HaveCount(3);
         newSubs.Count(s => s.ParentSubTaskId != null).Should().Be(1);
-
-        (await h.Db.ChecklistItems.CountAsync(c => c.WorkTaskId == newTasks[0].Id)).Should().Be(1);
+        newSubs.Should().Contain(s => s.Title == "DESA");
         (await h.Db.WorkTaskTags.CountAsync(x => x.WorkTaskId == newTasks[0].Id)).Should().Be(1);
         (await h.Db.Tags.CountAsync(t => t.Name == "SIP")).Should().Be(1, "the tag is reused, not duplicated");
 
@@ -95,8 +95,9 @@ public class Phase6Tests
         var newTask = await h.Db.WorkTasks.SingleAsync(t => t.Id == applied.Value);
         newTask.Title.Should().Be("Despliegue estándar");
         newTask.Priority.Should().Be(Priority.Critical);
-        (await h.Db.SubTasks.CountAsync(s => s.WorkTaskId == newTask.Id)).Should().Be(1);
-        (await h.Db.ChecklistItems.CountAsync(c => c.WorkTaskId == newTask.Id)).Should().Be(1);
+        // "PRE" (subtask) + "Backup" (ex-checklist, now a subtask).
+        var subs = await h.Db.SubTasks.Where(s => s.WorkTaskId == newTask.Id).ToListAsync();
+        subs.Select(s => s.Title).Should().BeEquivalentTo(["PRE", "Backup"]);
     }
 
     // ---------- Import ----------
@@ -134,7 +135,9 @@ public class Phase6Tests
 
         (await h.Db.Projects.CountAsync(p => p.Name == "Migración correo")).Should().Be(1);
         (await h.Db.WorkTasks.CountAsync()).Should().Be(2);
-        (await h.Db.SubTasks.CountAsync()).Should().Be(2);
+        // "Alta usuarios" + "Importar CSV" + "Revisar cuotas" (ex-checklist merged into subtasks).
+        (await h.Db.SubTasks.CountAsync()).Should().Be(3);
+        (await h.Db.SubTasks.CountAsync(s => s.Title == "Revisar cuotas")).Should().Be(1);
         (await h.Db.ActivityEvents.CountAsync(e => e.Type == ActivityType.Imported)).Should().Be(1);
     }
 

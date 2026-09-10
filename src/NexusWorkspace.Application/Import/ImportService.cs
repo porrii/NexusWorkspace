@@ -118,10 +118,10 @@ public sealed class ImportService(IApplicationDbContext db, IActivityLog activit
             };
             db.WorkTasks.Add(task);
 
-            var checkKey = 1d;
+            var checkKey = 1000d;
             foreach (var text in node.Checklist.Where(t => !string.IsNullOrWhiteSpace(t)))
             {
-                db.ChecklistItems.Add(new ChecklistItem { WorkTaskId = task.Id, Text = text.Trim(), SortKey = checkKey++ });
+                db.SubTasks.Add(new SubTask { WorkTaskId = task.Id, Title = text.Trim(), SortKey = checkKey++ });
             }
 
             AddSubTasks(task.Id, node.SubTasks, null);

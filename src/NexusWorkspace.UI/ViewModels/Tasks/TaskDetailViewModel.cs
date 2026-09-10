@@ -170,6 +170,7 @@ public partial class TaskDetailViewModel(
                 var activityReads = sp.GetRequiredService<ActivityReadService>();
                 var followUpReads = sp.GetRequiredService<FollowUpReadService>();
                 var reminderReads = sp.GetRequiredService<ReminderReadService>();
+                await sp.GetRequiredService<WorkTaskService>().EnsureChecklistConvertedAsync(_taskId, ct);
                 var d = await taskReads.GetDetailAsync(_taskId, ct);
                 var h = await activityReads.GetForEntityAsync(EntityKind.WorkTask, _taskId, 200, ct);
                 var f = await followUpReads.GetForEntityAsync(EntityKind.WorkTask, _taskId, ct);

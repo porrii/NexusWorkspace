@@ -155,12 +155,12 @@
                           ItemsSource="{Binding CsvColumns}" SelectedItem="{Binding CsvDescriptionColumn, Mode=TwoWay}" />
               </Grid>
               <Grid ColumnDefinitions="130,*">
-                <TextBlock Grid.Column="0" Text="Checklist" Classes="muted" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="0" Text="Subtareas" Classes="muted" VerticalAlignment="Center" />
                 <ComboBox Grid.Column="1" HorizontalAlignment="Stretch"
                           ItemsSource="{Binding CsvColumns}" SelectedItem="{Binding CsvChecklistColumn, Mode=TwoWay}" />
               </Grid>
             </StackPanel>
-            <TextBlock Classes="muted" Text="Se requiere una fila de cabecera. Los ítems de checklist en una celda se separan con «;» o «|»." TextWrapping="Wrap" />
+            <TextBlock Classes="muted" Text="Se requiere una fila de cabecera. Varias subtareas en una misma celda se separan con «;» o «|»." TextWrapping="Wrap" />
           </StackPanel>
         </Border>
         <StackPanel Orientation="Horizontal" Spacing="10">
