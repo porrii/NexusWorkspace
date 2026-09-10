@@ -35,9 +35,12 @@ Incremental. **La solución permanece compilable y ejecutable al terminar cada f
 
 - [x] **Pulido pre-v1** — Rendimiento: ninguna consulta de lista materializa ya todo el workspace (indicadores del Dashboard por `COUNT(*)`, `Take` en todas las listas grandes; los índices ya cubren filtros/orden). Accesibilidad: `AutomationProperties.Name` en los botones sólo-icono. `installer/pack.bat` (Velopack) genera el `Setup.exe` autónomo; `docs/RELEASE.md` con la lista de comprobación para pasar a `main` + release. **Android (Fase 8)** y los stubs (Sync, IA local, OCR, integraciones) quedan para **v2**.
 
-> **Estado 2026-09-07**: Fases 0–7 + 6b + pulido, en verde en este PC (`dotnet build`
-> **0/0**, **79/79 tests**). App arranca sin avisos; copia diaria automática al iniciar.
-> MVP de Windows listo para v1: pendiente generar el instalador, verificar y hacer
+> **Estado 2026-09-10**: Fases 0–7 + 6b + pulido, en verde (`dotnet build` **0/0**,
+> **79/79 tests**). Tras la primera prueba real se abrió una fase de **coherencia de UX**
+> (`docs/UX-REVIEW.md`), bloques A–G ya en `dev`: edición de tarea/proyecto, fusión
+> subtareas+checklist, vínculos persona/empresa↔proyecto/tarea, seguimientos acoplados
+> al estado, "Registrar evento" + comunicaciones en la tarea, Actividad filtrable,
+> página global de Tareas. Pendiente: repaso end-to-end en el PC de build, y luego
 > merge `dev` → `main` + release (ver `docs/RELEASE.md`).
 
 > Publicado en GitHub: `porrii/NexusWorkspace`, rama `dev`. `main` + release cuando la v1 esté lista.

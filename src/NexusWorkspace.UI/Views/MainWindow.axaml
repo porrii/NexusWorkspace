@@ -3,6 +3,7 @@
         xmlns:views="clr-namespace:NexusWorkspace.UI.Views"
         x:Class="NexusWorkspace.UI.Views.MainWindow"
         Title="NexusWorkspace"
+        Icon="/Assets/app.ico"
         Width="1280" Height="820"
         MinWidth="900" MinHeight="620"
         Background="{DynamicResource AppGroundBrush}"

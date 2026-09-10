@@ -51,18 +51,22 @@ set "DO_RUN=0"
 set "DO_CLEAN=0"
 set "DO_TEST=1"
 set "DO_MIGRATE=0"
+set "DO_PACK="
 
 :parseargs
 if "%~1"=="" goto endargs
-if /i "%~1"=="debug"   set "CONFIG=Debug"
-if /i "%~1"=="release" set "CONFIG=Release"
-if /i "%~1"=="run"     set "DO_RUN=1"
-if /i "%~1"=="clean"   set "DO_CLEAN=1"
-if /i "%~1"=="notest"  set "DO_TEST=0"
-if /i "%~1"=="migrate" set "DO_MIGRATE=1"
-if /i "%~1"=="help"    goto usage
-if /i "%~1"=="-h"      goto usage
-if /i "%~1"=="/?"      goto usage
+if /i "%~1"=="debug"     set "CONFIG=Debug"
+if /i "%~1"=="release"   set "CONFIG=Release"
+if /i "%~1"=="run"       set "DO_RUN=1"
+if /i "%~1"=="clean"     set "DO_CLEAN=1"
+if /i "%~1"=="notest"    set "DO_TEST=0"
+if /i "%~1"=="migrate"   set "DO_MIGRATE=1"
+if /i "%~1"=="installer" set "DO_PACK=vpk"    & set "CONFIG=Release"
+if /i "%~1"=="pack"      set "DO_PACK=vpk"    & set "CONFIG=Release"
+if /i "%~1"=="portable"  set "DO_PACK=nozip"  & set "CONFIG=Release"
+if /i "%~1"=="help"      goto usage
+if /i "%~1"=="-h"        goto usage
+if /i "%~1"=="/?"        goto usage
 shift
 goto parseargs
 :endargs
@@ -94,6 +98,7 @@ set "STEP_RESTORE=PENDIENTE"
 set "STEP_MIG=PENDIENTE"
 set "STEP_BUILD=PENDIENTE"
 set "STEP_TEST=PENDIENTE"
+set "STEP_PACK=PENDIENTE"
 set "SDK_STATE=?"
 set "EF_STATE=?"
 
@@ -237,6 +242,20 @@ if "%DO_TEST%"=="1" (
     set "STEP_TEST=OMITIDO"
 )
 
+rem =====================================================================
+rem  8) instalador (opcional: build.bat installer  |  build.bat portable)
+rem =====================================================================
+set "STEP_PACK=OMITIDO"
+if not "%DO_PACK%"=="" if "%STEP_BUILD%"=="OK" (
+    echo [pack] Generando instalador ^(%DO_PACK%^) ...
+    if /i "%DO_PACK%"=="nozip" (
+        call "%REPO%\installer\pack.bat" nozip
+    ) else (
+        call "%REPO%\installer\pack.bat"
+    )
+    if errorlevel 1 ( set "STEP_PACK=FALLO" ) else ( set "STEP_PACK=OK" )
+)
+
 goto summary
 
 rem =====================================================================
@@ -258,6 +277,7 @@ for /f %%c in ('powershell -NoProfile -Command "if(Test-Path '%BUILDLOG%'){(Sele
 >>"%SUMMARY%" echo   [3] migracion ..... %STEP_MIG%
 >>"%SUMMARY%" echo   [4] build ......... %STEP_BUILD%   (errores: %ERRCOUNT%  avisos: %WARNCOUNT%)
 >>"%SUMMARY%" echo   [5] test .......... %STEP_TEST%
+>>"%SUMMARY%" echo   [8] instalador .... %STEP_PACK%
 >>"%SUMMARY%" echo.
 git log -1 --oneline >> "%SUMMARY%" 2>&1
 >>"%SUMMARY%" echo.
@@ -309,7 +329,7 @@ exit /b 0
 
 :usage
 echo.
-echo Uso: build.bat [debug^|release] [run] [clean] [notest] [migrate]
+echo Uso: build.bat [debug^|release] [run] [clean] [notest] [migrate] [installer^|portable]
 echo.
 echo   (sin args)   restore + build Debug + test
 echo   release      compila en Release
@@ -317,6 +337,8 @@ echo   migrate      crea una migracion EF Update_^<fecha^> (tras cambiar el mode
 echo   run          lanza la app al terminar
 echo   clean        borra bin/obj antes
 echo   notest       no ejecuta los tests
+echo   installer    build Release + genera el instalador Velopack (installer\pack.bat)
+echo   portable     build Release + genera el zip portable (installer\pack.bat nozip)
 echo.
 endlocal
 exit /b 0

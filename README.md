@@ -1,55 +1,86 @@
-# NexusWorkspace
+<p align="center">
+  <img src="docs/assets/logo.png" alt="NexusWorkspace" width="120" />
+</p>
 
-Espacio de trabajo técnico personal, **local-first** y multiplataforma
-(Windows ahora, Android más adelante). Centraliza proyectos, tareas, incidencias,
-seguimientos, reuniones, comunicaciones, personas, empresas y documentación,
-**conservando todo el histórico de forma inmutable**.
+<h1 align="center">NexusWorkspace</h1>
 
-> Principio fundamental: **nunca perder información.** Una tarea, incidencia o
-> proyecto finalizado no desaparece — se archiva y permanece localizable durante años.
+<p align="center">
+  Espacio de trabajo técnico personal — <b>local-first</b>, offline y multiplataforma.<br/>
+  Centraliza proyectos, tareas, seguimientos, personas, empresas, comunicaciones y documentación,
+  <b>conservando todo el histórico de forma permanente e inmutable</b>.
+</p>
 
-## Estado
+<p align="center">
+  <img alt="Licencia MIT" src="https://img.shields.io/badge/licencia-MIT-blue" />
+  <img alt=".NET 9" src="https://img.shields.io/badge/.NET-9-512BD4" />
+  <img alt="Avalonia 11" src="https://img.shields.io/badge/Avalonia-11-663399" />
+  <img alt="Plataforma" src="https://img.shields.io/badge/Windows-10%2B%20x64-0078D6" />
+</p>
 
-En desarrollo. **Fases 0–2 completas y validadas** (build en verde, migración EF
-`Initial`, 39/39 tests). Ver `docs/ROADMAP.md`.
+> **Principio:** *nunca perder información.* Una tarea, incidencia o proyecto finalizado no
+> desaparece — se archiva y permanece localizable durante años.
 
-## Tecnología
+---
 
-C# · .NET 9 · Avalonia 11 (MVVM) · SQLite + EF Core (FTS5) · CommunityToolkit.Mvvm ·
-FluentAvalonia · Material.Icons · Serilog · LiveCharts2 · xUnit.
+## Qué hace
 
-100 % offline. Sin cuenta. Sin servicios en la nube obligatorios.
+- **Proyectos y tareas** con estados, prioridades, fechas, responsable y empresa; **subtareas**
+  editables; **comentarios**; **etiquetas** transversales.
+- **Seguimientos** ("esperando respuesta de…") acoplados al estado de la tarea: al ponerla en
+  espera se abre uno; al reanudarla se cierra solo. Con contador de días y recordatorios.
+- **Recordatorios** con fecha y hora, y notificaciones locales.
+- **Personas y empresas** con su histórico agregado; vínculos a proyectos y tareas; empleador.
+- **Comunicaciones** (email, llamada, reunión…) y **reuniones**, enlazadas a la persona, la
+  empresa, el proyecto y la tarea a la vez.
+- **Registrar evento**: hitos de un clic en una tarea (incidencia, despliegue, prueba…), con
+  tipos que defines tú.
+- **Vistas**: Dashboard con "¿qué tengo hoy?", Kanban por proyecto, Calendario, página global de
+  **Tareas** con filtros, **Actividad** filtrable y agrupada por día, **Archivos** adjuntos.
+- **Informes** PDF/Excel/CSV/JSON, **plantillas** de proyecto/tarea, **importación** JSON/CSV y
+  de notas indentadas.
+- **Copias de seguridad** automáticas y antes de cada migración; exportar/importar el workspace.
+- **Captura rápida** con hotkey global, **paleta de comandos** (Ctrl+K) y **búsqueda** FTS5 (Ctrl+F).
+
+100 % offline. Sin cuenta. Sin nube.
+
+## Instalación
+
+Descarga `NexusWorkspace-win-Setup.exe` de la página de
+[**Releases**](https://github.com/porrii/NexusWorkspace/releases) y ejecútalo. No requiere
+prerrequisitos (incluye el runtime de .NET 9). Al actualizar o reinstalar **no se tocan tus
+datos** (`%APPDATA%\NexusWorkspace\`).
+
+> Aún sin release estable: mientras tanto, compílalo tú (ver abajo).
+
+## Compilar
+
+```bat
+build.bat                :: restaura + compila Debug + tests
+build.bat run notest     :: compila y lanza la app
+build.bat installer       :: build Release + instalador Velopack (installer\releases\)
+build.bat portable        :: build Release + zip portable
+```
+
+`build.bat` resuelve un .NET 9 SDK compatible por sí mismo (usa el del equipo o instala una
+copia privada en `.dotnet\`, sin admin). Detalles: [`docs/BUILD.md`](docs/BUILD.md).
 
 ## Documentación
 
 | Documento | Contenido |
 |---|---|
-| [`docs/BUILD.md`](docs/BUILD.md) | Qué instalar en el PC de compilación y cómo compilar / ejecutar / publicar |
-| [`docs/FIRST-COMPILE.md`](docs/FIRST-COMPILE.md) | Guía para la primera compilación: secuencia, orden de errores, puntos frágiles |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Arquitectura, capas, almacenamiento, historial, backups, estrategia multiplataforma |
-| [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) | Entidades, relaciones, enums de estado, búsqueda FTS5 |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Arquitectura por capas, almacenamiento, historial, backups, multiplataforma |
+| [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) | Entidades, relaciones, enums, búsqueda FTS5 |
+| [`docs/BUILD.md`](docs/BUILD.md) | Requisitos y comandos de compilación / publicación |
+| [`docs/UX-REVIEW.md`](docs/UX-REVIEW.md) | Revisión de coherencia de UX y plan de bloques A–H |
+| [`docs/RELEASE.md`](docs/RELEASE.md) | Lista de comprobación de la v1 |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Fases de implementación |
+| [`installer/README.md`](installer/README.md) | Cómo se genera el instalador |
 
-Documento visual de arquitectura y wireframes:
-<https://claude.ai/code/artifact/b9e28e8b-0851-4844-916b-385f9f3b03a9>
+## Tecnología
 
-## Compilar
+C# · .NET 9 · Avalonia 11 (MVVM, CommunityToolkit.Mvvm) · SQLite + EF Core 9 (FTS5) ·
+FluentAvalonia · Material.Icons · Serilog · LiveCharts2 · QuestPDF · ClosedXML · Velopack · xUnit.
 
-Vía rápida (comprueba/instala .NET 9, restaura, migra, compila, testea y deja logs):
+## Licencia
 
-```bat
-build.bat
-```
-
-`build.bat release` · `build.bat run` · `build.bat clean` · `build.bat notest`.
-Los logs quedan en `build-logs\<fecha_hora>\` con un `SUMMARY.txt`.
-
-Manual:
-
-```powershell
-dotnet restore
-dotnet run --project src/NexusWorkspace.Desktop
-dotnet test
-```
-
-Requisitos y detalles: [`docs/BUILD.md`](docs/BUILD.md) · [`docs/FIRST-COMPILE.md`](docs/FIRST-COMPILE.md).
+[MIT](LICENSE) © 2026 Iván.

@@ -1,8 +1,13 @@
 # Compilar NexusWorkspace en el PC de desarrollo
 
-Este documento describe **qué instalar en el PC donde vas a compilar** y **cómo
-compilar, ejecutar y publicar** la aplicación. En el PC actual solo se escribe
-código; aquí no se compila nada.
+Este documento describe **qué necesita el equipo donde compilas** y **cómo
+compilar, ejecutar y publicar** la aplicación.
+
+> **Atajo:** `build.bat` (en la raíz) se encarga de todo — resuelve un .NET 9 SDK
+> compatible (usa el del equipo o instala una copia privada en `.dotnet\` sin admin),
+> restaura, crea la 1ª migración si falta, compila, testea y deja logs en
+> `build-logs\`. `build.bat installer` genera además el instalador. El resto de este
+> documento es la vía manual y los requisitos.
 
 ---
 

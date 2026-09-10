@@ -81,7 +81,7 @@ if not exist "%DOTNET_TOOLS%\vpk.exe" (
 )
 
 echo [3/3] vpk pack ...
-"%DOTNET_TOOLS%\vpk.exe" pack --packId NexusWorkspace --packTitle "NexusWorkspace" --packAuthors "Ivan" --packVersion %NX_VERSION% --packDir "%NX_PUBDIR%" --mainExe NexusWorkspace.Desktop.exe --outputDir "%NX_RELDIR%" > "%NX_LOGDIR%\vpk-pack.log" 2>&1
+"%DOTNET_TOOLS%\vpk.exe" pack --packId NexusWorkspace --packTitle "NexusWorkspace" --packAuthors "Ivan" --packVersion %NX_VERSION% --packDir "%NX_PUBDIR%" --mainExe NexusWorkspace.Desktop.exe --icon "%NX_REPO%\src\NexusWorkspace.Desktop\app.ico" --outputDir "%NX_RELDIR%" > "%NX_LOGDIR%\vpk-pack.log" 2>&1
 if errorlevel 1 (
   echo [X] Fallo en vpk pack. Ultimas lineas de %NX_LOGDIR%\vpk-pack.log :
   powershell -NoProfile -Command "Get-Content -LiteralPath '%NX_LOGDIR%\vpk-pack.log' -Tail 20"
