@@ -49,6 +49,9 @@ dotnet_naming_style.underscore_prefix_style.capitalization = camel_case
 
 # Analyzer noise we intentionally accept in this codebase
 dotnet_diagnostic.CA1848.severity = none   # LoggerMessage delegates — not worth it here
+dotnet_diagnostic.CA1873.severity = none   # companion to CA1848: flags e.g. info.Length / Path.GetFileName
+                                            # in LogInformation calls that fire at most a few times per
+                                            # session (backups, migrations) — not a hot path
 dotnet_diagnostic.CA1031.severity = none   # broad catch is deliberate in a few resilient paths
 dotnet_diagnostic.CA1305.severity = none   # UI date formatting uses the current culture on purpose
 dotnet_diagnostic.CA1822.severity = none   # false positive for XAML-bound instance members
