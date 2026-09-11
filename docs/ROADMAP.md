@@ -44,5 +44,5 @@ Incremental. **La solución permanece compilable y ejecutable al terminar cada f
 > merge `dev` → `main` + release (ver `docs/RELEASE.md`).
 
 > Publicado en GitHub: `porrii/NexusWorkspace`, rama `dev`. `main` + release cuando la v1 esté lista.
-> CI: el flujo está en `docs/ci-build.yml`; moverlo a `.github/workflows/build.yml` desde la web de
-> GitHub (o tras `gh auth refresh -s workflow`) para activarlo.
+> CI: `.github/workflows/build.yml` activo — restore + build + test en `windows-latest`
+> en cada push/PR a `dev`/`main`.

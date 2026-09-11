@@ -22,8 +22,7 @@ Android queda para v2.
 
 ## 3. CI (si aplica)
 
-- [ ] Mover `docs/ci-build.yml` a `.github/workflows/build.yml`
-      (`gh auth refresh -s workflow` y `git mv`, o pegarlo desde la web de GitHub).
+- [x] `.github/workflows/build.yml` activo (restore + build + test en cada push/PR a `dev`/`main`).
 - [ ] El workflow pasa en `dev`.
 
 ## 4. Merge y etiqueta

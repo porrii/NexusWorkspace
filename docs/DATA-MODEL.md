@@ -43,10 +43,10 @@ apuntan a cualquier entidad con **`TargetKind` (`EntityKind`) + `TargetId` (`Gui
 
 | Entidad | Campos clave | Relaciones |
 |---|---|---|
-| `Project` | `Name, Description, Icon, Color, Status, Priority, StartDateUtc, DueDateUtc, CompletedDateUtc, OwnerPersonId` | 1—∞ `WorkTask` · ∞—∞ `Person`/`Company`/`Tag` · 1—∞ `FollowUp`/`Communication`/`Meeting`/`Attachment`/`Comment` |
-| `WorkTask` | `Title, Description, ProjectId, Status, Priority, DueDateUtc, CompletedDateUtc, AssigneePersonId, RelatedCompanyId, SortKey` | ∞—1 `Project` · 1—∞ `SubTask`/`ChecklistItem`/`Comment`/`Attachment` · ∞—∞ `Tag`/`Person` · `TaskDependency` |
+| `Project` | `Name, Description, Icon, Color, Status, Priority, StartDateUtc, DueDateUtc, CompletedDateUtc, OwnerPersonId` | 1—∞ `WorkTask` · ∞—∞ `Person`/`Company`/`Tag` (`ProjectPerson` = equipo con `Role` libre, `ProjectCompany`, `ProjectTag`) · 1—∞ `FollowUp`/`Communication`/`Meeting`/`Attachment`/`Comment` |
+| `WorkTask` | `Title, Description, ProjectId, Status, Priority, DueDateUtc, CompletedDateUtc, AssigneePersonId, RelatedCompanyId, SortKey` | ∞—1 `Project` · 1—∞ `SubTask`/`ChecklistItem`/`Comment`/`Attachment` · ∞—∞ `Tag`/`Person` (`WorkTaskTag`, `WorkTaskPerson` = colaboradores además del `AssigneePersonId` único) · `TaskDependency` |
 | `SubTask` | `WorkTaskId, ParentSubTaskId (recursivo), Title, IsDone, SortKey` | árbol ilimitado; % completado calculado |
-| `ChecklistItem` | `WorkTaskId, Text, IsChecked, SortKey` | ∞—1 `WorkTask` |
+| `ChecklistItem` | `WorkTaskId, Text, IsChecked, SortKey` | ∞—1 `WorkTask`. **Transitorio** (docs/UX-REVIEW.md, bloques B1/B2): subtareas y checklist se ven y editan como una sola lista; nada nuevo crea `ChecklistItem` (`WorkTaskService.AddSubTaskAsync` para todo lo nuevo) y al abrir una tarea sus ítems vivos se mueven a `SubTask` (`EnsureChecklistConvertedAsync`). La entidad y la tabla siguen existiendo hasta una migración posterior a la v1 que las retire. |
 | `TaskDependency` | `WorkTaskId, DependsOnWorkTaskId, Kind` | `WorkTask` ↔ `WorkTask` |
 | `Person` | `Name, Role, CompanyId, Email, Phone, Notes, IsFavorite, LastContactedUtc` | ∞—1 `Company` · ∞—∞ `Project`/`WorkTask`/`Tag` (`ProjectPerson`, `WorkTaskPerson`, `PersonTag`) · 1—∞ `Communication` · ∞—∞ `Meeting` (`MeetingParticipant`) · detalle **agrega** todo lo vinculado |
 | `Company` | `Name, Kind (cliente/proveedor/interno/otro), Website, Notes, IsFavorite, LastContactedUtc` | 1—∞ `Person` · ∞—∞ `Project`/`Tag` (`ProjectCompany`, `CompanyTag`) · 1—∞ `Communication` |
@@ -62,9 +62,13 @@ apuntan a cualquier entidad con **`TargetKind` (`EntityKind`) + `TargetId` (`Gui
 | `Reminder` | `TargetKind, TargetId, Text, RemindAtUtc, Status` | a cualquier entidad |
 | `InboxItem` | `RawText, ParsedHint, State (Pending/Converted/Dismissed), ConvertedToKind, ConvertedToId, ProcessedAtUtc` | captura rápida; se convierte en `WorkTask`/`Project` (descartar = soft-delete) |
 | `SavedSearch` | `Name, Kind (superficie), QueryText, FiltersJson, IsPinned, SortKey, LastRunUtc` | búsquedas/filtros guardados por superficie; los fijados se muestran como chips |
-| `Template` | `Name, Kind (Project/Task), Description, DefinitionJson (opaco), UseCount, LastUsedAtUtc` | árbol reutilizable: proyecto (tareas → subtareas → checklist + etiquetas) o tarea suelta; aplicarla los recrea y suma a `UseCount` |
+| `Template` | `Name, Kind (Project/Task), Description, DefinitionJson (opaco), UseCount, LastUsedAtUtc` | árbol reutilizable: proyecto (tareas → subtareas + etiquetas) o tarea suelta; aplicarla los recrea y suma a `UseCount`. El JSON conserva un campo `Checklist` por compatibilidad con plantillas antiguas — al aplicarse se recrea como `SubTask`, igual que todo lo demás. |
 | `Notification` | `Text, Kind, CreatedAtUtc, IsRead, DeepLink` | centro de notificaciones local |
 | `Setting` | `Key, Value` | solo ajustes de negocio (UI/app → `settings.json`) |
+
+> `settings.json` (`AppSettings`, fuera de la BD) también guarda `TaskEventLabels`: la lista
+> de etiquetas de "Registrar evento" en el detalle de tarea, que crece cuando el usuario
+> escribe una nueva (ver `ActivityType.QuickAction` más abajo).
 
 ## Enums
 
@@ -72,7 +76,7 @@ apuntan a cualquier entidad con **`TargetKind` (`EntityKind`) + `TargetId` (`Gui
 - **`WorkTaskStatus`**: `Pending, InProgress, WaitingClient, WaitingProvider, Blocked, Finished, Cancelled` (archivada = flag ortogonal).
 - **`Priority`**: `Critical, High, Medium, Low`.
 - **`ActivityType`**: `… RelationAdded, RelationRemoved, MovedProject, Archived, Restored, Trashed, RestoredFromTrash, Deleted, Duplicated, TemplateApplied, Imported, Renamed, CommunicationLogged, MeetingScheduled, MeetingUpdated, TagAdded, TagRemoved, LinkedPerson, UnlinkedPerson, LinkedCompany, UnlinkedCompany` (append-only; los valores numéricos existentes nunca cambian).
-- **`QuickActionKind`**: `EmailSent, EmailReceived, CallMade, MeetingHeld, InfoSent, InfoReceived, PendingClient, PendingProvider, IncidentDetected, IncidentResolved, DeployedDev, DeployedPre, DeployedPro, ReminderSent, ChangeRequested, TestPerformed`.
+- **`QuickActionKind`**: `EmailSent, EmailReceived, CallMade, MeetingHeld, InfoSent, InfoReceived, PendingClient, PendingProvider, IncidentDetected, IncidentResolved, DeployedDev, DeployedPre, DeployedPro, ReminderSent, ChangeRequested, TestPerformed`. El catálogo fijo (`QuickActionCatalog`) y `WorkTaskService.ExecuteQuickActionAsync` siguen en el código pero **la UI ya no los usa** (bloque E): "Email/Llamada/Reunión" ahora son `Communication` reales (`CommunicationComposerViewModel` en la tarea) y "Pendiente cliente/proveedor" es directamente el cambio de estado. Lo que queda de la barra de un clic es **"Registrar evento"**: texto libre → `WorkTaskService.LogEventAsync` (un `ActivityEvent` de tipo `QuickAction`, sin `QuickActionKind`), con las etiquetas usadas guardadas en `AppSettings.TaskEventLabels`.
 - **`EntityKind`**: `Project, WorkTask, SubTask, ChecklistItem, Person, Company, Tag, Comment, Attachment, FollowUp, Communication, Meeting, Reminder, InboxItem, SavedSearch, Relation`.
 - **`CompanyKind`**: `Other, Client, Provider, Internal`.
 - **`CommunicationChannel`**: `Email, Call, Chat, InPerson, Letter, Ticket, Other`.
@@ -99,5 +103,18 @@ Cancelled      → Pending               (reactivar)
 ```
 
 Cada transición la valida `WorkTaskStateMachine` y genera un `ActivityEvent`
-(`StatusChanged`, con `OldValue`/`NewValue`). Las acciones rápidas pueden empujar el
-estado (p. ej. `PendingProvider` → `WaitingProvider`).
+(`StatusChanged`, con `OldValue`/`NewValue`).
+
+### Acoplo con `FollowUp` (bloque D)
+
+`WorkTaskService.ChangeStatusAsync` acopla el estado con los seguimientos de la tarea,
+sin que sean la misma entidad:
+
+- Al **salir** de un estado de espera (`WaitingClient`/`WaitingProvider`/`Blocked`) hacia
+  cualquier otro, se **cierran automáticamente** (`FollowUpState.Answered`, con
+  `Resolution` y `ActivityEvent` propios) todos los `FollowUp` abiertos (`Waiting`/
+  `Escalated`) de esa tarea.
+- Al **entrar** en un estado de espera desde el detalle de tarea, si no hay ninguno
+  abierto, la UI (`TaskDetailViewModel`) ofrece abrir uno precargado (asunto = título de
+  la tarea; "esperando a" = `RelatedCompanyId` de la tarea, o su `AssigneePersonId` si no
+  hay empresa). Sigue permitiéndose un `FollowUp` suelto, sin tarea.
