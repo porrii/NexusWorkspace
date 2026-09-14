@@ -5,25 +5,28 @@ Android queda para v2.
 
 ## 1. Verificación en verde (rama `dev`)
 
-- [ ] `build.bat release` → **0 errores / 0 avisos**, migraciones al día.
-- [ ] `dotnet test` → **todo verde** (79/79 a fecha de este documento).
+- [x] Build 0/0, 79/79 tests, en cada bloque desde A hasta H (parcial) — verificado en este PC.
+- [x] `docs/ROADMAP.md` y `docs/DATA-MODEL.md` reflejan el estado real (A–H, `docs/UX-REVIEW.md`).
+- [ ] **Recorrido manual en el PC de build**, tocando lo añadido tras A/B1: vincular
+      persona/empresa↔proyecto/tarea (C), estado→seguimiento automático (D), "Registrar
+      evento" + comunicaciones en la tarea (E), Actividad con filtros (F), página
+      **Tareas** global (G), lista de subtareas fusionada (B2).
 - [ ] Arranque de la app: sin `[WRN]`/`[ERR]` en `logs/nexus-<fecha>.log`;
       la copia diaria automática se crea; el scheduler arranca.
-- [ ] Recorrido manual rápido: crear proyecto → tarea → subtarea → acción rápida →
-      seguimiento → adjunto → informe PDF → copia de seguridad → restaurar (reinicio).
-- [ ] `docs/ROADMAP.md` y `docs/DATA-MODEL.md` reflejan el estado real.
 
 ## 2. Instalador
 
-- [ ] `installer\pack.bat` → `installer\releases\NexusWorkspace-win-Setup.exe`.
-- [ ] Instalar en una máquina/for perfil limpio: arranca, crea `%APPDATA%\NexusWorkspace`.
+- [ ] `build.bat installer` (o `installer\pack.bat`) → `installer\releases\NexusWorkspace-win-Setup.exe`,
+      ya con el icono de la app.
+- [ ] Instalar en un perfil limpio: arranca, crea `%APPDATA%\NexusWorkspace`, icono correcto
+      en escritorio/menú Inicio.
 - [ ] Con datos existentes: reinstalar **no** borra `nexus.db` ni `backups/`.
 - [ ] Desinstalar deja la carpeta de datos intacta.
 
-## 3. CI (si aplica)
+## 3. CI
 
 - [x] `.github/workflows/build.yml` activo (restore + build + test en cada push/PR a `dev`/`main`).
-- [ ] El workflow pasa en `dev`.
+- [x] El workflow pasa en `dev` (verificado dos veces, incl. tras limpiar avisos CA1873).
 
 ## 4. Merge y etiqueta
 

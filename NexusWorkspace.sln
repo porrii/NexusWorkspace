@@ -17,9 +17,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 		docs\ARCHITECTURE.md = docs\ARCHITECTURE.md
 		docs\BUILD.md = docs\BUILD.md
-		docs\FIRST-COMPILE.md = docs\FIRST-COMPILE.md
 		docs\DATA-MODEL.md = docs\DATA-MODEL.md
 		docs\ROADMAP.md = docs\ROADMAP.md
+		docs\RELEASE.md = docs\RELEASE.md
+		docs\UX-REVIEW.md = docs\UX-REVIEW.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusWorkspace.Domain", "src\NexusWorkspace.Domain\NexusWorkspace.Domain.csproj", "{B1A1E1F1-0001-4001-8001-000000000001}"
