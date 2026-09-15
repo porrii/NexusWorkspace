@@ -25,7 +25,8 @@ namespace NexusWorkspace.UI.ViewModels.Projects;
 public partial class ProjectDetailViewModel(
     IUnitOfWorkRunner unitOfWork,
     INavigationService navigation,
-    IPlatformLauncher launcher) : ViewModelBase
+    IPlatformLauncher launcher,
+    IAppNotifier notifier) : ViewModelBase
 {
     private Guid _projectId;
 
@@ -403,10 +404,13 @@ public partial class ProjectDetailViewModel(
             return;
         }
 
+        var wasArchived = Header.IsArchived;
+        var name = Header.Name;
+
         var result = await unitOfWork.RunAsync((sp, ct) =>
         {
             var service = sp.GetRequiredService<ProjectService>();
-            return Header.IsArchived
+            return wasArchived
                 ? service.UnarchiveAsync(_projectId, ct)
                 : service.ArchiveAsync(_projectId, ct);
         });
@@ -416,6 +420,12 @@ public partial class ProjectDetailViewModel(
             ErrorMessage = result.Error.Message;
             return;
         }
+
+        notifier.Toast(
+            wasArchived ? "Proyecto restaurado" : "Proyecto archivado",
+            wasArchived
+                ? $"«{name}» vuelve a estar activo."
+                : $"«{name}» se ha movido a archivados. Puedes restaurarlo aquí o desde Papelera y archivos.");
 
         await RefreshAsync();
     }

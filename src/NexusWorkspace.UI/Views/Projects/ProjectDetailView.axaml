@@ -28,6 +28,10 @@
               <TextBlock Text="{Binding Priority, Converter={x:Static conv:AppConverters.EnumLabel}}"
                          Foreground="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}" />
             </Border>
+            <Border Classes="pill" VerticalAlignment="Center" IsVisible="{Binding IsArchived}"
+                    BorderBrush="{DynamicResource SemWarningBrush}">
+              <TextBlock Text="Archivado" Foreground="{DynamicResource SemWarningBrush}" />
+            </Border>
           </StackPanel>
         </Grid>
 
@@ -138,7 +142,8 @@
         </ComboBox.ItemTemplate>
       </ComboBox>
       <Button Content="Editar proyecto" Classes="accent" Command="{Binding ToggleEditPanelCommand}" />
-      <Button Content="Archivar / Restaurar" Command="{Binding ArchiveCommand}" />
+      <Button Content="{Binding Header.IsArchived, Converter={x:Static conv:AppConverters.ArchiveLabel}}"
+              Command="{Binding ArchiveCommand}" />
       <Button Content="Guardar como plantilla" Classes="quick" Command="{Binding ToggleTemplatePanelCommand}" />
       <Button Classes="quick">
         <StackPanel Orientation="Horizontal" Spacing="6">

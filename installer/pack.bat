@@ -69,6 +69,13 @@ mkdir "%NX_RELDIR%"
 rem --- 2) empaquetar --------------------------------------------------------------
 if /i "%NX_MODE%"=="nozip" goto :nozip
 
+rem El .csproj copia nexus.portable a la salida siempre (para que 'dotnet run'/
+rem build.bat en local no toquen el %APPDATA% real). El instalador NO debe
+rem llevarlo: forzaria modo portable dentro de la carpeta de instalacion de
+rem Velopack (%LocalAppData%\NexusWorkspace\current\), datos que se perderian
+rem en cada actualizacion. Se quita solo para este modo.
+if exist "%NX_PUBDIR%\nexus.portable" del /q "%NX_PUBDIR%\nexus.portable"
+
 echo [2/3] Comprobando la herramienta Velopack (vpk) ...
 if not exist "%DOTNET_TOOLS%\vpk.exe" (
   echo        Instalando vpk ... (la primera vez tarda)

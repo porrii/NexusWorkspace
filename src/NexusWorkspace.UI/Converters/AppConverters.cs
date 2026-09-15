@@ -49,6 +49,9 @@ public static class AppConverters
 
     public static readonly FuncValueConverter<object?, bool> IsNotNull = new(value => value is not null);
 
+    public static readonly FuncValueConverter<bool, string> ArchiveLabel =
+        new(archived => archived ? "Restaurar" : "Archivar");
+
     public static readonly FuncValueConverter<int, bool> Positive = new(value => value > 0);
 
     public static readonly FuncValueConverter<int, bool> IsZero = new(value => value == 0);

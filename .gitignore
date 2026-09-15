@@ -12,6 +12,7 @@ x86/
 artifacts/
 publish/
 [Pp]ublish/
+dist/
 
 # ---- IDE ----
 .vs/
