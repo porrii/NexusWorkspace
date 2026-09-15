@@ -74,7 +74,6 @@
         </StackPanel>
         <CheckBox Content="Notificaciones activadas" IsChecked="{Binding NotificationsEnabled, Mode=TwoWay}" />
         <CheckBox Content="Mostrar recordatorios pendientes al arrancar" IsChecked="{Binding RemindersOnStartup, Mode=TwoWay}" />
-        <CheckBox Content="Avisos de seguimientos que llevan tiempo esperando" IsChecked="{Binding FollowUpNudges, Mode=TwoWay}" />
       </StackPanel>
     </Border>
 

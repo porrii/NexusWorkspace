@@ -6,7 +6,6 @@ using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
 using NexusWorkspace.Application.Communications;
 using NexusWorkspace.Application.Companies;
-using NexusWorkspace.Application.FollowUps;
 using NexusWorkspace.Application.Meetings;
 using NexusWorkspace.Application.People;
 using NexusWorkspace.Application.Projects;
@@ -67,8 +66,6 @@ public partial class PersonDetailViewModel(IUnitOfWorkRunner unitOfWork, INaviga
 
     public ObservableCollection<WorkTaskListItem> Tasks { get; } = [];
 
-    public ObservableCollection<FollowUpListItem> FollowUps { get; } = [];
-
     public ObservableCollection<CommunicationListItem> Communications { get; } = [];
 
     public ObservableCollection<MeetingListItem> Meetings { get; } = [];
@@ -108,13 +105,12 @@ public partial class PersonDetailViewModel(IUnitOfWorkRunner unitOfWork, INaviga
                 var allProjects = await sp.GetRequiredService<ProjectReadService>().GetListAsync(ProjectListScope.All, null, ct);
                 var allCompanies = await sp.GetRequiredService<CompanyReadService>().GetListAsync(CompanyScope.All, null, null, ct);
                 var tasks = await sp.GetRequiredService<WorkTaskReadService>().GetForPersonAsync(_personId, false, ct);
-                var followUps = await sp.GetRequiredService<FollowUpReadService>().GetWaitingOnPersonAsync(_personId, ct);
                 var comms = await sp.GetRequiredService<CommunicationReadService>().GetForPersonAsync(_personId, 200, ct);
                 var meetings = await sp.GetRequiredService<MeetingReadService>().GetForPersonAsync(_personId, ct);
                 var relations = await sp.GetRequiredService<RelationReadService>().GetForEntityAsync(EntityKind.Person, _personId, ct);
                 var timeline = await sp.GetRequiredService<ActivityReadService>().GetForEntityAsync(EntityKind.Person, _personId, 200, ct);
                 var tags = await sp.GetRequiredService<TagReadService>().GetAllAsync(false, ct);
-                return (header, projects, allProjects, allCompanies, tasks, followUps, comms, meetings, relations, timeline, tags);
+                return (header, projects, allProjects, allCompanies, tasks, comms, meetings, relations, timeline, tags);
             });
 
             if (data.header is null)
@@ -129,7 +125,6 @@ public partial class PersonDetailViewModel(IUnitOfWorkRunner unitOfWork, INaviga
             UnlinkedProjects.Reset(data.allProjects.Where(p => !linkedIds.Contains(p.Id)).OrderBy(p => p.Name));
             AllCompanies.Reset(data.allCompanies);
             Tasks.Reset(data.tasks);
-            FollowUps.Reset(data.followUps);
             Communications.Reset(data.comms);
             Meetings.Reset(data.meetings);
             Relations.Reset(data.relations);

@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
-using NexusWorkspace.Application.FollowUps;
 using NexusWorkspace.Application.Inbox;
 using NexusWorkspace.Application.Projects;
 using NexusWorkspace.Application.Reminders;
@@ -78,9 +77,6 @@ public partial class DashboardViewModel : ViewModelBase
     private bool _showUpcoming = true;
 
     [ObservableProperty]
-    private bool _showWaitingOn = true;
-
-    [ObservableProperty]
     private bool _showReminders = true;
 
     [ObservableProperty]
@@ -88,9 +84,6 @@ public partial class DashboardViewModel : ViewModelBase
 
     [ObservableProperty]
     private DateTimeOffset? _reminderDate = DateTimeOffset.Now.Date.AddDays(1);
-
-    [ObservableProperty]
-    private bool _anyWaitingOn;
 
     [ObservableProperty]
     private bool _anyReminders;
@@ -113,7 +106,6 @@ public partial class DashboardViewModel : ViewModelBase
         ShowActiveProjects = widgets.GetValueOrDefault("activeProjects", true);
         ShowRecentActivity = widgets.GetValueOrDefault("recentActivity", true);
         ShowUpcoming = widgets.GetValueOrDefault("upcoming", true);
-        ShowWaitingOn = widgets.GetValueOrDefault("waitingOn", true);
         ShowReminders = widgets.GetValueOrDefault("reminders", true);
         _loadingWidgetPrefs = false;
     }
@@ -123,8 +115,6 @@ public partial class DashboardViewModel : ViewModelBase
     public ObservableCollection<ActivityEntry> RecentActivity { get; } = [];
 
     public ObservableCollection<WorkTaskListItem> UpcomingTasks { get; } = [];
-
-    public ObservableCollection<FollowUpListItem> WaitingOn { get; } = [];
 
     public ObservableCollection<ReminderView> UpcomingReminders { get; } = [];
 
@@ -144,7 +134,6 @@ public partial class DashboardViewModel : ViewModelBase
                 var taskReads = sp.GetRequiredService<WorkTaskReadService>();
                 var activityReads = sp.GetRequiredService<ActivityReadService>();
                 var inboxReads = sp.GetRequiredService<InboxReadService>();
-                var followUpReads = sp.GetRequiredService<FollowUpReadService>();
                 var reminderReads = sp.GetRequiredService<ReminderReadService>();
 
                 var activeProjects = await projectReads.GetListAsync(ProjectListScope.Active, null, ct);
@@ -152,9 +141,8 @@ public partial class DashboardViewModel : ViewModelBase
                 var upcoming = await taskReads.GetOpenAcrossWorkspaceAsync(ct);
                 var recentActivity = await activityReads.GetRecentAsync(12, ct);
                 var inboxCount = await inboxReads.CountPendingAsync(ct);
-                var waiting = await followUpReads.GetListAsync(FollowUpScope.Open, ct);
                 var reminders = await reminderReads.GetPendingAsync(ct);
-                return (activeProjects, summary, upcoming, recentActivity, inboxCount, waiting, reminders);
+                return (activeProjects, summary, upcoming, recentActivity, inboxCount, reminders);
             });
 
             OpenTaskCount = data.summary.Open;
@@ -169,13 +157,11 @@ public partial class DashboardViewModel : ViewModelBase
                 .Where(t => t.DueDateUtc is not null)
                 .OrderBy(t => t.DueDateUtc)
                 .Take(6));
-            WaitingOn.Reset(data.waiting.Take(6));
             UpcomingReminders.Reset(data.reminders.Take(6));
 
             AnyActiveProjects = ActiveProjects.Count > 0;
             AnyRecentActivity = RecentActivity.Count > 0;
             AnyUpcoming = UpcomingTasks.Count > 0;
-            AnyWaitingOn = WaitingOn.Count > 0;
             AnyReminders = UpcomingReminders.Count > 0;
 
             ShowOnboarding = data.activeProjects.Count == 0 && data.summary.Open == 0
@@ -209,9 +195,6 @@ public partial class DashboardViewModel : ViewModelBase
     private void OpenInbox() => _navigation.NavigateTo(PageKey.Inbox);
 
     [RelayCommand]
-    private void OpenFollowUps() => _navigation.NavigateTo(PageKey.FollowUps);
-
-    [RelayCommand]
     private void OpenCalendar() => _navigation.NavigateTo(PageKey.Calendar);
 
     [RelayCommand]
@@ -237,19 +220,6 @@ public partial class DashboardViewModel : ViewModelBase
 
     [RelayCommand]
     private void ToggleCustomize() => IsCustomizing = !IsCustomizing;
-
-    [RelayCommand]
-    private async Task SendFollowUpReminderAsync(FollowUpListItem? item)
-    {
-        if (item is null)
-        {
-            return;
-        }
-
-        await _unitOfWork.RunAsync((sp, ct) =>
-            sp.GetRequiredService<FollowUpService>().SendReminderAsync(item.Id, null, ct));
-        await RefreshAsync();
-    }
 
     [RelayCommand]
     private async Task AddReminderAsync()
@@ -312,8 +282,6 @@ public partial class DashboardViewModel : ViewModelBase
     partial void OnShowRecentActivityChanged(bool value) => PersistWidget("recentActivity", value);
 
     partial void OnShowUpcomingChanged(bool value) => PersistWidget("upcoming", value);
-
-    partial void OnShowWaitingOnChanged(bool value) => PersistWidget("waitingOn", value);
 
     partial void OnShowRemindersChanged(bool value) => PersistWidget("reminders", value);
 

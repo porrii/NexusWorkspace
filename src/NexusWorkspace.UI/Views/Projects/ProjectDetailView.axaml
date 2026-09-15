@@ -293,33 +293,8 @@
         </StackPanel>
       </TabItem>
 
-      <TabItem Header="Seguimientos">
+      <TabItem Header="Recordatorios">
         <StackPanel Spacing="10" Margin="0,12,0,0">
-          <ItemsControl ItemsSource="{Binding FollowUps}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Border Classes="row" Margin="0,0,0,8">
-                  <Grid ColumnDefinitions="*,Auto,Auto">
-                    <StackPanel Grid.Column="0" Spacing="1">
-                      <TextBlock Text="{Binding Subject}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                      <TextBlock Classes="muted" Text="{Binding WaitingOn, StringFormat='{}⏳ {0}'}" />
-                    </StackPanel>
-                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="8,0" FontWeight="SemiBold"
-                               Foreground="{DynamicResource SemWaitingBrush}"
-                               Text="{Binding DaysWaiting, StringFormat='{}{0} d'}" />
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"
-                                IsVisible="{Binding IsOpen}">
-                      <Button Content="Recordatorio" Classes="quick"
-                              Command="{Binding $parent[ItemsControl].DataContext.SendFollowUpReminderCommand}" CommandParameter="{Binding}" />
-                      <Button Content="Respondió" Classes="quick"
-                              Command="{Binding $parent[ItemsControl].DataContext.ResolveFollowUpCommand}" CommandParameter="{Binding}" />
-                    </StackPanel>
-                  </Grid>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-
           <ItemsControl ItemsSource="{Binding Reminders}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
@@ -336,18 +311,8 @@
           </ItemsControl>
 
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Content="Iniciar seguimiento" Classes="quick" Command="{Binding ToggleFollowUpPanelCommand}" />
             <Button Content="Nuevo recordatorio" Classes="quick" Command="{Binding ToggleReminderPanelCommand}" />
           </StackPanel>
-
-          <Border Classes="tile" IsVisible="{Binding IsFollowUpPanelOpen}">
-            <StackPanel Spacing="8">
-              <TextBox Watermark="¿Qué estás esperando?" Text="{Binding FollowUpSubject, Mode=TwoWay}" />
-              <TextBox Watermark="¿De quién?" Text="{Binding FollowUpWaitingOn, Mode=TwoWay}" />
-              <Button Content="Empezar a esperar" Classes="accent" HorizontalAlignment="Right"
-                      Command="{Binding StartFollowUpCommand}" />
-            </StackPanel>
-          </Border>
 
           <Border Classes="tile" IsVisible="{Binding IsReminderPanelOpen}">
             <StackPanel Spacing="8">

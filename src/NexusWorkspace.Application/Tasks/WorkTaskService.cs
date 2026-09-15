@@ -113,9 +113,6 @@ public sealed class WorkTaskService(IApplicationDbContext db, IClock clock, IAct
         return Result.Success();
     }
 
-    private static bool IsWaitingStatus(WorkTaskStatus s)
-        => s is WorkTaskStatus.WaitingClient or WorkTaskStatus.WaitingProvider or WorkTaskStatus.Blocked;
-
     public async Task<Result> ChangeStatusAsync(Guid taskId, WorkTaskStatus target, CancellationToken cancellationToken = default)
     {
         var task = await db.WorkTasks.FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);
@@ -128,25 +125,6 @@ public sealed class WorkTaskService(IApplicationDbContext db, IClock clock, IAct
         if (result.IsFailure)
         {
             return result;
-        }
-
-        // Coupling: leaving a "waiting" state auto-resolves any open follow-up on this task.
-        if (!IsWaitingStatus(target))
-        {
-            var open = await db.FollowUps
-                .Where(f => f.TargetKind == EntityKind.WorkTask && f.TargetId == taskId
-                            && (f.State == FollowUpState.Waiting || f.State == FollowUpState.Escalated))
-                .ToListAsync(cancellationToken);
-
-            foreach (var f in open)
-            {
-                f.State = FollowUpState.Answered;
-                f.ResolvedAtUtc = clock.UtcNow;
-                f.Resolution = $"Cerrado automáticamente al pasar la tarea a «{DisplayNames.Of(target)}».";
-                f.NextFollowUpUtc = null;
-                activity.Record(EntityKind.WorkTask, taskId, ActivityType.FollowUpResolved,
-                    $"Seguimiento cerrado: {f.Subject}.", task.ProjectId, note: f.Resolution);
-            }
         }
 
         await db.SaveChangesAsync(cancellationToken);

@@ -6,7 +6,6 @@ using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
 using NexusWorkspace.Application.Communications;
 using NexusWorkspace.Application.Companies;
-using NexusWorkspace.Application.FollowUps;
 using NexusWorkspace.Application.People;
 using NexusWorkspace.Application.Projects;
 using NexusWorkspace.Application.Relations;
@@ -62,8 +61,6 @@ public partial class CompanyDetailViewModel(IUnitOfWorkRunner unitOfWork, INavig
 
     public ObservableCollection<WorkTaskListItem> Tasks { get; } = [];
 
-    public ObservableCollection<FollowUpListItem> FollowUps { get; } = [];
-
     public ObservableCollection<CommunicationListItem> Communications { get; } = [];
 
     public ObservableCollection<RelationView> Relations { get; } = [];
@@ -101,12 +98,11 @@ public partial class CompanyDetailViewModel(IUnitOfWorkRunner unitOfWork, INavig
                 var projects = await sp.GetRequiredService<ProjectReadService>().GetForCompanyAsync(_companyId, ct);
                 var allProjects = await sp.GetRequiredService<ProjectReadService>().GetListAsync(ProjectListScope.All, null, ct);
                 var tasks = await sp.GetRequiredService<WorkTaskReadService>().GetForCompanyAsync(_companyId, false, ct);
-                var followUps = await sp.GetRequiredService<FollowUpReadService>().GetWaitingOnCompanyAsync(_companyId, ct);
                 var comms = await sp.GetRequiredService<CommunicationReadService>().GetForCompanyAsync(_companyId, 200, ct);
                 var relations = await sp.GetRequiredService<RelationReadService>().GetForEntityAsync(EntityKind.Company, _companyId, ct);
                 var timeline = await sp.GetRequiredService<ActivityReadService>().GetForEntityAsync(EntityKind.Company, _companyId, 200, ct);
                 var tags = await sp.GetRequiredService<TagReadService>().GetAllAsync(false, ct);
-                return (header, people, projects, allProjects, tasks, followUps, comms, relations, timeline, tags);
+                return (header, people, projects, allProjects, tasks, comms, relations, timeline, tags);
             });
 
             if (data.header is null)
@@ -122,7 +118,6 @@ public partial class CompanyDetailViewModel(IUnitOfWorkRunner unitOfWork, INavig
             var linkedIds = data.projects.Select(p => p.Id).ToHashSet();
             UnlinkedProjects.Reset(data.allProjects.Where(p => !linkedIds.Contains(p.Id)).OrderBy(p => p.Name));
             Tasks.Reset(data.tasks);
-            FollowUps.Reset(data.followUps);
             Communications.Reset(data.comms);
             Relations.Reset(data.relations);
             Timeline.Reset(data.timeline);

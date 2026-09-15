@@ -49,12 +49,6 @@
       </Border>
       <Border Classes="tile" Width="170" Height="82" Margin="0,0,10,10">
         <StackPanel>
-          <TextBlock Text="{Binding Stats.OpenFollowUpCount}" FontSize="24" FontWeight="SemiBold" />
-          <TextBlock Text="Seguimientos abiertos" Classes="muted" />
-        </StackPanel>
-      </Border>
-      <Border Classes="tile" Width="170" Height="82" Margin="0,0,10,10">
-        <StackPanel>
           <TextBlock Text="{Binding Stats.AvgDaysToFinish}" FontSize="24" FontWeight="SemiBold" />
           <TextBlock Text="Días medios a fin" Classes="muted" />
         </StackPanel>

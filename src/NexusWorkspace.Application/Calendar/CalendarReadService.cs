@@ -52,19 +52,6 @@ public sealed class CalendarReadService(IApplicationDbContext db)
             .Select(p => new { p.Id, p.Name, Due = p.DueDateUtc!.Value })
             .ToListAsync(cancellationToken);
 
-        var followUps = await db.FollowUps.AsNoTracking()
-            .Where(f => (f.State == FollowUpState.Waiting || f.State == FollowUpState.Escalated)
-                        && f.NextFollowUpUtc != null && f.NextFollowUpUtc >= fromUtc && f.NextFollowUpUtc <= toUtc)
-            .Select(f => new
-            {
-                f.Id,
-                f.Subject,
-                Next = f.NextFollowUpUtc!.Value,
-                f.ProjectId,
-                ProjectName = f.Project != null ? f.Project.Name : null,
-            })
-            .ToListAsync(cancellationToken);
-
         var reminders = await db.Reminders.AsNoTracking()
             .Where(r => r.Status == ReminderStatus.Pending && r.RemindAtUtc >= fromUtc && r.RemindAtUtc <= toUtc)
             .Select(r => new
@@ -90,7 +77,7 @@ public sealed class CalendarReadService(IApplicationDbContext db)
             .ToListAsync(cancellationToken);
 
         var entries = new List<CalendarEntry>(
-            tasks.Count + projects.Count + followUps.Count + reminders.Count + meetings.Count);
+            tasks.Count + projects.Count + reminders.Count + meetings.Count);
 
         entries.AddRange(tasks.Select(t => new CalendarEntry
         {
@@ -114,18 +101,6 @@ public sealed class CalendarReadService(IApplicationDbContext db)
             NavigateId = p.Id,
             ProjectId = p.Id,
             ProjectName = p.Name,
-        }));
-
-        entries.AddRange(followUps.Select(f => new CalendarEntry
-        {
-            Date = LocalDay(f.Next),
-            WhenUtc = f.Next,
-            Kind = CalendarEntryKind.FollowUpNext,
-            Title = f.Subject,
-            NavigateKind = EntityKind.FollowUp,
-            NavigateId = f.Id,
-            ProjectId = f.ProjectId,
-            ProjectName = f.ProjectName,
         }));
 
         entries.AddRange(reminders.Select(r => new CalendarEntry

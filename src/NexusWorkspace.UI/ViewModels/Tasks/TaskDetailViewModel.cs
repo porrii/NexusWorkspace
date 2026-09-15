@@ -6,7 +6,6 @@ using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Activity;
 using NexusWorkspace.Application.Communications;
 using NexusWorkspace.Application.Companies;
-using NexusWorkspace.Application.FollowUps;
 using NexusWorkspace.Application.People;
 using NexusWorkspace.Application.Reminders;
 using NexusWorkspace.Application.Tags;
@@ -47,21 +46,6 @@ public partial class TaskDetailViewModel(
 
     [ObservableProperty]
     private string _eventNote = string.Empty;
-
-    [ObservableProperty]
-    private bool _isFollowUpPanelOpen;
-
-    [ObservableProperty]
-    private string _followUpSubject = string.Empty;
-
-    [ObservableProperty]
-    private string _followUpWaitingOn = string.Empty;
-
-    [ObservableProperty]
-    private PersonListItem? _followUpWaitingPerson;
-
-    [ObservableProperty]
-    private CompanyListItem? _followUpWaitingCompany;
 
     [ObservableProperty]
     private bool _isReminderPanelOpen;
@@ -107,8 +91,6 @@ public partial class TaskDetailViewModel(
 
     [ObservableProperty]
     private string? _templateMessage;
-
-    public ObservableCollection<FollowUpListItem> FollowUps { get; } = [];
 
     public ObservableCollection<ReminderView> Reminders { get; } = [];
 
@@ -168,17 +150,15 @@ public partial class TaskDetailViewModel(
             {
                 var taskReads = sp.GetRequiredService<WorkTaskReadService>();
                 var activityReads = sp.GetRequiredService<ActivityReadService>();
-                var followUpReads = sp.GetRequiredService<FollowUpReadService>();
                 var reminderReads = sp.GetRequiredService<ReminderReadService>();
                 await sp.GetRequiredService<WorkTaskService>().EnsureChecklistConvertedAsync(_taskId, ct);
                 var d = await taskReads.GetDetailAsync(_taskId, ct);
                 var h = await activityReads.GetForEntityAsync(EntityKind.WorkTask, _taskId, 200, ct);
-                var f = await followUpReads.GetForEntityAsync(EntityKind.WorkTask, _taskId, ct);
                 var r = await reminderReads.GetForEntityAsync(EntityKind.WorkTask, _taskId, ct);
                 var people = await sp.GetRequiredService<PersonReadService>().GetListAsync(PersonScope.All, null, null, ct);
                 var companies = await sp.GetRequiredService<CompanyReadService>().GetListAsync(CompanyScope.All, null, null, ct);
                 var tags = await sp.GetRequiredService<TagReadService>().GetAllAsync(false, ct);
-                return (d, h, f, r, people, companies, tags);
+                return (d, h, r, people, companies, tags);
             });
 
             var detail = data.d;
@@ -206,7 +186,6 @@ public partial class TaskDetailViewModel(
             Children.Reset(BuildChildren(detail));
             Comments.Reset(detail.Comments);
             History.Reset(data.h);
-            FollowUps.Reset(data.f);
             Reminders.Reset(data.r);
             AllPeople.Reset(data.people);
             AllCompanies.Reset(data.companies);
@@ -242,35 +221,12 @@ public partial class TaskDetailViewModel(
         ChangeStatusCommand.Execute(value.Value);
     }
 
-    private static bool IsWaitingStatus(WorkTaskStatus s)
-        => s is WorkTaskStatus.WaitingClient or WorkTaskStatus.WaitingProvider or WorkTaskStatus.Blocked;
-
     [RelayCommand]
-    private async Task ChangeStatusAsync(WorkTaskStatus status)
-    {
-        if (Detail is null || Detail.Status == status)
-        {
-            return;
-        }
-
-        var wentToWaiting = IsWaitingStatus(status);
-        await RunAndRefreshAsync((sp, ct) =>
-            sp.GetRequiredService<WorkTaskService>().ChangeStatusAsync(_taskId, status, ct));
-
-        // Coupling: entering a waiting state offers to open a follow-up bound to
-        // this task, pre-filled from its related company / assignee.
-        if (wentToWaiting && Detail is { } d && IsWaitingStatus(d.Status)
-            && !FollowUps.Any(f => f.IsOpen) && !IsFollowUpPanelOpen)
-        {
-            FollowUpSubject = d.Title;
-            FollowUpWaitingOn = string.Empty;
-            FollowUpWaitingCompany = d.RelatedCompanyId is { } cid ? AllCompanies.FirstOrDefault(c => c.Id == cid) : null;
-            FollowUpWaitingPerson = FollowUpWaitingCompany is null && d.AssigneePersonId is { } aid
-                ? AllPeople.FirstOrDefault(p => p.Id == aid)
-                : null;
-            IsFollowUpPanelOpen = true;
-        }
-    }
+    private Task ChangeStatusAsync(WorkTaskStatus status)
+        => Detail is null || Detail.Status == status
+            ? Task.CompletedTask
+            : RunAndRefreshAsync((sp, ct) =>
+                sp.GetRequiredService<WorkTaskService>().ChangeStatusAsync(_taskId, status, ct));
 
     [RelayCommand]
     private Task ChangePriorityAsync(Priority priority)
@@ -627,67 +583,6 @@ public partial class TaskDetailViewModel(
                     ? service.UnarchiveAsync(_taskId, ct)
                     : service.ArchiveAsync(_taskId, ct);
             });
-
-    [RelayCommand]
-    private void ToggleFollowUpPanel()
-    {
-        IsFollowUpPanelOpen = !IsFollowUpPanelOpen;
-        if (!IsFollowUpPanelOpen)
-        {
-            ResetFollowUpDraft();
-        }
-    }
-
-    private void ResetFollowUpDraft()
-    {
-        FollowUpSubject = string.Empty;
-        FollowUpWaitingOn = string.Empty;
-        FollowUpWaitingPerson = null;
-        FollowUpWaitingCompany = null;
-    }
-
-    [RelayCommand]
-    private async Task StartFollowUpAsync()
-    {
-        var subject = FollowUpSubject?.Trim();
-        if (string.IsNullOrWhiteSpace(subject))
-        {
-            ErrorMessage = "Indica qué estás esperando.";
-            return;
-        }
-
-        var result = await unitOfWork.RunAsync((sp, ct) =>
-            sp.GetRequiredService<FollowUpService>().StartAsync(new StartFollowUpRequest
-            {
-                TargetKind = EntityKind.WorkTask,
-                TargetId = _taskId,
-                Subject = subject,
-                WaitingOnPersonId = FollowUpWaitingPerson?.Id,
-                WaitingOnCompanyId = FollowUpWaitingCompany?.Id,
-                WaitingOnLabel = string.IsNullOrWhiteSpace(FollowUpWaitingOn) ? null : FollowUpWaitingOn.Trim(),
-            }, ct));
-
-        if (result.IsFailure)
-        {
-            ErrorMessage = result.Error.Message;
-            return;
-        }
-
-        ResetFollowUpDraft();
-        IsFollowUpPanelOpen = false;
-        await RefreshAsync();
-    }
-
-    [RelayCommand]
-    private Task SendFollowUpReminderAsync(FollowUpListItem? item)
-        => item is null ? Task.CompletedTask : RunAndRefreshAsync((sp, ct) =>
-            sp.GetRequiredService<FollowUpService>().SendReminderAsync(item.Id, null, ct));
-
-    [RelayCommand]
-    private Task ResolveFollowUpAsync(FollowUpListItem? item)
-        => item is null ? Task.CompletedTask : RunAndRefreshAsync((sp, ct) =>
-            sp.GetRequiredService<FollowUpService>().ResolveAsync(
-                new ResolveFollowUpRequest { Id = item.Id, State = FollowUpState.Answered }, ct));
 
     [RelayCommand]
     private void ToggleReminderPanel()

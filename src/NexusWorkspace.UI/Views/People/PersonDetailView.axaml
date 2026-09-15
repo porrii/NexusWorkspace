@@ -128,12 +128,6 @@
             </Border>
             <Border Classes="tile" Width="150" Height="72" Margin="0,0,10,10">
               <StackPanel>
-                <TextBlock Text="{Binding Header.OpenFollowUpCount}" FontSize="22" FontWeight="SemiBold" />
-                <TextBlock Text="Seguimientos" Classes="muted" />
-              </StackPanel>
-            </Border>
-            <Border Classes="tile" Width="150" Height="72" Margin="0,0,10,10">
-              <StackPanel>
                 <TextBlock Text="{Binding Header.CommunicationCount}" FontSize="22" FontWeight="SemiBold" />
                 <TextBlock Text="Comunicaciones" Classes="muted" />
               </StackPanel>
@@ -208,26 +202,6 @@
                   </StackPanel>
                 </StackPanel>
               </Button>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </TabItem>
-
-      <TabItem Header="Seguimientos">
-        <ItemsControl ItemsSource="{Binding FollowUps}" Margin="0,12,0,0">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Border Classes="row" Margin="0,0,0,8">
-                <StackPanel Spacing="4">
-                  <TextBlock Text="{Binding Subject}" FontWeight="SemiBold" />
-                  <StackPanel Orientation="Horizontal" Spacing="12">
-                    <TextBlock Classes="muted" Text="{Binding State, Converter={x:Static conv:AppConverters.EnumLabel}}" />
-                    <TextBlock Classes="muted" Text="{Binding DaysWaiting, StringFormat='{}{0} días esperando'}" />
-                    <TextBlock Classes="muted" Text="{Binding ProjectName}"
-                               IsVisible="{Binding ProjectName, Converter={x:Static conv:AppConverters.HasText}}" />
-                  </StackPanel>
-                </StackPanel>
-              </Border>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>

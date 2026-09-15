@@ -64,7 +64,6 @@ public partial class MainViewModel : ViewModelBase
             new(PageKey.Inbox, "Inbox", "Inbox"),
             new(PageKey.Projects, "Proyectos", "FolderMultiple"),
             new(PageKey.Tasks, "Tareas", "CheckboxMarked"),
-            new(PageKey.FollowUps, "Seguimientos", "ClockAlert"),
             new(PageKey.Calendar, "Calendario", "Calendar"),
             new(PageKey.People, "Personas", "AccountMultiple"),
             new(PageKey.Companies, "Empresas", "OfficeBuilding"),

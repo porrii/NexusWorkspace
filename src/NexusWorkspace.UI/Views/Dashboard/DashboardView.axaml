@@ -43,7 +43,6 @@
           <CheckBox Content="Proyectos activos" IsChecked="{Binding ShowActiveProjects, Mode=TwoWay}" Margin="0,0,18,0" />
           <CheckBox Content="Actividad reciente" IsChecked="{Binding ShowRecentActivity, Mode=TwoWay}" Margin="0,0,18,0" />
           <CheckBox Content="Próximos vencimientos" IsChecked="{Binding ShowUpcoming, Mode=TwoWay}" Margin="0,0,18,0" />
-          <CheckBox Content="Esperando respuesta" IsChecked="{Binding ShowWaitingOn, Mode=TwoWay}" Margin="0,0,18,0" />
           <CheckBox Content="Recordatorios" IsChecked="{Binding ShowReminders, Mode=TwoWay}" />
         </WrapPanel>
       </StackPanel>
@@ -108,10 +107,12 @@
       </StackPanel>
     </Border>
 
-    <Grid ColumnDefinitions="*,*">
+    <!-- These three reflow with WrapPanel (not a fixed grid) so hiding one doesn't
+         leave an empty hole next to the ones that stay. -->
+    <WrapPanel>
 
       <!-- Active projects -->
-      <Border Classes="card" Grid.Column="0" Margin="0,0,9,0" IsVisible="{Binding ShowActiveProjects}">
+      <Border Classes="card" Width="531" Margin="0,0,18,18" IsVisible="{Binding ShowActiveProjects}">
         <StackPanel Spacing="12">
           <TextBlock Text="Proyectos activos" Classes="h2" />
           <ItemsControl ItemsSource="{Binding ActiveProjects}">
@@ -139,7 +140,7 @@
       </Border>
 
       <!-- Recent activity -->
-      <Border Classes="card" Grid.Column="1" Margin="9,0,0,0" IsVisible="{Binding ShowRecentActivity}">
+      <Border Classes="card" Width="531" Margin="0,0,18,18" IsVisible="{Binding ShowRecentActivity}">
         <StackPanel Spacing="12">
           <TextBlock Text="Actividad reciente" Classes="h2" />
           <ItemsControl ItemsSource="{Binding RecentActivity}">
@@ -158,41 +159,8 @@
         </StackPanel>
       </Border>
 
-    </Grid>
-
-    <Grid ColumnDefinitions="*,*">
-
-      <!-- Esperando respuesta -->
-      <Border Classes="card" Grid.Column="0" Margin="0,0,9,0" IsVisible="{Binding ShowWaitingOn}">
-        <StackPanel Spacing="12">
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Grid.Column="0" Text="Esperando respuesta" Classes="h2" />
-            <Button Grid.Column="1" Content="Ver todos" Classes="quick" Command="{Binding OpenFollowUpsCommand}" />
-          </Grid>
-          <ItemsControl ItemsSource="{Binding WaitingOn}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,9">
-                  <StackPanel Grid.Column="0" Spacing="1">
-                    <TextBlock Text="{Binding WaitingOn}" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding Subject}" Classes="muted" MaxLines="1" TextTrimming="CharacterEllipsis" />
-                  </StackPanel>
-                  <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="8,0"
-                             Foreground="{DynamicResource SemWaitingBrush}" FontWeight="SemiBold"
-                             Text="{Binding DaysWaiting, StringFormat='{}{0} d'}" />
-                  <Button Grid.Column="2" Content="Recordatorio" Classes="quick" VerticalAlignment="Center"
-                          Command="{Binding $parent[ItemsControl].DataContext.SendFollowUpReminderCommand}"
-                          CommandParameter="{Binding}" />
-                </Grid>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-          <TextBlock Text="No esperas respuesta de nadie." Classes="muted" IsVisible="{Binding !AnyWaitingOn}" />
-        </StackPanel>
-      </Border>
-
       <!-- Próximos recordatorios -->
-      <Border Classes="card" Grid.Column="1" Margin="9,0,0,0" IsVisible="{Binding ShowReminders}">
+      <Border Classes="card" Width="531" Margin="0,0,18,18" IsVisible="{Binding ShowReminders}">
         <StackPanel Spacing="12">
           <TextBlock Text="Próximos recordatorios" Classes="h2" />
           <ItemsControl ItemsSource="{Binding UpcomingReminders}">
@@ -220,7 +188,7 @@
         </StackPanel>
       </Border>
 
-    </Grid>
+    </WrapPanel>
 
     <Border Classes="card" IsVisible="{Binding ShowUpcoming}">
       <StackPanel Spacing="12">

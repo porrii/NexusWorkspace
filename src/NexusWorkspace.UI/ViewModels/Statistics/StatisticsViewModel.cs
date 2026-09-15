@@ -110,7 +110,6 @@ public partial class StatisticsViewModel(IUnitOfWorkRunner unitOfWork, IPlatform
             new string?[] { "Tareas abiertas", Stats.OpenTaskCount.ToString() },
             new string?[] { "Tareas finalizadas", Stats.FinishedTaskCount.ToString() },
             new string?[] { "Tareas vencidas", Stats.OverdueTaskCount.ToString() },
-            new string?[] { "Seguimientos abiertos", Stats.OpenFollowUpCount.ToString() },
             new string?[] { "Personas", Stats.PeopleCount.ToString() },
             new string?[] { "Empresas", Stats.CompanyCount.ToString() },
             new string?[] { "Adjuntos", Stats.AttachmentCount.ToString() },

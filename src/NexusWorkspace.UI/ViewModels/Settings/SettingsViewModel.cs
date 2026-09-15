@@ -54,9 +54,6 @@ public partial class SettingsViewModel : ViewModelBase
     private bool _remindersOnStartup = true;
 
     [ObservableProperty]
-    private bool _followUpNudges = true;
-
-    [ObservableProperty]
     private string _startupSection = "Dashboard";
 
     [ObservableProperty]
@@ -120,7 +117,7 @@ public partial class SettingsViewModel : ViewModelBase
     public IReadOnlyList<string> BackupScheduleOptions { get; } = ["None", "Daily", "Weekly"];
 
     public IReadOnlyList<string> StartupSectionOptions { get; } =
-        ["Dashboard", "Inbox", "Projects", "Tasks", "FollowUps", "Calendar", "Statistics"];
+        ["Dashboard", "Inbox", "Projects", "Tasks", "Calendar", "Statistics"];
 
     /// <summary>Sensible starting points for a new task — excludes Finished/Cancelled.</summary>
     public IReadOnlyList<WorkTaskStatus> DefaultTaskStatusOptions { get; } =
@@ -163,7 +160,6 @@ public partial class SettingsViewModel : ViewModelBase
         BackupBeforeMigration = s.Backup.BackupBeforeMigration;
         NotificationsEnabled = s.Notifications.Enabled;
         RemindersOnStartup = s.Notifications.RemindersOnStartup;
-        FollowUpNudges = s.Notifications.FollowUpNudges;
         StartupSection = s.StartupSection;
         DefaultTaskStatus = s.DefaultTaskStatus;
         DefaultProjectStatus = s.DefaultProjectStatus;
@@ -198,8 +194,6 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnNotificationsEnabledChanged(bool value) => Persist(s => s.Notifications.Enabled = value);
 
     partial void OnRemindersOnStartupChanged(bool value) => Persist(s => s.Notifications.RemindersOnStartup = value);
-
-    partial void OnFollowUpNudgesChanged(bool value) => Persist(s => s.Notifications.FollowUpNudges = value);
 
     partial void OnStartupSectionChanged(string value) => Persist(s => s.StartupSection = value);
 
