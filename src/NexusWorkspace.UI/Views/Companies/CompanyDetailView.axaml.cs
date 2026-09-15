@@ -19,8 +19,8 @@ public partial class CompanyDetailView : UserControl
             && combo.SelectedItem is TagListItem tag
             && DataContext is CompanyDetailViewModel viewModel)
         {
-            viewModel.AddTagCommand.Execute(tag);
             combo.SelectedItem = null;
+            viewModel.AddTagCommand.Execute(tag);
         }
     }
 
@@ -30,8 +30,8 @@ public partial class CompanyDetailView : UserControl
             && combo.SelectedItem is PersonListItem person
             && DataContext is CompanyDetailViewModel viewModel)
         {
-            viewModel.AddPersonCommand.Execute(person);
             combo.SelectedItem = null;
+            viewModel.AddPersonCommand.Execute(person);
         }
     }
 
@@ -41,8 +41,8 @@ public partial class CompanyDetailView : UserControl
             && combo.SelectedItem is ProjectListItem project
             && DataContext is CompanyDetailViewModel viewModel)
         {
-            viewModel.LinkProjectCommand.Execute(project);
             combo.SelectedItem = null;
+            viewModel.LinkProjectCommand.Execute(project);
         }
     }
 

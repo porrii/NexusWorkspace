@@ -17,8 +17,8 @@ public partial class TaskDetailView : UserControl
             && combo.SelectedItem is TagListItem tag
             && DataContext is TaskDetailViewModel viewModel)
         {
-            viewModel.AddTagCommand.Execute(tag);
             combo.SelectedItem = null;
+            viewModel.AddTagCommand.Execute(tag);
         }
     }
 
@@ -28,8 +28,8 @@ public partial class TaskDetailView : UserControl
             && combo.SelectedItem is PersonListItem person
             && DataContext is TaskDetailViewModel viewModel)
         {
-            viewModel.AddCollaboratorCommand.Execute(person);
             combo.SelectedItem = null;
+            viewModel.AddCollaboratorCommand.Execute(person);
         }
     }
 
