@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Calendar;
+using NexusWorkspace.Application.Reminders;
 using NexusWorkspace.Domain.Enums;
 using NexusWorkspace.UI.Services;
 using NexusWorkspace.UI.ViewModels.Projects;
@@ -22,12 +23,32 @@ public partial class CalendarViewModel(IUnitOfWorkRunner unitOfWork, INavigation
     [ObservableProperty]
     private CalendarDay? _selectedDay;
 
+    [ObservableProperty]
+    private bool _isQuickAddOpen;
+
+    [ObservableProperty]
+    private string _quickAddText = string.Empty;
+
+    [ObservableProperty]
+    private TimeSpan? _quickAddTime = new(9, 0, 0);
+
+    [ObservableProperty]
+    private RecurrenceFrequency _quickAddRecurrence = RecurrenceFrequency.None;
+
+    [ObservableProperty]
+    private int _quickAddRecurrenceInterval = 1;
+
+    [ObservableProperty]
+    private DateTimeOffset? _quickAddRecurrenceEnd;
+
     public ObservableCollection<CalendarWeek> Weeks { get; } = [];
 
     public ObservableCollection<string> WeekdayHeaders { get; } =
         ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
 
     public ObservableCollection<CalendarEntry> SelectedDayEntries { get; } = [];
+
+    public IReadOnlyList<RecurrenceFrequency> RecurrenceOptions { get; } = Enum.GetValues<RecurrenceFrequency>();
 
     public override Task OnActivatedAsync() => RefreshAsync();
 
@@ -58,6 +79,49 @@ public partial class CalendarViewModel(IUnitOfWorkRunner unitOfWork, INavigation
     {
         SelectedDay = day;
         SelectedDayEntries.Reset(day?.Entries ?? []);
+        IsQuickAddOpen = false;
+        QuickAddText = string.Empty;
+        QuickAddRecurrence = RecurrenceFrequency.None;
+        QuickAddRecurrenceInterval = 1;
+        QuickAddRecurrenceEnd = null;
+    }
+
+    [RelayCommand]
+    private void ToggleQuickAdd() => IsQuickAddOpen = !IsQuickAddOpen;
+
+    [RelayCommand]
+    private async Task AddReminderAsync()
+    {
+        var text = QuickAddText?.Trim();
+        if (string.IsNullOrWhiteSpace(text) || SelectedDay is null)
+        {
+            return;
+        }
+
+        var localWhen = SelectedDay.Date.ToDateTime(TimeOnly.MinValue) + (QuickAddTime ?? new TimeSpan(9, 0, 0));
+
+        var result = await unitOfWork.RunAsync((sp, ct) =>
+            sp.GetRequiredService<ReminderService>().CreateAsync(new CreateReminderRequest
+            {
+                Text = text,
+                RemindAtUtc = DateTime.SpecifyKind(localWhen, DateTimeKind.Local).ToUniversalTime(),
+                RecurrenceFrequency = QuickAddRecurrence,
+                RecurrenceInterval = QuickAddRecurrenceInterval,
+                RecurrenceEndUtc = QuickAddRecurrenceEnd?.UtcDateTime,
+            }, ct));
+
+        if (result.IsFailure)
+        {
+            ErrorMessage = result.Error.Message;
+            return;
+        }
+
+        QuickAddText = string.Empty;
+        QuickAddRecurrence = RecurrenceFrequency.None;
+        QuickAddRecurrenceInterval = 1;
+        QuickAddRecurrenceEnd = null;
+        IsQuickAddOpen = false;
+        await RefreshAsync();
     }
 
     [RelayCommand]

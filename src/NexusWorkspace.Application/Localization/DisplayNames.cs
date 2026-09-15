@@ -140,6 +140,15 @@ public static class DisplayNames
         _ => status.ToString(),
     };
 
+    public static string Of(RecurrenceFrequency frequency) => frequency switch
+    {
+        RecurrenceFrequency.None => "No se repite",
+        RecurrenceFrequency.Daily => "Cada día",
+        RecurrenceFrequency.Weekly => "Cada semana",
+        RecurrenceFrequency.Monthly => "Cada mes",
+        _ => frequency.ToString(),
+    };
+
     public static string Of(QuickActionKind action) => action switch
     {
         QuickActionKind.EmailSent => "Correo enviado",

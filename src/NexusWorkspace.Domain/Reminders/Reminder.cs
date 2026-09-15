@@ -30,6 +30,17 @@ public class Reminder : AuditableEntity
 
     public Project? Project { get; set; }
 
+    /// <summary>None for a one-off reminder. Otherwise, RemindAtUtc is both the next occurrence and the recurrence anchor.</summary>
+    public RecurrenceFrequency RecurrenceFrequency { get; set; } = RecurrenceFrequency.None;
+
+    /// <summary>Repeat every N units of <see cref="RecurrenceFrequency"/> (e.g. 2 + Weekly = every two weeks). Ignored when frequency is None.</summary>
+    public int RecurrenceInterval { get; set; } = 1;
+
+    /// <summary>Optional last date the recurrence may fire on. Null repeats indefinitely.</summary>
+    public DateTime? RecurrenceEndUtc { get; set; }
+
+    public bool IsRecurring => RecurrenceFrequency != RecurrenceFrequency.None;
+
     public bool IsPending => Status == ReminderStatus.Pending;
 
     public bool IsDue(DateTime nowUtc) => Status == ReminderStatus.Pending && RemindAtUtc <= nowUtc;

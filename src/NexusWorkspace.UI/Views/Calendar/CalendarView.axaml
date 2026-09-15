@@ -82,7 +82,37 @@
     <!-- Selected day -->
     <Border Grid.Column="1" Classes="card">
       <StackPanel Spacing="12">
-        <TextBlock Text="{Binding SelectedDay.DayHeader}" Classes="h2" TextWrapping="Wrap" />
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Grid.Column="0" Text="{Binding SelectedDay.DayHeader}" Classes="h2" TextWrapping="Wrap" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Classes="quick" Padding="8" ToolTip.Tip="Nuevo recordatorio"
+                  Command="{Binding ToggleQuickAddCommand}" IsVisible="{Binding SelectedDay, Converter={x:Static conv:AppConverters.IsNotNull}}">
+            <mi:MaterialIcon Kind="Plus" Width="14" Height="14" />
+          </Button>
+        </Grid>
+
+        <Border Classes="tile" IsVisible="{Binding IsQuickAddOpen}">
+          <StackPanel Spacing="8">
+            <TextBox Watermark="Recordarme…" Text="{Binding QuickAddText, Mode=TwoWay}" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TimePicker SelectedTime="{Binding QuickAddTime, Mode=TwoWay}" ClockIdentifier="24HourClock" />
+              <ComboBox Width="140" ItemsSource="{Binding RecurrenceOptions}" SelectedItem="{Binding QuickAddRecurrence, Mode=TwoWay}">
+                <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate></ComboBox.ItemTemplate>
+              </ComboBox>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding QuickAddRecurrence, Converter={x:Static conv:AppConverters.IsRecurring}}">
+              <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <TextBlock Text="Cada" Classes="muted" VerticalAlignment="Center" />
+                <NumericUpDown Width="90" Minimum="1" Maximum="365" Increment="1" FormatString="0"
+                                Value="{Binding QuickAddRecurrenceInterval, Mode=TwoWay}" />
+              </StackPanel>
+              <DatePicker SelectedDate="{Binding QuickAddRecurrenceEnd, Mode=TwoWay}" />
+            </StackPanel>
+            <TextBlock Text="Deja la fecha de fin vacía para que se repita indefinidamente." Classes="muted" TextWrapping="Wrap"
+                       IsVisible="{Binding QuickAddRecurrence, Converter={x:Static conv:AppConverters.IsRecurring}}" />
+            <Button Content="Crear recordatorio" Classes="accent" Command="{Binding AddReminderCommand}" />
+          </StackPanel>
+        </Border>
+
         <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource SemCriticalBrush}"
                    IsVisible="{Binding ErrorMessage, Converter={x:Static conv:AppConverters.HasText}}" />
         <ItemsControl ItemsSource="{Binding SelectedDayEntries}">

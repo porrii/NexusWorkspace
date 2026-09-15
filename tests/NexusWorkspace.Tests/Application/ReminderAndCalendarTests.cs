@@ -72,4 +72,64 @@ public class ReminderAndCalendarTests
         entries.Should().Contain(e => e.Kind == CalendarEntryKind.TaskDue && e.NavigateId == task.Value);
         entries.Should().Contain(e => e.Kind == CalendarEntryKind.Reminder);
     }
+
+    [Fact]
+    public async Task Completing_a_weekly_reminder_rolls_it_to_the_next_occurrence_instead_of_finishing_it()
+    {
+        await using var h = new TestHarness();
+        var first = h.Clock.UtcNow.AddDays(1);
+        var r = await h.Reminders.CreateAsync(new CreateReminderRequest
+        {
+            Text = "Reunión semanal", RemindAtUtc = first,
+            RecurrenceFrequency = RecurrenceFrequency.Weekly, RecurrenceInterval = 1,
+        });
+
+        await h.Reminders.CompleteAsync(r.Value);
+
+        var reminder = await h.Db.Reminders.SingleAsync();
+        reminder.Status.Should().Be(ReminderStatus.Pending);
+        reminder.CompletedAtUtc.Should().BeNull();
+        reminder.Notified.Should().BeFalse();
+        reminder.RemindAtUtc.Should().Be(first.AddDays(7));
+        (await new ReminderReadService(h.Db).CountPendingAsync()).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Recurring_reminder_finishes_for_good_once_it_reaches_its_end_date()
+    {
+        await using var h = new TestHarness();
+        var first = h.Clock.UtcNow.AddDays(1);
+        var r = await h.Reminders.CreateAsync(new CreateReminderRequest
+        {
+            Text = "Serie corta", RemindAtUtc = first,
+            RecurrenceFrequency = RecurrenceFrequency.Weekly, RecurrenceInterval = 1,
+            RecurrenceEndUtc = first.AddDays(3), // next occurrence (first + 7d) falls after this
+        });
+
+        await h.Reminders.CompleteAsync(r.Value);
+
+        var reminder = await h.Db.Reminders.SingleAsync();
+        reminder.Status.Should().Be(ReminderStatus.Done);
+        reminder.CompletedAtUtc.Should().Be(h.Clock.UtcNow);
+        reminder.RemindAtUtc.Should().Be(first); // last fired occurrence, not rolled forward
+    }
+
+    [Fact]
+    public async Task Calendar_expands_a_weekly_recurring_reminder_into_every_occurrence_in_range()
+    {
+        await using var h = new TestHarness();
+        var first = h.Clock.UtcNow.AddDays(1);
+        await h.Reminders.CreateAsync(new CreateReminderRequest
+        {
+            Text = "Reunión de los miércoles", RemindAtUtc = first,
+            RecurrenceFrequency = RecurrenceFrequency.Weekly, RecurrenceInterval = 1,
+        });
+
+        var calendar = new CalendarReadService(h.Db);
+        var entries = await calendar.GetRangeAsync(h.Clock.UtcNow, h.Clock.UtcNow.AddDays(28));
+
+        var occurrences = entries.Where(e => e.Kind == CalendarEntryKind.Reminder).OrderBy(e => e.WhenUtc).ToList();
+        occurrences.Should().HaveCount(4);
+        occurrences.Select(e => e.WhenUtc).Should().Equal(first, first.AddDays(7), first.AddDays(14), first.AddDays(21));
+    }
 }

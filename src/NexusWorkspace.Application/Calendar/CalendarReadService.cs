@@ -52,17 +52,28 @@ public sealed class CalendarReadService(IApplicationDbContext db)
             .Select(p => new { p.Id, p.Name, Due = p.DueDateUtc!.Value })
             .ToListAsync(cancellationToken);
 
-        var reminders = await db.Reminders.AsNoTracking()
-            .Where(r => r.Status == ReminderStatus.Pending && r.RemindAtUtc >= fromUtc && r.RemindAtUtc <= toUtc)
+        // Recurring reminders only store their next occurrence, so instead of filtering by
+        // date in SQL, every pending reminder is fetched and its occurrences within the
+        // visible range are expanded in memory (cheap: this is a small local table).
+        var pendingReminders = await db.Reminders.AsNoTracking()
+            .Where(r => r.Status == ReminderStatus.Pending)
             .Select(r => new
             {
                 r.Id,
                 r.Text,
-                At = r.RemindAtUtc,
+                r.RemindAtUtc,
+                r.RecurrenceFrequency,
+                r.RecurrenceInterval,
+                r.RecurrenceEndUtc,
                 r.ProjectId,
                 ProjectName = r.Project != null ? r.Project.Name : null,
             })
             .ToListAsync(cancellationToken);
+
+        var reminders = pendingReminders
+            .SelectMany(r => ExpandOccurrences(r.RemindAtUtc, r.RecurrenceFrequency, r.RecurrenceInterval, r.RecurrenceEndUtc, fromUtc, toUtc)
+                .Select(at => new { r.Id, r.Text, At = at, r.ProjectId, r.ProjectName }))
+            .ToList();
 
         var meetings = await db.Meetings.AsNoTracking()
             .Where(m => m.Status != MeetingStatus.Cancelled && m.StartUtc >= fromUtc && m.StartUtc <= toUtc)
@@ -132,4 +143,53 @@ public sealed class CalendarReadService(IApplicationDbContext db)
 
     private static DateOnly LocalDay(DateTime utc)
         => DateOnly.FromDateTime(DateTime.SpecifyKind(utc, DateTimeKind.Utc).ToLocalTime());
+
+    /// <summary>
+    /// Every occurrence of a (possibly recurring) reminder that falls within [fromUtc, toUtc].
+    /// <paramref name="anchorUtc"/> is the reminder's current RemindAtUtc, which may sit before or
+    /// after the requested range, so it is walked in both directions rather than assumed to be first.
+    /// </summary>
+    private static IEnumerable<DateTime> ExpandOccurrences(
+        DateTime anchorUtc, RecurrenceFrequency frequency, int interval, DateTime? recurrenceEndUtc,
+        DateTime fromUtc, DateTime toUtc)
+    {
+        if (frequency == RecurrenceFrequency.None)
+        {
+            if (anchorUtc >= fromUtc && anchorUtc <= toUtc)
+            {
+                yield return anchorUtc;
+            }
+
+            yield break;
+        }
+
+        interval = Math.Max(1, interval);
+        var rangeEnd = recurrenceEndUtc is { } end && end < toUtc ? end : toUtc;
+
+        DateTime Step(DateTime d, int direction) => frequency switch
+        {
+            RecurrenceFrequency.Daily => d.AddDays(interval * direction),
+            RecurrenceFrequency.Weekly => d.AddDays(7 * interval * direction),
+            RecurrenceFrequency.Monthly => d.AddMonths(interval * direction),
+            _ => d,
+        };
+
+        const int guardLimit = 2000;
+
+        var current = anchorUtc;
+        for (var i = 0; current > fromUtc && i < guardLimit; i++)
+        {
+            current = Step(current, -1);
+        }
+
+        for (var i = 0; current <= rangeEnd && i < guardLimit; i++)
+        {
+            if (current >= fromUtc)
+            {
+                yield return current;
+            }
+
+            current = Step(current, 1);
+        }
+    }
 }

@@ -60,6 +60,15 @@ public partial class TaskDetailViewModel(
     private TimeSpan? _newReminderTime = new(9, 0, 0);
 
     [ObservableProperty]
+    private RecurrenceFrequency _newReminderRecurrence = RecurrenceFrequency.None;
+
+    [ObservableProperty]
+    private int _newReminderRecurrenceInterval = 1;
+
+    [ObservableProperty]
+    private DateTimeOffset? _newReminderRecurrenceEnd;
+
+    [ObservableProperty]
     private bool _isEditPanelOpen;
 
     [ObservableProperty]
@@ -93,6 +102,8 @@ public partial class TaskDetailViewModel(
     private string? _templateMessage;
 
     public ObservableCollection<ReminderView> Reminders { get; } = [];
+
+    public IReadOnlyList<RecurrenceFrequency> RecurrenceOptions { get; } = Enum.GetValues<RecurrenceFrequency>();
 
     /// <summary>Subtasks and legacy checklist items merged into one editable list.</summary>
     public ObservableCollection<TaskChildRow> Children { get; } = [];
@@ -562,6 +573,9 @@ public partial class TaskDetailViewModel(
         if (!IsReminderPanelOpen)
         {
             NewReminderText = string.Empty;
+            NewReminderRecurrence = RecurrenceFrequency.None;
+            NewReminderRecurrenceInterval = 1;
+            NewReminderRecurrenceEnd = null;
         }
     }
 
@@ -583,6 +597,9 @@ public partial class TaskDetailViewModel(
                 RemindAtUtc = DateTime.SpecifyKind(localWhen, DateTimeKind.Local).ToUniversalTime(),
                 TargetKind = EntityKind.WorkTask,
                 TargetId = _taskId,
+                RecurrenceFrequency = NewReminderRecurrence,
+                RecurrenceInterval = NewReminderRecurrenceInterval,
+                RecurrenceEndUtc = NewReminderRecurrenceEnd?.UtcDateTime,
             }, ct));
 
         if (result.IsFailure)
@@ -592,6 +609,9 @@ public partial class TaskDetailViewModel(
         }
 
         NewReminderText = string.Empty;
+        NewReminderRecurrence = RecurrenceFrequency.None;
+        NewReminderRecurrenceInterval = 1;
+        NewReminderRecurrenceEnd = null;
         IsReminderPanelOpen = false;
         await RefreshAsync();
     }

@@ -73,6 +73,15 @@ public partial class ProjectDetailViewModel(
     private TimeSpan? _newReminderTime = new(9, 0, 0);
 
     [ObservableProperty]
+    private RecurrenceFrequency _newReminderRecurrence = RecurrenceFrequency.None;
+
+    [ObservableProperty]
+    private int _newReminderRecurrenceInterval = 1;
+
+    [ObservableProperty]
+    private DateTimeOffset? _newReminderRecurrenceEnd;
+
+    [ObservableProperty]
     private bool _isEditPanelOpen;
 
     [ObservableProperty]
@@ -107,6 +116,8 @@ public partial class ProjectDetailViewModel(
     public ObservableCollection<ActivityEntry> Timeline { get; } = [];
 
     public ObservableCollection<ReminderView> Reminders { get; } = [];
+
+    public IReadOnlyList<RecurrenceFrequency> RecurrenceOptions { get; } = Enum.GetValues<RecurrenceFrequency>();
 
     public ObservableCollection<ProjectStatus> AvailableStatuses { get; } = [];
 
@@ -571,6 +582,9 @@ public partial class ProjectDetailViewModel(
         if (!IsReminderPanelOpen)
         {
             NewReminderText = string.Empty;
+            NewReminderRecurrence = RecurrenceFrequency.None;
+            NewReminderRecurrenceInterval = 1;
+            NewReminderRecurrenceEnd = null;
         }
     }
 
@@ -592,6 +606,9 @@ public partial class ProjectDetailViewModel(
                 RemindAtUtc = DateTime.SpecifyKind(localWhen, DateTimeKind.Local).ToUniversalTime(),
                 TargetKind = EntityKind.Project,
                 TargetId = _projectId,
+                RecurrenceFrequency = NewReminderRecurrence,
+                RecurrenceInterval = NewReminderRecurrenceInterval,
+                RecurrenceEndUtc = NewReminderRecurrenceEnd?.UtcDateTime,
             }, ct));
 
         if (result.IsFailure)
@@ -601,6 +618,9 @@ public partial class ProjectDetailViewModel(
         }
 
         NewReminderText = string.Empty;
+        NewReminderRecurrence = RecurrenceFrequency.None;
+        NewReminderRecurrenceInterval = 1;
+        NewReminderRecurrenceEnd = null;
         IsReminderPanelOpen = false;
         await RefreshAsync();
     }

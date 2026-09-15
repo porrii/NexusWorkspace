@@ -31,6 +31,9 @@ public sealed class ReminderService(IApplicationDbContext db, IClock clock, IAct
             TargetKind = request.TargetKind,
             TargetId = request.TargetId,
             ProjectId = projectId,
+            RecurrenceFrequency = request.RecurrenceFrequency,
+            RecurrenceInterval = Math.Max(1, request.RecurrenceInterval),
+            RecurrenceEndUtc = request.RecurrenceFrequency == RecurrenceFrequency.None ? null : request.RecurrenceEndUtc,
         };
 
         db.Reminders.Add(reminder);
@@ -102,10 +105,38 @@ public sealed class ReminderService(IApplicationDbContext db, IClock clock, IAct
             return NotFound();
         }
 
+        // Completing or dismissing a recurring reminder rolls it to its next occurrence
+        // instead of ending it, unless that occurrence would fall after RecurrenceEndUtc.
+        if (reminder.IsRecurring)
+        {
+            var next = NextOccurrence(reminder.RemindAtUtc, reminder.RecurrenceFrequency, reminder.RecurrenceInterval);
+            if (reminder.RecurrenceEndUtc is null || next <= reminder.RecurrenceEndUtc)
+            {
+                reminder.RemindAtUtc = next;
+                reminder.Status = ReminderStatus.Pending;
+                reminder.Notified = false;
+                reminder.CompletedAtUtc = null;
+                await db.SaveChangesAsync(cancellationToken);
+                return Result.Success();
+            }
+        }
+
         reminder.Status = status;
         reminder.CompletedAtUtc = status == ReminderStatus.Done ? clock.UtcNow : null;
         await db.SaveChangesAsync(cancellationToken);
         return Result.Success();
+    }
+
+    private static DateTime NextOccurrence(DateTime current, RecurrenceFrequency frequency, int interval)
+    {
+        interval = Math.Max(1, interval);
+        return frequency switch
+        {
+            RecurrenceFrequency.Daily => current.AddDays(interval),
+            RecurrenceFrequency.Weekly => current.AddDays(7 * interval),
+            RecurrenceFrequency.Monthly => current.AddMonths(interval),
+            _ => current,
+        };
     }
 
     private async Task<Guid?> ResolveProjectIdAsync(EntityKind? kind, Guid? id, CancellationToken cancellationToken)

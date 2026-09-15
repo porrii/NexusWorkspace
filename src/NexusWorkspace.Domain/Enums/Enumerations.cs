@@ -161,6 +161,16 @@ public enum ReminderStatus
     Dismissed = 2,
 }
 
+/// <summary>How often a reminder repeats. The reminder's RemindAtUtc also acts as the recurrence anchor.</summary>
+public enum RecurrenceFrequency
+{
+    /// <summary>One-off reminder, does not repeat.</summary>
+    None = 0,
+    Daily = 1,
+    Weekly = 2,
+    Monthly = 3,
+}
+
 /// <summary>Kind of a local notification-centre entry.</summary>
 public enum NotificationKind
 {

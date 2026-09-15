@@ -59,6 +59,9 @@ public static class AppConverters
     public static readonly FuncValueConverter<bool, string> ExpandChevron =
         new(expanded => expanded ? "ChevronDown" : "ChevronRight");
 
+    public static readonly FuncValueConverter<RecurrenceFrequency, bool> IsRecurring =
+        new(frequency => frequency != RecurrenceFrequency.None);
+
     public static readonly FuncValueConverter<ReminderStatus, bool> ReminderPending =
         new(status => status == ReminderStatus.Pending);
 
@@ -266,6 +269,7 @@ public static class AppConverters
         RelationKind r => DisplayNames.Of(r),
         FollowUpState f => DisplayNames.Of(f),
         ReminderStatus rs => DisplayNames.Of(rs),
+        RecurrenceFrequency rf => DisplayNames.Of(rf),
         EntityKind e => DisplayNames.Of(e),
         TemplateKind tk => DisplayNames.Of(tk),
         Application.Trash.TrashScope ts => DisplayNames.Of(ts),
