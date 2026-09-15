@@ -43,7 +43,7 @@ public partial class TasksViewModel(IUnitOfWorkRunner unitOfWork, INavigationSer
     [ObservableProperty]
     private FilterOption<Priority>? _selectedPriority;
 
-    public ObservableCollection<WorkTaskListItem> Tasks { get; } = [];
+    public ObservableCollection<TaskListRow> Tasks { get; } = [];
 
     public ObservableCollection<ProjectOption> ProjectOptions { get; } = [];
 
@@ -119,6 +119,66 @@ public partial class TasksViewModel(IUnitOfWorkRunner unitOfWork, INavigationSer
         }
     }
 
+    [RelayCommand]
+    private async Task ToggleExpandAsync(TaskListRow? row)
+    {
+        if (row is null)
+        {
+            return;
+        }
+
+        row.IsExpanded = !row.IsExpanded;
+        if (row.IsExpanded && !row.ChildrenLoaded)
+        {
+            await LoadChildrenAsync(row);
+        }
+    }
+
+    [RelayCommand]
+    private async Task ToggleChildAsync(TaskChildRow? row)
+    {
+        if (row is null)
+        {
+            return;
+        }
+
+        await unitOfWork.RunAsync((sp, ct) =>
+        {
+            var svc = sp.GetRequiredService<WorkTaskService>();
+            return row.IsChecklist
+                ? svc.SetChecklistItemCheckedAsync(row.Id, !row.IsDone, ct)
+                : svc.SetSubTaskDoneAsync(row.Id, !row.IsDone, ct);
+        });
+
+        if (row.OwnerRow is { } owner)
+        {
+            await LoadChildrenAsync(owner);
+        }
+    }
+
+    private async Task LoadChildrenAsync(TaskListRow row)
+    {
+        row.IsLoadingChildren = true;
+        try
+        {
+            var detail = await unitOfWork.RunAsync((sp, ct) =>
+                sp.GetRequiredService<WorkTaskReadService>().GetDetailAsync(row.Item.Id, ct));
+
+            if (detail is null)
+            {
+                return;
+            }
+
+            row.Children.Reset(TaskChildRow.BuildFrom(detail, row));
+            row.Comments.Reset(detail.Comments);
+            row.ChildrenLoaded = true;
+        }
+        finally
+        {
+            row.IsLoadingChildren = false;
+        }
+    }
+
     private async Task LoadOptionsAsync()
     {
         var data = await unitOfWork.RunAsync(async (sp, ct) =>
@@ -164,7 +224,7 @@ public partial class TasksViewModel(IUnitOfWorkRunner unitOfWork, INavigationSer
             var rows = await unitOfWork.RunAsync((sp, ct) =>
                 sp.GetRequiredService<WorkTaskReadService>().GetFilteredAsync(filter, 1000, ct));
 
-            Tasks.Reset(rows);
+            Tasks.Reset(rows.Select(r => new TaskListRow { Item = r }));
             IsEmpty = Tasks.Count == 0;
         }
         catch (Exception ex)

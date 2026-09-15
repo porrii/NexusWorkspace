@@ -183,7 +183,7 @@ public partial class TaskDetailViewModel(
             SelectedStatus = detail.Status;
             _suppressStatusChange = false;
 
-            Children.Reset(BuildChildren(detail));
+            Children.Reset(TaskChildRow.BuildFrom(detail));
             Comments.Reset(detail.Comments);
             History.Reset(data.h);
             Reminders.Reset(data.r);
@@ -361,35 +361,6 @@ public partial class TaskDetailViewModel(
 
     [RelayCommand]
     private void ClearEditCompany() => EditCompany = null;
-
-    private static IEnumerable<TaskChildRow> BuildChildren(WorkTaskDetail detail)
-    {
-        // Subtasks first, ordered as a tree (parent then its children) with a depth
-        // for indentation; then the legacy checklist items as a flat tail.
-        var byParent = detail.SubTasks.ToLookup(s => s.ParentSubTaskId);
-
-        IEnumerable<TaskChildRow> Walk(Guid? parent, int depth)
-        {
-            foreach (var s in byParent[parent].OrderBy(s => s.SortKey))
-            {
-                yield return new TaskChildRow { Id = s.Id, IsChecklist = false, Title = s.Title, IsDone = s.IsDone, Depth = depth };
-                foreach (var child in Walk(s.Id, depth + 1))
-                {
-                    yield return child;
-                }
-            }
-        }
-
-        foreach (var row in Walk(null, 0))
-        {
-            yield return row;
-        }
-
-        foreach (var c in detail.Checklist.OrderBy(c => c.SortKey))
-        {
-            yield return new TaskChildRow { Id = c.Id, IsChecklist = true, Title = c.Text, IsDone = c.IsChecked, Depth = 0 };
-        }
-    }
 
     [RelayCommand]
     private async Task AddSubTaskAsync()

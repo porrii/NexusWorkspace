@@ -1,6 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:conv="clr-namespace:NexusWorkspace.UI.Converters"
+             x:Name="Root"
              x:Class="NexusWorkspace.UI.Views.Tasks.TasksView">
 
   <StackPanel Spacing="16" MaxWidth="1040">
@@ -54,32 +56,81 @@
     <ItemsControl ItemsSource="{Binding Tasks}">
       <ItemsControl.ItemTemplate>
         <DataTemplate>
-          <Button Classes="tile" Margin="0,0,0,8" HorizontalAlignment="Stretch"
-                  Command="{Binding $parent[ItemsControl].DataContext.OpenTaskCommand}" CommandParameter="{Binding}">
-            <Grid ColumnDefinitions="*,Auto">
-              <StackPanel Grid.Column="0" Spacing="3">
-                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                  <TextBlock Classes="muted" Text="{Binding ProjectName}" />
-                  <TextBlock Classes="muted" Text="{Binding AssigneeName, StringFormat='{}· {0}'}"
-                             IsVisible="{Binding AssigneeName, Converter={x:Static conv:AppConverters.HasText}}" />
-                  <TextBlock Classes="muted"
-                             Text="{Binding DueDateUtc, Converter={x:Static conv:AppConverters.LocalDate}, StringFormat='{}· vence {0}'}"
-                             IsVisible="{Binding DueDateUtc, Converter={x:Static conv:AppConverters.IsNotNull}}" />
+          <Border Classes="tile" Margin="0,0,0,8">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <Button Grid.Column="0" Classes="quick" Padding="6,4" VerticalAlignment="Top" Margin="0,0,8,0"
+                        ToolTip.Tip="Ver subtareas"
+                        Command="{Binding $parent[ItemsControl].DataContext.ToggleExpandCommand}" CommandParameter="{Binding}">
+                  <mi:MaterialIcon Width="14" Height="14" Kind="{Binding IsExpanded, Converter={x:Static conv:AppConverters.ExpandChevron}}" />
+                </Button>
+
+                <Button Grid.Column="1" Background="Transparent" BorderThickness="0" Padding="0"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Command="{Binding $parent[ItemsControl].DataContext.OpenTaskCommand}" CommandParameter="{Binding Item}">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="3">
+                      <TextBlock Text="{Binding Item.Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                      <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Classes="muted" Text="{Binding Item.ProjectName}" />
+                        <TextBlock Classes="muted" Text="{Binding Item.AssigneeName, StringFormat='{}· {0}'}"
+                                   IsVisible="{Binding Item.AssigneeName, Converter={x:Static conv:AppConverters.HasText}}" />
+                        <TextBlock Classes="muted"
+                                   Text="{Binding Item.DueDateUtc, Converter={x:Static conv:AppConverters.LocalDate}, StringFormat='{}· vence {0}'}"
+                                   IsVisible="{Binding Item.DueDateUtc, Converter={x:Static conv:AppConverters.IsNotNull}}" />
+                      </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                      <Border Classes="pill" BorderBrush="{Binding Item.Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}">
+                        <TextBlock Text="{Binding Item.Priority, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                                   Foreground="{Binding Item.Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}" />
+                      </Border>
+                      <Border Classes="pill" BorderBrush="{Binding Item.Status, Converter={x:Static conv:AppConverters.TaskStatusBrush}}">
+                        <TextBlock Text="{Binding Item.Status, Converter={x:Static conv:AppConverters.EnumLabel}}"
+                                   Foreground="{Binding Item.Status, Converter={x:Static conv:AppConverters.TaskStatusBrush}}" />
+                      </Border>
+                    </StackPanel>
+                  </Grid>
+                </Button>
+              </Grid>
+
+              <StackPanel IsVisible="{Binding IsExpanded}" Margin="30,0,0,0" Spacing="8">
+                <TextBlock Text="Cargando…" Classes="muted" IsVisible="{Binding IsLoadingChildren}" />
+
+                <StackPanel IsVisible="{Binding ChildrenLoaded}" Spacing="8">
+                  <ItemsControl ItemsSource="{Binding Children}"
+                                IsVisible="{Binding Children.Count, Converter={x:Static conv:AppConverters.Positive}}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Grid ColumnDefinitions="Auto,*" Margin="0,1">
+                          <CheckBox Grid.Column="0" IsChecked="{Binding IsDone, Mode=OneWay}"
+                                    Command="{Binding #Root.DataContext.ToggleChildCommand}"
+                                    CommandParameter="{Binding}" />
+                          <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <StackPanel IsVisible="{Binding Children.Count, Converter={x:Static conv:AppConverters.IsZero}}" Spacing="8">
+                    <TextBlock Text="Sin subtareas." Classes="muted"
+                               IsVisible="{Binding Comments.Count, Converter={x:Static conv:AppConverters.IsZero}}" />
+                    <ItemsControl ItemsSource="{Binding Comments}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <StackPanel Spacing="2" Margin="0,0,0,8">
+                            <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
+                            <TextBlock Classes="muted"
+                                       Text="{Binding CreatedAtUtc, Converter={x:Static conv:AppConverters.RelativeDateTime}}" />
+                          </StackPanel>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
                 </StackPanel>
               </StackPanel>
-              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <Border Classes="pill" BorderBrush="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}">
-                  <TextBlock Text="{Binding Priority, Converter={x:Static conv:AppConverters.EnumLabel}}"
-                             Foreground="{Binding Priority, Converter={x:Static conv:AppConverters.PriorityBrush}}" />
-                </Border>
-                <Border Classes="pill" BorderBrush="{Binding Status, Converter={x:Static conv:AppConverters.TaskStatusBrush}}">
-                  <TextBlock Text="{Binding Status, Converter={x:Static conv:AppConverters.EnumLabel}}"
-                             Foreground="{Binding Status, Converter={x:Static conv:AppConverters.TaskStatusBrush}}" />
-                </Border>
-              </StackPanel>
-            </Grid>
-          </Button>
+            </StackPanel>
+          </Border>
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>

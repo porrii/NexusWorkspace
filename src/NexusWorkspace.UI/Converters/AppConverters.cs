@@ -56,6 +56,9 @@ public static class AppConverters
 
     public static readonly FuncValueConverter<int, bool> IsZero = new(value => value == 0);
 
+    public static readonly FuncValueConverter<bool, string> ExpandChevron =
+        new(expanded => expanded ? "ChevronDown" : "ChevronRight");
+
     public static readonly FuncValueConverter<ReminderStatus, bool> ReminderPending =
         new(status => status == ReminderStatus.Pending);
 
