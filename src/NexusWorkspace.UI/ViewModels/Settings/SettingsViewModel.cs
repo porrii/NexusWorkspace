@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NexusWorkspace.Application.Abstractions;
 using NexusWorkspace.Application.Import;
 using NexusWorkspace.Application.Settings;
+using NexusWorkspace.Domain.Enums;
 using NexusWorkspace.UI.Services;
 
 namespace NexusWorkspace.UI.ViewModels.Settings;
@@ -57,6 +58,12 @@ public partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _startupSection = "Dashboard";
+
+    [ObservableProperty]
+    private WorkTaskStatus _defaultTaskStatus = WorkTaskStatus.InProgress;
+
+    [ObservableProperty]
+    private ProjectStatus _defaultProjectStatus = ProjectStatus.Active;
 
     [ObservableProperty]
     private ImportSource _importSource = ImportSource.Notes;
@@ -113,7 +120,18 @@ public partial class SettingsViewModel : ViewModelBase
     public IReadOnlyList<string> BackupScheduleOptions { get; } = ["None", "Daily", "Weekly"];
 
     public IReadOnlyList<string> StartupSectionOptions { get; } =
-        ["Dashboard", "Inbox", "Projects", "FollowUps", "Calendar", "Statistics"];
+        ["Dashboard", "Inbox", "Projects", "Tasks", "FollowUps", "Calendar", "Statistics"];
+
+    /// <summary>Sensible starting points for a new task — excludes Finished/Cancelled.</summary>
+    public IReadOnlyList<WorkTaskStatus> DefaultTaskStatusOptions { get; } =
+    [
+        WorkTaskStatus.Pending, WorkTaskStatus.InProgress,
+        WorkTaskStatus.WaitingClient, WorkTaskStatus.WaitingProvider, WorkTaskStatus.Blocked,
+    ];
+
+    /// <summary>Sensible starting points for a new project — excludes Finished.</summary>
+    public IReadOnlyList<ProjectStatus> DefaultProjectStatusOptions { get; } =
+        [ProjectStatus.Planning, ProjectStatus.Active, ProjectStatus.OnHold, ProjectStatus.Blocked];
 
     public ObservableCollection<BackupInfo> Backups { get; } = [];
 
@@ -147,6 +165,8 @@ public partial class SettingsViewModel : ViewModelBase
         RemindersOnStartup = s.Notifications.RemindersOnStartup;
         FollowUpNudges = s.Notifications.FollowUpNudges;
         StartupSection = s.StartupSection;
+        DefaultTaskStatus = s.DefaultTaskStatus;
+        DefaultProjectStatus = s.DefaultProjectStatus;
         _loadingSettings = false;
     }
 
@@ -182,6 +202,10 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnFollowUpNudgesChanged(bool value) => Persist(s => s.Notifications.FollowUpNudges = value);
 
     partial void OnStartupSectionChanged(string value) => Persist(s => s.StartupSection = value);
+
+    partial void OnDefaultTaskStatusChanged(WorkTaskStatus value) => Persist(s => s.DefaultTaskStatus = value);
+
+    partial void OnDefaultProjectStatusChanged(ProjectStatus value) => Persist(s => s.DefaultProjectStatus = value);
 
     private void Persist(Action<AppSettings> mutate)
     {

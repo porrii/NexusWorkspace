@@ -34,7 +34,7 @@ public class WorkTaskServiceTests
 
         var task = await harness.Db.WorkTasks.SingleAsync();
         task.Title.Should().Be("Integración con SIP");
-        task.Status.Should().Be(WorkTaskStatus.Pending);
+        task.Status.Should().Be(harness.Settings.Current.DefaultTaskStatus);
         task.CreatedAtUtc.Should().Be(harness.Clock.UtcNow);
 
         var events = await harness.Db.ActivityEvents.Where(e => e.TargetId == task.Id).ToListAsync();
@@ -45,6 +45,7 @@ public class WorkTaskServiceTests
     public async Task Invalid_status_transition_is_rejected_without_changing_state()
     {
         await using var harness = new TestHarness();
+        harness.Settings.Current.DefaultTaskStatus = WorkTaskStatus.Pending;
         var projectId = await NewProjectAsync(harness);
         var created = await harness.Tasks.CreateAsync(new CreateWorkTaskRequest { ProjectId = projectId, Title = "X" });
 
@@ -61,6 +62,7 @@ public class WorkTaskServiceTests
     public async Task Valid_status_transition_records_old_and_new_values()
     {
         await using var harness = new TestHarness();
+        harness.Settings.Current.DefaultTaskStatus = WorkTaskStatus.Pending;
         var projectId = await NewProjectAsync(harness);
         var created = await harness.Tasks.CreateAsync(new CreateWorkTaskRequest { ProjectId = projectId, Title = "X" });
 

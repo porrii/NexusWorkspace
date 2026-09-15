@@ -1,3 +1,5 @@
+using NexusWorkspace.Domain.Enums;
+
 namespace NexusWorkspace.Application.Settings;
 
 /// <summary>App appearance mode. "System" follows the OS setting.</summary>
@@ -21,6 +23,12 @@ public sealed class AppSettings
     public bool SidebarExpanded { get; set; } = true;
 
     public string StartupSection { get; set; } = "Dashboard";
+
+    /// <summary>Status assigned to a task when it's created.</summary>
+    public WorkTaskStatus DefaultTaskStatus { get; set; } = WorkTaskStatus.InProgress;
+
+    /// <summary>Status assigned to a project when it's created.</summary>
+    public ProjectStatus DefaultProjectStatus { get; set; } = ProjectStatus.Active;
 
     public WindowPlacement Window { get; set; } = new();
 

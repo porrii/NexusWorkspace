@@ -25,6 +25,7 @@ public class ProjectServiceTests
     public async Task ChangeStatusAsync_finishing_sets_completed_date_and_logs()
     {
         await using var harness = new TestHarness();
+        harness.Settings.Current.DefaultProjectStatus = ProjectStatus.Planning;
         var created = await harness.Projects.CreateAsync(new CreateProjectRequest { Name = "Axon" });
 
         await harness.Projects.ChangeStatusAsync(created.Value, ProjectStatus.Active);

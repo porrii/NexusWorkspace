@@ -8,7 +8,7 @@ using NexusWorkspace.Domain.Projects;
 namespace NexusWorkspace.Application.Projects;
 
 /// <summary>Write-side operations for projects. Every meaningful change appends history.</summary>
-public sealed class ProjectService(IApplicationDbContext db, IClock clock, IActivityLog activity)
+public sealed class ProjectService(IApplicationDbContext db, IClock clock, IActivityLog activity, ISettingsStore settings)
 {
     public async Task<Result<Guid>> CreateAsync(CreateProjectRequest request, CancellationToken cancellationToken = default)
     {
@@ -25,7 +25,7 @@ public sealed class ProjectService(IApplicationDbContext db, IClock clock, IActi
             Icon = request.Icon,
             Color = request.Color,
             Priority = request.Priority,
-            Status = ProjectStatus.Planning,
+            Status = settings.Current.DefaultProjectStatus,
             StartDateUtc = request.StartDateUtc,
             DueDateUtc = request.DueDateUtc,
             OwnerPersonId = request.OwnerPersonId,

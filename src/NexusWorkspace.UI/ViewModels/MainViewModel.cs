@@ -81,7 +81,10 @@ public partial class MainViewModel : ViewModelBase
         Search.RequestClose += (_, _) => IsSearchOpen = false;
 
         _navigation.Navigated += OnNavigated;
-        _navigation.NavigateTo(PageKey.Dashboard);
+        var startupPage = Enum.TryParse<PageKey>(settings.Current.StartupSection, out var parsed)
+            ? parsed
+            : PageKey.Dashboard;
+        _navigation.NavigateTo(startupPage);
         _ = Notifications.RefreshCountAsync();
     }
 

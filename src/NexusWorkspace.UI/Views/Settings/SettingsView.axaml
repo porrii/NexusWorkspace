@@ -56,6 +56,22 @@
           <TextBlock Text="Sección al arrancar" Classes="muted" VerticalAlignment="Center" />
           <ComboBox Width="200" ItemsSource="{Binding StartupSectionOptions}" SelectedItem="{Binding StartupSection, Mode=TwoWay}" />
         </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Estado inicial de las tareas nuevas" Classes="muted" VerticalAlignment="Center" />
+          <ComboBox Width="200" ItemsSource="{Binding DefaultTaskStatusOptions}" SelectedItem="{Binding DefaultTaskStatus, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Estado inicial de los proyectos nuevos" Classes="muted" VerticalAlignment="Center" />
+          <ComboBox Width="200" ItemsSource="{Binding DefaultProjectStatusOptions}" SelectedItem="{Binding DefaultProjectStatus, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate><TextBlock Text="{Binding Converter={x:Static conv:AppConverters.EnumLabel}}" /></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
         <CheckBox Content="Notificaciones activadas" IsChecked="{Binding NotificationsEnabled, Mode=TwoWay}" />
         <CheckBox Content="Mostrar recordatorios pendientes al arrancar" IsChecked="{Binding RemindersOnStartup, Mode=TwoWay}" />
         <CheckBox Content="Avisos de seguimientos que llevan tiempo esperando" IsChecked="{Binding FollowUpNudges, Mode=TwoWay}" />

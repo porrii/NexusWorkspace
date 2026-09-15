@@ -10,7 +10,7 @@ using NexusWorkspace.Domain.Tasks;
 namespace NexusWorkspace.Application.Tasks;
 
 /// <summary>Write-side operations for tasks, subtasks, checklist, comments and quick actions.</summary>
-public sealed class WorkTaskService(IApplicationDbContext db, IClock clock, IActivityLog activity)
+public sealed class WorkTaskService(IApplicationDbContext db, IClock clock, IActivityLog activity, ISettingsStore settings)
 {
     public async Task<Result<Guid>> CreateAsync(CreateWorkTaskRequest request, CancellationToken cancellationToken = default)
     {
@@ -37,7 +37,7 @@ public sealed class WorkTaskService(IApplicationDbContext db, IClock clock, IAct
             Title = title,
             Description = Clean(request.Description),
             Priority = request.Priority,
-            Status = WorkTaskStatus.Pending,
+            Status = settings.Current.DefaultTaskStatus,
             DueDateUtc = request.DueDateUtc,
             AssigneePersonId = request.AssigneePersonId,
             RelatedCompanyId = request.RelatedCompanyId,

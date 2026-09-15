@@ -53,8 +53,9 @@ public sealed class TestHarness : IAsyncDisposable, IDisposable
         Db.Database.ExecuteSqlRaw(Fts5SearchService.CreateTableSql);
 
         IActivityLog activityLog = new ActivityLog(Db, Clock);
-        Projects = new ProjectService(Db, Clock, activityLog);
-        Tasks = new WorkTaskService(Db, Clock, activityLog);
+        Settings = new InMemorySettingsStore();
+        Projects = new ProjectService(Db, Clock, activityLog, Settings);
+        Tasks = new WorkTaskService(Db, Clock, activityLog, Settings);
         Inbox = new InboxService(Db, Clock, activityLog);
         FollowUps = new FollowUpService(Db, Clock, activityLog);
         Reminders = new ReminderService(Db, Clock, activityLog);
@@ -98,6 +99,8 @@ public sealed class TestHarness : IAsyncDisposable, IDisposable
     public FixedClock Clock { get; }
 
     public NexusDbContext Db { get; }
+
+    public InMemorySettingsStore Settings { get; }
 
     public ProjectService Projects { get; }
 
