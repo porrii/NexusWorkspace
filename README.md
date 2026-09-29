@@ -5,8 +5,8 @@
 <h1 align="center">NexusWorkspace</h1>
 
 <p align="center">
-  Espacio de trabajo técnico personal — <b>local-first</b>, offline y multiplataforma.<br/>
-  Centraliza proyectos, tareas, seguimientos, personas, empresas, comunicaciones y documentación,
+  Espacio de trabajo técnico personal — <b>local-first</b> y offline, para Windows.<br/>
+  Centraliza proyectos, tareas, personas, empresas, comunicaciones y documentación,
   <b>conservando todo el histórico de forma permanente e inmutable</b>.
 </p>
 
