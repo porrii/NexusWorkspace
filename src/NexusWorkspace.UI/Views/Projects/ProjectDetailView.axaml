@@ -327,7 +327,7 @@
               <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding NewReminderRecurrence, Converter={x:Static conv:AppConverters.IsRecurring}}">
                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                   <TextBlock Text="Cada" Classes="muted" VerticalAlignment="Center" />
-                  <NumericUpDown Width="90" Minimum="1" Maximum="365" Increment="1" FormatString="0"
+                  <NumericUpDown Width="110" Minimum="1" Maximum="365" Increment="1"
                                   Value="{Binding NewReminderRecurrenceInterval, Mode=TwoWay}" />
                 </StackPanel>
                 <DatePicker SelectedDate="{Binding NewReminderRecurrenceEnd, Mode=TwoWay}" />
