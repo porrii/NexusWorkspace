@@ -23,7 +23,7 @@
     <Authors>Iván</Authors>
     <Copyright>© 2026 Iván</Copyright>
     <Version>1.0.0</Version>
-    <Description>Espacio de trabajo técnico personal, local y offline: proyectos, tareas, seguimientos, personas, archivos e informes, con todo el histórico permanente.</Description>
+    <Description>Espacio de trabajo técnico personal, local y offline: proyectos, tareas, personas, archivos e informes, con todo el histórico permanente.</Description>
     <RepositoryUrl>https://github.com/porrii/NexusWorkspace</RepositoryUrl>
     <NeutralLanguage>es</NeutralLanguage>
   </PropertyGroup>
