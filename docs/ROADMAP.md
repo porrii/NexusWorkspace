@@ -40,9 +40,22 @@ Incremental. **La solución permanece compilable y ejecutable al terminar cada f
 > (`docs/UX-REVIEW.md`), bloques A–G ya en `dev`: edición de tarea/proyecto, fusión
 > subtareas+checklist, vínculos persona/empresa↔proyecto/tarea, seguimientos acoplados
 > al estado, "Registrar evento" + comunicaciones en la tarea, Actividad filtrable,
-> página global de Tareas. Pendiente: repaso end-to-end en el PC de build, y luego
-> merge `dev` → `main` + release (ver `docs/RELEASE.md`).
+> página global de Tareas.
 
-> Publicado en GitHub: `porrii/NexusWorkspace`, rama `dev`. `main` + release cuando la v1 esté lista.
+> **Post-pulido (primera prueba real en el PC de build)**: corregidos varios fallos
+> encontrados usando la app de verdad — cierre al vincular persona/proyecto desde un
+> ComboBox, ventana que no encajaba en pantallas pequeñas, sin aviso al archivar un
+> proyecto, modo portable colándose en el instalador, y la "sección al arrancar" de
+> Configuración (nunca se leía). Estado inicial de tareas/proyectos nuevos configurable.
+> **Se ocultan los Seguimientos de toda la interfaz** (ver nota en `docs/DATA-MODEL.md`):
+> sin uso claro tal y como estaban planteados; la entidad y el servicio siguen en el
+> código para rediseñarlos con calma más adelante. Dashboard: los widgets ya no dejan
+> huecos al ocultarlos. **Tareas**: subtareas desplegables en línea desde la lista
+> global, sin entrar al detalle. **Calendario**: crear un recordatorio con un clic desde
+> cualquier día, y recordatorios **recurrentes** (diario/semanal/mensual, cada N, con fin
+> opcional) — requirió una migración de EF Core nueva.
+
+> Publicado en GitHub: `porrii/NexusWorkspace`. `main` + release `v1.0.0` (ver
+> `docs/RELEASE.md`); el desarrollo sigue en `dev`.
 > CI: `.github/workflows/build.yml` activo — restore + build + test en `windows-latest`
 > en cada push/PR a `dev`/`main`.

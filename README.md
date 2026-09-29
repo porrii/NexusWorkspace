@@ -11,6 +11,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/porrii/NexusWorkspace/actions/workflows/build.yml"><img alt="Build" src="https://github.com/porrii/NexusWorkspace/actions/workflows/build.yml/badge.svg?branch=main" /></a>
   <img alt="Licencia MIT" src="https://img.shields.io/badge/licencia-MIT-blue" />
   <img alt=".NET 9" src="https://img.shields.io/badge/.NET-9-512BD4" />
   <img alt="Avalonia 11" src="https://img.shields.io/badge/Avalonia-11-663399" />
@@ -25,10 +26,11 @@
 ## Qué hace
 
 - **Proyectos y tareas** con estados, prioridades, fechas, responsable y empresa; **subtareas**
-  editables; **comentarios**; **etiquetas** transversales.
-- **Seguimientos** ("esperando respuesta de…") acoplados al estado de la tarea: al ponerla en
-  espera se abre uno; al reanudarla se cierra solo. Con contador de días y recordatorios.
-- **Recordatorios** con fecha y hora, y notificaciones locales.
+  editables desde la propia tarea o desplegables en línea desde la página **Tareas**; **comentarios**;
+  **etiquetas** transversales.
+- **Recordatorios** con fecha y hora, notificaciones locales y **repetición** (diaria, semanal o
+  mensual, cada N, con fin opcional) — se crean también con un clic desde cualquier día del
+  Calendario.
 - **Personas y empresas** con su histórico agregado; vínculos a proyectos y tareas; empleador.
 - **Comunicaciones** (email, llamada, reunión…) y **reuniones**, enlazadas a la persona, la
   empresa, el proyecto y la tarea a la vez.
@@ -50,7 +52,8 @@ Descarga `NexusWorkspace-win-Setup.exe` de la página de
 prerrequisitos (incluye el runtime de .NET 9). Al actualizar o reinstalar **no se tocan tus
 datos** (`%APPDATA%\NexusWorkspace\`).
 
-> Aún sin release estable: mientras tanto, compílalo tú (ver abajo).
+> Windows puede mostrar un aviso de SmartScreen la primera vez (el ejecutable no está firmado
+> con un certificado de pago) — "Más información" → "Ejecutar de todas formas".
 
 ## Compilar
 

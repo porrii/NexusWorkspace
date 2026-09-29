@@ -5,8 +5,9 @@ Android queda para v2.
 
 ## 1. Verificación en verde (rama `dev`)
 
-- [x] Build 0/0, 79/79 tests, en cada bloque desde A hasta H (parcial) — verificado en este PC.
-- [x] `docs/ROADMAP.md` y `docs/DATA-MODEL.md` reflejan el estado real (A–H, `docs/UX-REVIEW.md`).
+- [x] Build 0/0, 82/82 tests (incluye recordatorios recurrentes) — verificado en este PC y en CI.
+- [x] `docs/ROADMAP.md` y `docs/DATA-MODEL.md` reflejan el estado real (A–H, `docs/UX-REVIEW.md`,
+      y los cambios post-pulido: Seguimientos ocultos, subtareas desplegables, calendario).
 - [ ] **Recorrido manual en el PC de build**, tocando lo añadido tras A/B1: vincular
       persona/empresa↔proyecto/tarea (C), estado→seguimiento automático (D), "Registrar
       evento" + comunicaciones en la tarea (E), Actividad con filtros (F), página

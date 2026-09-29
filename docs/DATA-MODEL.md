@@ -105,16 +105,12 @@ Cancelled      → Pending               (reactivar)
 Cada transición la valida `WorkTaskStateMachine` y genera un `ActivityEvent`
 (`StatusChanged`, con `OldValue`/`NewValue`).
 
-### Acoplo con `FollowUp` (bloque D)
+### `FollowUp`: oculto de la interfaz (post-v1)
 
-`WorkTaskService.ChangeStatusAsync` acopla el estado con los seguimientos de la tarea,
-sin que sean la misma entidad:
-
-- Al **salir** de un estado de espera (`WaitingClient`/`WaitingProvider`/`Blocked`) hacia
-  cualquier otro, se **cierran automáticamente** (`FollowUpState.Answered`, con
-  `Resolution` y `ActivityEvent` propios) todos los `FollowUp` abiertos (`Waiting`/
-  `Escalated`) de esa tarea.
-- Al **entrar** en un estado de espera desde el detalle de tarea, si no hay ninguno
-  abierto, la UI (`TaskDetailViewModel`) ofrece abrir uno precargado (asunto = título de
-  la tarea; "esperando a" = `RelatedCompanyId` de la tarea, o su `AssigneePersonId` si no
-  hay empresa). Sigue permitiéndose un `FollowUp` suelto, sin tarea.
+La entidad `FollowUp`, su servicio y el acoplo automático con
+`WorkTaskService.ChangeStatusAsync` (cerrar seguimientos abiertos al salir de un estado
+de espera) descritos en versiones anteriores de este documento **ya no están activos**.
+Se quitó la superficie de usuario (páginas, pestañas, widget del Dashboard, atajo de
+paleta de comandos) porque no aportaba valor tal y como estaba planteada, pero la
+entidad, la tabla y `FollowUpService`/`FollowUpReadService` se mantienen intactos en el
+código para poder rediseñarla con calma más adelante en vez de reconstruirla desde cero.
